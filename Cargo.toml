@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
+members = ["ids", "derive"]
 
 [profile.release]
-debug = true
+debug = "limited"
 
