@@ -1,13 +1,21 @@
+//! Type checked and niche compatible integer ids.
+
+#![feature(impl_trait_in_assoc_type)]
+// We could avoid `impl_trait_in_assoc_type` at the cost of suboptimal iterator implementations and
+// more boilerplate. Since it seems this is close to stabilization, let's not spend the effort on
+// all that boilerplate right now.
+//
 #![deny(unsafe_op_in_unsafe_fn)]
 #![warn(missing_docs)]
 #![warn(clippy::undocumented_unsafe_blocks)]
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
-//! Type checked and niche compatible integer ids.
 
 #[cfg(doc)]
 use core::hash::Hash;
 
 mod id;
+mod id_range;
+pub mod id_vec;
 
 /// Derives an [`Id`] instance for a newtype wrapper around an existing [`Id`] type.
 ///
@@ -19,3 +27,5 @@ mod id;
 pub use imctk_derive::Id;
 
 pub use id::{GenericId, Id, Id16, Id32, Id64, Id8, IdSize};
+
+pub use id_range::IdRange;
