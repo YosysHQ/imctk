@@ -1,4 +1,6 @@
 mod id8 {
+    use imctk_transparent::SubtypeCast;
+
     use crate::id::{u8_range_types::NonMaxHighNibbleU8, GenericId, Id};
     use core::{fmt, fmt::Debug, hash::Hash};
 
@@ -7,6 +9,11 @@ mod id8 {
     #[derive(Clone, Copy)]
     #[repr(transparent)]
     pub struct Id8(NonMaxHighNibbleU8);
+
+    // SAFETY: NonMaxHighNibbleU8 is `#[repr(u8)]`
+    unsafe impl SubtypeCast for Id8 {
+        type Repr = u8;
+    }
 
     impl Id8 {
         #[inline(always)]
@@ -151,6 +158,8 @@ mod id8 {
 }
 
 mod id16 {
+    use imctk_transparent::SubtypeCast;
+
     use crate::id::{u8_range_types::NonMaxU8, GenericId, Id};
     use core::{fmt, fmt::Debug, hash::Hash};
 
@@ -171,6 +180,11 @@ mod id16 {
     pub struct Id16 {
         msb: NonMaxU8,
         lsb: u8,
+    }
+
+    // SAFETY: By using `#[repr(C, align(2))]` we guarantee a compatible representation
+    unsafe impl SubtypeCast for Id16 {
+        type Repr = u16;
     }
 
     impl Id16 {
@@ -316,6 +330,8 @@ mod id16 {
 }
 
 mod id32 {
+    use imctk_transparent::SubtypeCast;
+
     use crate::id::{u8_range_types::NonMaxU8, GenericId, Id};
     use core::{fmt, fmt::Debug, hash::Hash};
 
@@ -336,6 +352,11 @@ mod id32 {
     pub struct Id32 {
         msb: NonMaxU8,
         lsbs: [u8; 3],
+    }
+
+    // SAFETY: By using `#[repr(C, align(4))]` we guarantee a compatible representation
+    unsafe impl SubtypeCast for Id32 {
+        type Repr = u32;
     }
 
     impl Id32 {
@@ -488,6 +509,8 @@ mod id32 {
 }
 
 mod id64 {
+    use imctk_transparent::SubtypeCast;
+
     use crate::id::{u8_range_types::NonMaxU8, GenericId, Id};
     use core::{fmt, fmt::Debug, hash::Hash};
 
@@ -508,6 +531,11 @@ mod id64 {
     pub struct Id64 {
         msb: NonMaxU8,
         lsbs: [u8; 7],
+    }
+
+    // SAFETY: By using `#[repr(C, align(8))]` we guarantee a compatible representation
+    unsafe impl SubtypeCast for Id64 {
+        type Repr = u64;
     }
 
     impl Id64 {
@@ -660,6 +688,8 @@ mod id64 {
 }
 
 mod id_size {
+    use imctk_transparent::SubtypeCast;
+
     use crate::id::{u8_range_types::NonMaxMsbU8, GenericId, Id};
     use core::{fmt, fmt::Debug, hash::Hash};
 
@@ -686,6 +716,12 @@ mod id_size {
     pub struct IdSize {
         msb: NonMaxMsbU8,
         lsbs: [u8; LSBS],
+    }
+
+    // SAFETY: By using `#[repr(C, align(N))]` with N based on the pointer width, we guarantee a
+    // compatible representation.
+    unsafe impl SubtypeCast for IdSize {
+        type Repr = usize;
     }
 
     impl IdSize {

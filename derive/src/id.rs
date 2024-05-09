@@ -2,9 +2,9 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::DeriveInput;
 
-use crate::resolve_crate;
+use crate::{require_repr_transparent, resolve_crate, ReprTransparent};
 
-pub fn real_derive_id(input: DeriveInput) -> syn::Result<TokenStream> {
+pub fn derive_id(input: DeriveInput) -> syn::Result<TokenStream> {
     #![allow(non_snake_case)]
 
     let DeriveInput {
@@ -15,43 +15,11 @@ pub fn real_derive_id(input: DeriveInput) -> syn::Result<TokenStream> {
         ..
     } = input;
 
-    let mut repr_transparent_found = false;
-
-    for attr in attrs {
-        if attr.meta.path().is_ident("repr") {
-            attr.parse_nested_meta(|meta| {
-                if meta.path.is_ident("transparent") {
-                    repr_transparent_found = true;
-                } else {
-                    bail!(
-                        &attr,
-                        "deriving `Id` is only supported for `#[repr(transparent)]` structs"
-                    );
-                }
-                Ok(())
-            })?;
-        }
-    }
-
-    if !repr_transparent_found {
-        bail!(&ident, "`derive(Id)` requries `#[repr(transparent)]`");
-    }
-
-    let data_struct = match data {
-        syn::Data::Struct(data_struct) => data_struct,
-        syn::Data::Enum(data_enum) => {
-            bail!(
-                data_enum.enum_token,
-                "can only derive `Id` for `struct` types"
-            );
-        }
-        syn::Data::Union(data_union) => {
-            bail!(
-                data_union.union_token,
-                "can only derive `Id` for `struct` types"
-            );
-        }
-    };
+    let ReprTransparent {
+        field,
+        field_ty: inner,
+        extra_init,
+    } = require_repr_transparent(&ident, "Id", &attrs, &data)?;
 
     // We're extra careful about shadowing of prelude items, as we're emitting code using `unsafe`
     let imctk_ids = resolve_crate("imctk-ids");
@@ -71,77 +39,13 @@ pub fn real_derive_id(input: DeriveInput) -> syn::Result<TokenStream> {
     let PartialEq = quote![::core::prelude::rust_2021::PartialEq];
     let PartialOrd = quote![::core::prelude::rust_2021::PartialOrd];
     let Ordering = quote![::core::cmp::Ordering];
-    let PhantomData = quote![::core::marker::PhantomData];
     let Send = quote![::core::marker::Send];
     let Sync = quote![::core::marker::Sync];
-
-    let mut fields = data_struct.fields.iter();
-
-    let Some(field_def) = fields.next() else {
-        bail!(
-            data_struct.fields,
-            "can only derive `Id` for structs where the first field's type implements `Id` and any following fields are `PhantomData`"
-        );
-    };
-
-    let mut extra_init = quote![];
-
-    for field_def in fields {
-        if let Some(ident) = &field_def.ident {
-            extra_init.extend(quote![, #ident: #PhantomData]);
-        } else {
-            extra_init.extend(quote![, #PhantomData]);
-        }
-    }
-
-    let field = if let Some(ident) = &field_def.ident {
-        quote![#ident]
-    } else {
-        quote![0]
-    };
-
-    let construct = |inner: TokenStream| {
-        if let Some(ident) = &field_def.ident {
-            quote![Self { #ident: #inner #extra_init}]
-        } else {
-            quote![Self(#inner #extra_init)]
-        }
-    };
 
     let target_ident = ident;
     let (impl_generics, type_generics, where_clause) = generics.split_for_impl();
 
     let target_type = quote![#target_ident #type_generics];
-
-    let inner = &field_def.ty;
-
-    let min_def = construct(quote![<#inner as #Id>::MIN]);
-    let max_def = construct(quote![<#inner as #Id>::MAX]);
-
-    let from_index_unchecked_body = construct(quote! {
-        // SAFETY: forwarding to an existing implementation
-        unsafe { <#inner as #Id>::from_index_unchecked(index) }
-    });
-
-    let from_index_body = construct(quote! {
-        <#inner as #Id>::from_index(index)
-    });
-
-    let try_from_index_body = construct(quote! {
-        <#inner as #Id>::try_from_index(index)?
-    });
-
-    let max_body = construct(quote! {
-        #Ord::max(self.#field, other.#field)
-    });
-
-    let min_body = construct(quote! {
-        #Ord::min(self.#field, other.#field)
-    });
-
-    let clamp_body = construct(quote! {
-        #Ord::clamp(self.#field, min.#field, max.#field)
-    });
 
     Ok(quote! {
         // SAFETY: forwarding to an existing implementation
@@ -150,27 +54,32 @@ pub fn real_derive_id(input: DeriveInput) -> syn::Result<TokenStream> {
             type Generic = <#inner as #Id>::Generic;
 
             const MAX_INDEX: #usize = <#inner as #Id>::MAX_INDEX;
-            const MIN: Self = #min_def;
-            const MAX: Self = #max_def;
+            const MIN: Self = Self { #field: <#inner as #Id>::MIN #extra_init };
+            const MAX: Self = Self { #field: <#inner as #Id>::MAX #extra_init };
 
             #[inline(always)]
             unsafe fn from_index_unchecked(index: #usize) -> Self {
-                #from_index_unchecked_body
+                // SAFETY: forwarding to an existing implementation
+                Self {
+                    #field: unsafe { <#inner as #Id>::from_index_unchecked(index) }
+                    #extra_init
+                }
             }
 
             #[inline(always)]
             fn from_index(index: #usize) -> Self {
-                #from_index_body
+                Self { #field: <#inner as #Id>::from_index(index) #extra_init }
             }
 
             #[inline(always)]
             fn try_from_index(index: #usize) -> #Option<Self> {
-                Some(#try_from_index_body)
+                Some(Self { #field: <#inner as #Id>::try_from_index(index)? #extra_init })
             }
 
             #[inline(always)]
             fn index(self) -> #usize {
-                self.#field.index()
+                let Self { #field: inner #extra_init } = self;
+                inner.index()
             }
         }
 
@@ -256,7 +165,7 @@ pub fn real_derive_id(input: DeriveInput) -> syn::Result<TokenStream> {
             where
                 Self: #Sized,
             {
-                #max_body
+                Self { #field: #Ord::max(self.#field, other.#field) #extra_init }
             }
 
             #[inline(always)]
@@ -264,7 +173,7 @@ pub fn real_derive_id(input: DeriveInput) -> syn::Result<TokenStream> {
             where
                 Self: #Sized,
             {
-                #min_body
+                Self { #field: #Ord::min(self.#field, other.#field) #extra_init }
             }
 
             #[inline(always)]
@@ -273,7 +182,7 @@ pub fn real_derive_id(input: DeriveInput) -> syn::Result<TokenStream> {
                 Self: #Sized,
                 Self: #PartialOrd,
             {
-                #clamp_body
+                Self { #field: #Ord::clamp(self.#field, min.#field, max.#field) #extra_init }
             }
         }
     })

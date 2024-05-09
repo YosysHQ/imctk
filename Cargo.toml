@@ -1,7 +1,12 @@
 [workspace]
 resolver = "2"
-members = ["ids", "derive"]
+members = [
+    "ids",
+    "derive",
+    "transparent",
+
+    # comment to force multi-line layout
+]
 
 [profile.release]
-debug = "limited"
-
+debug = true
