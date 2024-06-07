@@ -71,7 +71,7 @@
 //! which adds only a small fraction of a bit to the minimal metadata overhead given a sufficiently
 //! large number of subtables.
 //!
-//! [^1]: Due to a technicallity we add allocators in pairs and thus require two allocators for
+//! [^1]: Due to a technicality we add allocators in pairs and thus require two allocators for
 //!     every span of `1 << 21` subtables.
 //!
 //! Each node allocator maintains a dynamically growing slab for 16 different size classes. Each
