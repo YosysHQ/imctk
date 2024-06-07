@@ -392,6 +392,7 @@ impl<T> IndexedTable<T> {
                                     (&mut *entry_ptr, value)
                                 }
                                 Err(value) => {
+                                    self.entries += 1;
                                     let mut hash_table = HashTable::with_capacity(CHUNK_SIZE * 2);
                                     int_table.drain_and_dealloc_with(
                                         |value, _byte_hash| {
