@@ -239,12 +239,14 @@ impl<T> IndexedTable<T> {
 
                 let new_node = chunk.node(new_chunk_alloc);
 
-                for table in (*new_node.tables_raw()).iter_mut() {
-                    if let Subtable::Small(table) = table {
-                        let old_table_alloc = &mut self.allocators[allocator_index ^ 1];
-                        let new_table_alloc = &mut new_allocators[(allocator_index & 1) ^ 1];
+                if new_node.table_count() > 0 {
+                    for table in (*new_node.tables_raw()).iter_mut() {
+                        if let Subtable::Small(table) = table {
+                            let old_table_alloc = &mut self.allocators[allocator_index ^ 1];
+                            let new_table_alloc = &mut new_allocators[(allocator_index & 1) ^ 1];
 
-                        table.move_node(old_table_alloc, new_table_alloc);
+                            table.move_node(old_table_alloc, new_table_alloc);
+                        }
                     }
                 }
             }
