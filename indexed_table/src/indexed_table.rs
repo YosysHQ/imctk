@@ -101,7 +101,7 @@ impl<T> IndexedTable<T> {
     /// let hasher = |&value: &u64| value.wrapping_mul(0x2545f4914f6cdd1d);
     ///
     /// // Subtables are not implicitly created, so this will panic!
-    /// table.insert_unique(5, 42, hasher(&42), hasher);
+    /// table.insert_unique(5, hasher(&42), 42, hasher);
     /// ```
     ///
     /// ```
@@ -111,9 +111,9 @@ impl<T> IndexedTable<T> {
     /// #
     /// // Initializing subtables with `resize` avoids this panic
     /// table.resize(10);
-    /// table.insert_unique(5, 42, hasher(&42), hasher);
-    /// table.insert_unique(5, 43, hasher(&43), hasher);
-    /// table.insert_unique(6, 44, hasher(&44), hasher);
+    /// table.insert_unique(5, hasher(&42), 42, hasher);
+    /// table.insert_unique(5, hasher(&43), 43, hasher);
+    /// table.insert_unique(6, hasher(&44), 44, hasher);
     ///
     /// assert_eq!(table.len(), 10);
     /// assert_eq!(table.flat_len(), 3);
@@ -275,8 +275,8 @@ impl<T> IndexedTable<T> {
     pub fn insert(
         &mut self,
         subtable: usize,
-        value: T,
         hash: u64,
+        value: T,
         mut eq: impl FnMut(&T) -> bool,
         hasher: impl Fn(&T) -> u64,
     ) -> (&mut T, Option<T>) {
@@ -386,7 +386,7 @@ impl<T> IndexedTable<T> {
                         Subtable::Small(int_table) => {
                             let table_alloc = &mut self.allocators[allocator_index ^ 1];
 
-                            match int_table.insert(value, hash, eq, table_alloc) {
+                            match int_table.insert(hash, value, eq, table_alloc) {
                                 Ok((entry_ptr, value)) => {
                                     self.entries += value.is_none() as usize;
                                     (&mut *entry_ptr, value)
@@ -435,8 +435,8 @@ impl<T> IndexedTable<T> {
     pub fn insert_unique(
         &mut self,
         subtable: usize,
-        value: T,
         hash: u64,
+        value: T,
         hasher: impl Fn(&T) -> u64,
     ) -> &mut T {
         assert!(subtable < self.subtables);

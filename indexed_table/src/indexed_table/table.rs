@@ -83,8 +83,8 @@ impl<T> SmallSubtable<T> {
 
     pub unsafe fn insert(
         &mut self,
-        value: T,
         hash: u64,
+        value: T,
         mut eq: impl FnMut(&T) -> bool,
         allocator: &mut NodeAllocator<T>,
     ) -> Result<(*mut T, Option<T>), T> {
