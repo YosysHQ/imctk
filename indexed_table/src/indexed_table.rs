@@ -277,7 +277,7 @@ impl<T> IndexedTable<T> {
         subtable: usize,
         hash: u64,
         value: T,
-        mut eq: impl FnMut(&T) -> bool,
+        mut eq: impl FnMut(&T, &T) -> bool,
         hasher: impl Fn(&T) -> u64,
     ) -> (&mut T, Option<T>) {
         assert!(subtable < self.subtables);
@@ -320,7 +320,7 @@ impl<T> IndexedTable<T> {
                     let entry_offset = chunk.meta.entry_offset(chunk_slot);
                     let found_entry_ptr = node.entry_ptr(entry_offset);
 
-                    if eq(&*found_entry_ptr) {
+                    if eq(&*found_entry_ptr, &value) {
                         return (&mut *found_entry_ptr, Some(value));
                     }
                     self.entries += 1;
@@ -339,7 +339,7 @@ impl<T> IndexedTable<T> {
 
                     for i in 0..2 {
                         let found_entry_ptr = node.entry_ptr(entry_offset + i);
-                        if eq(&*found_entry_ptr) {
+                        if eq(&*found_entry_ptr, &value) {
                             return (&mut *found_entry_ptr, Some(value));
                         }
                     }
@@ -374,7 +374,7 @@ impl<T> IndexedTable<T> {
                     let table = &mut *table_ptr;
 
                     match table {
-                        Subtable::Large(table) => match table.entry(hash, eq, hasher) {
+                        Subtable::Large(table) => match table.entry(hash, |entry| eq(entry, &value), hasher) {
                             hashbrown::hash_table::Entry::Occupied(entry) => {
                                 (entry.into_mut(), Some(value))
                             }

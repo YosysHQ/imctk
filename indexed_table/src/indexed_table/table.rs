@@ -85,7 +85,7 @@ impl<T> SmallSubtable<T> {
         &mut self,
         hash: u64,
         value: T,
-        mut eq: impl FnMut(&T) -> bool,
+        mut eq: impl FnMut(&T, &T) -> bool,
         allocator: &mut NodeAllocator<T>,
     ) -> Result<(*mut T, Option<T>), T> {
         let byte_hash = byte_hash_from_hash(hash);
@@ -101,7 +101,7 @@ impl<T> SmallSubtable<T> {
             }
 
             let entry_ptr = node_ptr.add(match_index);
-            if eq(&*entry_ptr) {
+            if eq(&*entry_ptr, &value) {
                 return Ok((entry_ptr, Some(value)));
             }
         }
