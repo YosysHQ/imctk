@@ -1,4 +1,4 @@
-use crate::indexed_table::node::NodeRef;
+use crate::table_seq::node::NodeRef;
 
 use super::node::{Node, NodeAllocator};
 
@@ -27,7 +27,6 @@ impl<T> Default for Chunk<T> {
         }
     }
 }
-
 
 impl<T> Chunk<T> {
     #[inline(always)]
@@ -70,20 +69,17 @@ impl ChunkMetadata {
         self.mask_large &= !(1 << index);
     }
 
-
     #[inline(always)]
     pub fn make_pair(&mut self, index: u32) {
         self.mask_entry |= 1 << index;
         self.mask_large |= 1 << index;
     }
 
-
     #[inline(always)]
     pub fn make_table(&mut self, index: u32) {
         self.mask_entry &= !(1 << index);
         self.mask_large |= 1 << index;
     }
-
 
     #[inline(always)]
     pub fn make_empty(&mut self, index: u32) {

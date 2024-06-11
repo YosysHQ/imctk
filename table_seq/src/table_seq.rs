@@ -34,7 +34,7 @@ pub use owned::OwnedSubtable;
 /// all subtables. For methods that operate on all entries of all subtables we include `flat` suffix
 /// or prefix.
 
-pub struct IndexedTable<T> {
+pub struct TableSeq<T> {
     _phantom: PhantomData<T>,
     allocators: Vec<NodeAllocator<T>>,
     subtables: usize,
@@ -44,7 +44,7 @@ pub struct IndexedTable<T> {
     chunks: Vec<Chunk<T>>,
 }
 
-impl<T> Default for IndexedTable<T> {
+impl<T> Default for TableSeq<T> {
     fn default() -> Self {
         Self {
             _phantom: PhantomData,
@@ -72,7 +72,7 @@ impl<'a, T> Drop for InvalidateChunkOnDrop<'a, T> {
 
         debug_assert!(
             false,
-            "IndexedTable does not support storing values that panic when dropped"
+            "TableSeq does not support storing values that panic when dropped"
         );
         self.0.meta = Default::default();
     }
@@ -84,7 +84,7 @@ impl<'a, T> InvalidateChunkOnDrop<'a, T> {
     }
 }
 
-impl<T> IndexedTable<T> {
+impl<T> TableSeq<T> {
     /// Resizes the indexed table to a given number of subtables.
     ///
     /// When this is used to increase the number of subtables, empty subtables are appended at the
@@ -96,8 +96,8 @@ impl<T> IndexedTable<T> {
     /// # Examples
     ///
     /// ```should_panic
-    /// use indexed_table::IndexedTable;
-    /// let mut table: IndexedTable<u64> = Default::default();
+    /// use table_seq::TableSeq;
+    /// let mut table: TableSeq<u64> = Default::default();
     /// let hasher = |&value: &u64| value.wrapping_mul(0x2545f4914f6cdd1d);
     ///
     /// // Subtables are not implicitly created, so this will panic!
@@ -105,8 +105,8 @@ impl<T> IndexedTable<T> {
     /// ```
     ///
     /// ```
-    /// # use indexed_table::IndexedTable;
-    /// # let mut table: IndexedTable<u64> = Default::default();
+    /// # use table_seq::TableSeq;
+    /// # let mut table: TableSeq<u64> = Default::default();
     /// # let hasher = |&value: &u64| value.wrapping_mul(0x2545f4914f6cdd1d);
     /// #
     /// // Initializing subtables with `resize` avoids this panic
@@ -374,15 +374,17 @@ impl<T> IndexedTable<T> {
                     let table = &mut *table_ptr;
 
                     match table {
-                        Subtable::Large(table) => match table.entry(hash, |entry| eq(entry, &value), hasher) {
-                            hashbrown::hash_table::Entry::Occupied(entry) => {
-                                (entry.into_mut(), Some(value))
+                        Subtable::Large(table) => {
+                            match table.entry(hash, |entry| eq(entry, &value), hasher) {
+                                hashbrown::hash_table::Entry::Occupied(entry) => {
+                                    (entry.into_mut(), Some(value))
+                                }
+                                hashbrown::hash_table::Entry::Vacant(entry) => {
+                                    self.entries += 1;
+                                    (entry.insert(value).into_mut(), None)
+                                }
                             }
-                            hashbrown::hash_table::Entry::Vacant(entry) => {
-                                self.entries += 1;
-                                (entry.insert(value).into_mut(), None)
-                            }
-                        },
+                        }
                         Subtable::Small(int_table) => {
                             let table_alloc = &mut self.allocators[allocator_index ^ 1];
 
@@ -1188,7 +1190,7 @@ impl<T> IndexedTable<T> {
     }
 }
 
-impl<T> IndexedTable<T> {
+impl<T> TableSeq<T> {
     unsafe fn drop_chunk(&mut self, chunk_index: usize) {
         let chunk = self.chunks.get_unchecked_mut(chunk_index);
         if !chunk.meta.is_empty() {
@@ -1217,7 +1219,7 @@ impl<T> IndexedTable<T> {
     }
 }
 
-impl<T> Drop for IndexedTable<T> {
+impl<T> Drop for TableSeq<T> {
     fn drop(&mut self) {
         for chunk_index in 0..self.chunks.len() {
             unsafe { self.drop_chunk(chunk_index) };

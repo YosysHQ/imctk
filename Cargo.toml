@@ -4,7 +4,7 @@ members = [
     "ids",
     "derive",
     "transparent",
-    "indexed_table",
+    "table_seq",
 
     # comment to force multi-line layout
 ]

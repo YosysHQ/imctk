@@ -1,5 +1,5 @@
 [package]
-name = "indexed_table"
+name = "table_seq"
 version = "0.1.0"
 edition = "2021"
 

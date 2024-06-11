@@ -6,7 +6,7 @@ use hashbrown::HashTable;
 use super::{iter::SubtableIterMut, table::SMALL_SUBTABLE_CAPACITY, SubtableIter};
 
 #[cfg(doc)]
-use crate::IndexedTable;
+use crate::TableSeq;
 
 pub(crate) struct OwnedSubtableSmall<T> {
     values: [MaybeUninit<T>; SMALL_SUBTABLE_CAPACITY],
@@ -83,9 +83,9 @@ impl<T> OwnedSubtableSmall<T> {
     }
 }
 
-/// Structure holding an individually owned [`IndexedTable`] subtable.
+/// Structure holding an individually owned [`TableSeq`] subtable.
 ///
-/// While an [`IndexedTable`] is optimized for reduced memory usage, this type always has the
+/// While an [`TableSeq`] is optimized for reduced memory usage, this type always has the
 /// capacity to store up to 16 entries in-line and thus should only be used as temporary storage for
 /// passing or returning full subtables.
 pub struct OwnedSubtable<T> {

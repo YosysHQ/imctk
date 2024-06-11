@@ -40,13 +40,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "indexed_table"
-version = "0.1.0"
-dependencies = [
- "hashbrown",
-]
-
-[[package]]
 name = "indexmap"
 version = "2.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -98,6 +91,13 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
+]
+
+[[package]]
+name = "table_seq"
+version = "0.1.0"
+dependencies = [
+ "hashbrown",
 ]
 
 [[package]]
