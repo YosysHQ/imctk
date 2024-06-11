@@ -28,6 +28,18 @@ mod id8 {
             // SAFETY: delegated to caller
             unsafe { std::mem::transmute::<u8, Self>(index) }
         }
+
+        /// Returns the id with a given index, panicking when the index is invalid.
+        ///
+        /// Unlike the [`Id::from_index`] this is a `const fn`.
+        ///
+        /// This panics if and only if `index > Self::MAX_INDEX`.
+        #[inline]
+        pub const fn from_index_const(index: usize) -> Self {
+            assert!(index <= Self::MAX_INDEX);
+            // SAFETY: preceding assert checks the precondition
+            unsafe { Self::from_u8_unchecked(index as u8) }
+        }
     }
 
     impl PartialEq for Id8 {
@@ -200,6 +212,18 @@ mod id16 {
             // SAFETY: delegated to caller
             unsafe { std::mem::transmute::<u16, Self>(index) }
         }
+
+        /// Returns the id with a given index, panicking when the index is invalid.
+        ///
+        /// Unlike the [`Id::from_index`] this is a `const fn`.
+        ///
+        /// This panics if and only if `index > Self::MAX_INDEX`.
+        #[inline]
+        pub const fn from_index_const(index: usize) -> Self {
+            assert!(index <= Self::MAX_INDEX);
+            // SAFETY: preceding assert checks the precondition
+            unsafe { Self::from_u16_unchecked(index as u16) }
+        }
     }
 
     impl PartialEq for Id16 {
@@ -371,6 +395,18 @@ mod id32 {
             debug_assert!(index as usize <= Self::MAX_INDEX);
             // SAFETY: delegated to caller
             unsafe { std::mem::transmute::<u32, Self>(index) }
+        }
+
+        /// Returns the id with a given index, panicking when the index is invalid.
+        ///
+        /// Unlike the [`Id::from_index`] this is a `const fn`.
+        ///
+        /// This panics if and only if `index > Self::MAX_INDEX`.
+        #[inline]
+        pub const fn from_index_const(index: usize) -> Self {
+            assert!(index <= Self::MAX_INDEX);
+            // SAFETY: preceding assert checks the precondition
+            unsafe { Self::from_u32_unchecked(index as u32) }
         }
     }
 
@@ -550,6 +586,18 @@ mod id64 {
             debug_assert!(index as usize <= Self::MAX_INDEX);
             // SAFETY: delegated to caller
             unsafe { std::mem::transmute::<u64, Self>(index) }
+        }
+
+        /// Returns the id with a given index, panicking when the index is invalid.
+        ///
+        /// Unlike the [`Id::from_index`] this is a `const fn`.
+        ///
+        /// This panics if and only if `index > Self::MAX_INDEX`.
+        #[inline]
+        pub const fn from_index_const(index: usize) -> Self {
+            assert!(index <= Self::MAX_INDEX);
+            // SAFETY: preceding assert checks the precondition
+            unsafe { Self::from_u64_unchecked(index as u64) }
         }
     }
 
@@ -736,6 +784,18 @@ mod id_size {
             debug_assert!(index <= Self::MAX_INDEX);
             // SAFETY: delegated to caller
             unsafe { std::mem::transmute::<usize, Self>(index) }
+        }
+
+        /// Returns the id with a given index, panicking when the index is invalid.
+        ///
+        /// Unlike the [`Id::from_index`] this is a `const fn`.
+        ///
+        /// This panics if and only if `index > Self::MAX_INDEX`.
+        #[inline]
+        pub const fn from_index_const(index: usize) -> Self {
+            assert!(index <= Self::MAX_INDEX);
+            // SAFETY: preceding assert checks the precondition
+            unsafe { Self::from_usize_unchecked(index) }
         }
     }
 
