@@ -555,7 +555,149 @@ impl<T> IndexedTable<T> {
         }
     }
 
-    // TODO find, find_mut
+    /// Finds an entry of a subtable using a given hash value and returns a reference to the found
+    /// entry.
+    ///
+    /// This method calls `eq` to determine if a candidate entry should be returned. Any entry of
+    /// the selected subtable is a potential argument for `eq`, but it will never be called with
+    /// entries from other subtables.
+    pub fn find(&self, subtable: usize, hash: u64, mut eq: impl FnMut(&T) -> bool) -> Option<&T> {
+        assert!(subtable < self.subtables);
+        unsafe {
+            let chunk_slot = (subtable & CHUNK_MASK) as u32;
+            let chunk_index = subtable >> CHUNK_SHIFT;
+            let allocator_index = subtable >> ALLOCATOR_SHIFT;
+
+            let chunk = self.chunks.get_unchecked(chunk_index);
+            let chunk_alloc = self.allocators.get_unchecked(allocator_index);
+
+            if chunk.meta.is_empty() {
+                return None;
+            }
+            match chunk.meta.entry_type(chunk_slot) {
+                EntryType::Empty => None,
+                EntryType::Single => {
+                    let node = chunk.node(chunk_alloc);
+                    let entry_offset = chunk.meta.entry_offset(chunk_slot);
+                    let found_entry_ptr = node.entry_ptr(entry_offset);
+
+                    if !eq(&*found_entry_ptr) {
+                        return None;
+                    }
+                    Some(&*found_entry_ptr)
+                }
+                EntryType::Pair => {
+                    let node = chunk.node(chunk_alloc);
+                    let mut entry_offset = chunk.meta.entry_offset(chunk_slot);
+
+                    let mut to_check = 2;
+                    let mut found_entry_ptr;
+                    loop {
+                        found_entry_ptr = node.entry_ptr(entry_offset);
+                        if eq(&*found_entry_ptr) {
+                            break;
+                        }
+                        to_check -= 1;
+                        entry_offset += 1;
+                        if to_check == 0 {
+                            return None;
+                        }
+                    }
+                    Some(&*found_entry_ptr)
+                }
+                EntryType::Table => {
+                    let node = chunk.node(chunk_alloc);
+                    let table_offset = chunk.meta.table_offset(chunk_slot);
+
+                    let table_ptr = node.table_ptr(table_offset);
+                    let table = &mut *table_ptr;
+
+                    match table {
+                        Subtable::Large(table) => table.find(hash, eq),
+                        Subtable::Small(table) => {
+                            let table_alloc = &self.allocators[allocator_index ^ 1];
+
+                            table.find(hash, eq, table_alloc)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// Finds an entry of a subtable using a given hash value and returns a mutable reference to the
+    /// found entry.
+    ///
+    /// This method calls `eq` to determine if a candidate entry should be returned. Any entry of
+    /// the selected subtable is a potential argument for `eq`, but it will never be called with
+    /// entries from other subtables.
+    pub fn find_mut(
+        &mut self,
+        subtable: usize,
+        hash: u64,
+        mut eq: impl FnMut(&T) -> bool,
+    ) -> Option<&mut T> {
+        assert!(subtable < self.subtables);
+        unsafe {
+            let chunk_slot = (subtable & CHUNK_MASK) as u32;
+            let chunk_index = subtable >> CHUNK_SHIFT;
+            let allocator_index = subtable >> ALLOCATOR_SHIFT;
+
+            let chunk = self.chunks.get_unchecked(chunk_index);
+            let chunk_alloc = self.allocators.get_unchecked(allocator_index);
+
+            if chunk.meta.is_empty() {
+                return None;
+            }
+            match chunk.meta.entry_type(chunk_slot) {
+                EntryType::Empty => None,
+                EntryType::Single => {
+                    let node = chunk.node(chunk_alloc);
+                    let entry_offset = chunk.meta.entry_offset(chunk_slot);
+                    let found_entry_ptr = node.entry_ptr(entry_offset);
+
+                    if !eq(&*found_entry_ptr) {
+                        return None;
+                    }
+                    Some(&mut *found_entry_ptr)
+                }
+                EntryType::Pair => {
+                    let node = chunk.node(chunk_alloc);
+                    let mut entry_offset = chunk.meta.entry_offset(chunk_slot);
+
+                    let mut to_check = 2;
+                    let mut found_entry_ptr;
+                    loop {
+                        found_entry_ptr = node.entry_ptr(entry_offset);
+                        if eq(&*found_entry_ptr) {
+                            break;
+                        }
+                        to_check -= 1;
+                        entry_offset += 1;
+                        if to_check == 0 {
+                            return None;
+                        }
+                    }
+                    Some(&mut *found_entry_ptr)
+                }
+                EntryType::Table => {
+                    let node = chunk.node(chunk_alloc);
+                    let table_offset = chunk.meta.table_offset(chunk_slot);
+
+                    let table_ptr = node.table_ptr(table_offset);
+                    let table = &mut *table_ptr;
+
+                    match table {
+                        Subtable::Large(table) => table.find_mut(hash, eq),
+                        Subtable::Small(table) => {
+                            let table_alloc = &mut self.allocators[allocator_index ^ 1];
+                            table.find_mut(hash, eq, table_alloc)
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     // TODO entry API
 

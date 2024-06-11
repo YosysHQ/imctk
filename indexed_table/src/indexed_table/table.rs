@@ -202,7 +202,7 @@ impl<T> SmallSubtable<T> {
         while let Some(found_match) = NonZeroU16::new(matches) {
             matches &= matches - 1;
             let match_index = found_match.trailing_zeros() as usize;
-            if match_index >= self.len as usize {
+            if match_index >= len {
                 break;
             }
 
@@ -218,6 +218,64 @@ impl<T> SmallSubtable<T> {
                 self.len -= 1;
 
                 return Some(value);
+            }
+        }
+
+        None
+    }
+
+    pub unsafe fn find(
+        &self,
+        hash: u64,
+        mut eq: impl FnMut(&T) -> bool,
+        allocator: &NodeAllocator<T>,
+    ) -> Option<&T> {
+        let byte_hash = byte_hash_from_hash(hash);
+        let mut matches = find_byte_among_16(byte_hash, &self.hashes);
+
+        let node_ptr = allocator.ptr(self.node);
+
+        let len = self.len as usize;
+
+        while let Some(found_match) = NonZeroU16::new(matches) {
+            matches &= matches - 1;
+            let match_index = found_match.trailing_zeros() as usize;
+            if match_index >= len {
+                break;
+            }
+
+            let entry_ptr = node_ptr.add(match_index);
+            if eq(&*entry_ptr) {
+                return Some(&*entry_ptr);
+            }
+        }
+
+        None
+    }
+
+    pub unsafe fn find_mut(
+        &mut self,
+        hash: u64,
+        mut eq: impl FnMut(&T) -> bool,
+        allocator: &mut NodeAllocator<T>,
+    ) -> Option<&mut T> {
+        let byte_hash = byte_hash_from_hash(hash);
+        let mut matches = find_byte_among_16(byte_hash, &self.hashes);
+
+        let node_ptr = allocator.ptr(self.node);
+
+        let len = self.len as usize;
+
+        while let Some(found_match) = NonZeroU16::new(matches) {
+            matches &= matches - 1;
+            let match_index = found_match.trailing_zeros() as usize;
+            if match_index >= len {
+                break;
+            }
+
+            let entry_ptr = node_ptr.add(match_index);
+            if eq(&*entry_ptr) {
+                return Some(&mut *entry_ptr);
             }
         }
 
