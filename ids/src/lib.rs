@@ -25,6 +25,6 @@ pub mod id_vec;
 /// implemented according to `Id`'s safety requirements.
 pub use imctk_derive::Id;
 
-pub use id::{GenericId, Id, Id16, Id32, Id64, Id8, IdSize};
+pub use id::{ConstIdFromIndex, GenericId, Id, Id16, Id32, Id64, Id8, IdSize};
 
 pub use id_range::IdRange;

@@ -1,10 +1,54 @@
-use crate::{GenericId, Id};
+use crate::id::{GenericId, Id};
+
+use super::ConstIdFromIndex;
+
+impl<const INDEX: usize> ConstIdFromIndex<INDEX> for usize {
+    type Id = Self;
+    const ID: Self = INDEX;
+}
+
+impl<const INDEX: usize> ConstIdFromIndex<INDEX> for u64 {
+    type Id = Self;
+    #[allow(clippy::absurd_extreme_comparisons)]
+    const ID: Self = {
+        assert!(INDEX <= Self::MAX_INDEX);
+        INDEX as Self
+    };
+}
+
+impl<const INDEX: usize> ConstIdFromIndex<INDEX> for u32 {
+    type Id = Self;
+    #[allow(clippy::absurd_extreme_comparisons)]
+    const ID: Self = {
+        assert!(INDEX <= Self::MAX_INDEX);
+        INDEX as Self
+    };
+}
+
+impl<const INDEX: usize> ConstIdFromIndex<INDEX> for u16 {
+    type Id = Self;
+    #[allow(clippy::absurd_extreme_comparisons)]
+    const ID: Self = {
+        assert!(INDEX <= Self::MAX_INDEX);
+        INDEX as Self
+    };
+}
+
+impl<const INDEX: usize> ConstIdFromIndex<INDEX> for u8 {
+    type Id = Self;
+    #[allow(clippy::absurd_extreme_comparisons)]
+    const ID: Self = {
+        assert!(INDEX <= Self::MAX_INDEX);
+        INDEX as Self
+    };
+}
 
 // SAFETY: the only purpose of all code for this type is to uphold the documented Id safety
 // requirements.
 unsafe impl Id for usize {
-    type Generic = GenericId<{ Self::MAX_INDEX }>;
     type Base = Self;
+    type Generic = GenericId<{ Self::MAX_INDEX }>;
+    type FromConstIndex<const INDEX: usize> = Self;
 
     #[inline(always)]
     fn index(self) -> usize {
@@ -31,8 +75,9 @@ unsafe impl Id for usize {
 // SAFETY: the only purpose of all code for this type is to uphold the documented Id safety
 // requirements.
 unsafe impl Id for u64 {
-    type Generic = GenericId<{ Self::MAX_INDEX }>;
     type Base = Self;
+    type Generic = GenericId<{ Self::MAX_INDEX }>;
+    type FromConstIndex<const INDEX: usize> = Self;
 
     #[inline(always)]
     fn index(self) -> usize {
@@ -58,8 +103,9 @@ unsafe impl Id for u64 {
 // SAFETY: the only purpose of all code for this type is to uphold the documented Id safety
 // requirements.
 unsafe impl Id for u32 {
-    type Generic = GenericId<{ Self::MAX_INDEX }>;
     type Base = Self;
+    type Generic = GenericId<{ Self::MAX_INDEX }>;
+    type FromConstIndex<const INDEX: usize> = Self;
 
     #[inline(always)]
     fn index(self) -> usize {
@@ -85,8 +131,9 @@ unsafe impl Id for u32 {
 // SAFETY: the only purpose of all code for this type is to uphold the documented Id safety
 // requirements.
 unsafe impl Id for u16 {
-    type Generic = GenericId<{ Self::MAX_INDEX }>;
     type Base = Self;
+    type Generic = GenericId<{ Self::MAX_INDEX }>;
+    type FromConstIndex<const INDEX: usize> = Self;
 
     #[inline(always)]
     fn index(self) -> usize {
@@ -108,8 +155,9 @@ unsafe impl Id for u16 {
 // SAFETY: the only purpose of all code for this type is to uphold the documented Id safety
 // requirements.
 unsafe impl Id for u8 {
-    type Generic = GenericId<{ Self::MAX_INDEX }>;
     type Base = Self;
+    type Generic = GenericId<{ Self::MAX_INDEX }>;
+    type FromConstIndex<const INDEX: usize> = Self;
 
     #[inline(always)]
     fn index(self) -> usize {

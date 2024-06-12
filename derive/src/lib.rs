@@ -138,7 +138,14 @@ mod transparent;
 
 #[proc_macro_derive(Id)]
 pub fn derive_id(input: MacroTokenStream) -> MacroTokenStream {
-    id::derive_id(parse_macro_input!(input as DeriveInput))
+    id::derive_id(parse_macro_input!(input as DeriveInput), false)
+        .unwrap_or_else(|err| err.to_compile_error())
+        .into()
+}
+
+#[proc_macro_derive(UnsafeInternalGenericId)]
+pub fn derive_unsafe_internal_generic_id(input: MacroTokenStream) -> MacroTokenStream {
+    id::derive_id(parse_macro_input!(input as DeriveInput), true)
         .unwrap_or_else(|err| err.to_compile_error())
         .into()
 }

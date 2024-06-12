@@ -4,6 +4,20 @@ mod id_types;
 mod primitive_impls;
 mod u8_range_types;
 
+#[allow(unused_imports)] // docs
+
+/// Used to construct constant values from an index.
+///
+/// Together with [`Id::FromConstIndex`], this works around the lack of support for `const fn` in
+/// traits.
+pub trait ConstIdFromIndex<const INDEX: usize> {
+    /// This trait is usually implemented on the target [`Id`] type, in which case this can be `Self`.
+    type Id: Id;
+
+    /// The constant ID value having the index `INDEX`.
+    const ID: Self::Id;
+}
+
 /// Types that represent integer ids
 ///
 /// A type of this trait represents an `usize` index value in the range `0..=Self::MAX_INDEX`, with
@@ -43,6 +57,11 @@ pub unsafe trait Id: Copy + Ord + Hash + Send + Sync + Debug {
     /// This is used for type checked conversions between ids that do not have to share the same
     /// representation.
     type Generic: Id<Generic = Self::Generic>;
+
+    /// Used to construct constant values from an index.
+    ///
+    /// This works around the lack of support for `const fn` in traits.
+    type FromConstIndex<const INDEX: usize>: ConstIdFromIndex<INDEX, Id = Self>;
 
     /// Returns the id with a given index, panicking when the index is invalid.
     ///
@@ -132,39 +151,60 @@ pub unsafe trait Id: Copy + Ord + Hash + Send + Sync + Debug {
     }
 }
 
-/// A newtype wrapper around `usize` that limits the contained value to the `MAX_INDEX` generic
+/// A newtype wrapper around an `Id` type that limits the contained value to the `MAX_INDEX` generic
 /// parameter.
 ///
-/// Used to implement conversion between different [`Id`] types that have the same index range.
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct GenericId<const MAX_INDEX: usize>(usize);
+/// Used with `usize` as `Id` type to implement conversion between [`Id`] types that have different
+/// representations but that share the same index range.
+#[derive(imctk_derive::UnsafeInternalGenericId)]
+#[repr(transparent)]
+pub struct GenericId<const MAX_INDEX: usize, Repr: Id = usize>(Repr);
 
-impl<const MAX_INDEX: usize> Debug for GenericId<MAX_INDEX> {
+impl<const MAX_INDEX: usize, Repr: Id> Debug for GenericId<MAX_INDEX, Repr> {
     #[inline(always)]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         Debug::fmt(&self.0, f)
     }
 }
 
-/// SAFETY: The most direct implementation that upholds Id's safety requirements
-unsafe impl<const MAX_INDEX: usize> Id for GenericId<MAX_INDEX> {
+impl<const MAX_INDEX: usize, Repr: Id, const INDEX: usize> ConstIdFromIndex<INDEX>
+    for GenericId<MAX_INDEX, Repr>
+{
+    type Id = Self;
+    const ID: Self::Id = Self(<Repr::FromConstIndex<INDEX> as ConstIdFromIndex<INDEX>>::ID);
+}
+
+// SAFETY: The most direct implementation that upholds Id's safety requirements
+unsafe impl<const MAX_INDEX: usize, Repr: Id> Id for GenericId<MAX_INDEX, Repr> {
     type Base = Self;
-    type Generic = Self;
+    type Generic = GenericId<MAX_INDEX, usize>;
+    type FromConstIndex<const INDEX: usize> = Self;
 
-    fn index(self) -> usize {
-        self.0
-    }
+    const MAX_INDEX: usize = {
+        assert!(MAX_INDEX <= Repr::MAX_INDEX);
+        MAX_INDEX
+    };
 
-    const MAX_INDEX: usize = MAX_INDEX;
+    const MIN: Self = Self(Repr::MIN);
+    const MAX: Self = Self(<Repr::FromConstIndex<MAX_INDEX> as ConstIdFromIndex<MAX_INDEX>>::ID);
 
-    const MIN: Self = Self(0);
-
-    const MAX: Self = Self(MAX_INDEX);
-
+    #[inline(always)]
     unsafe fn from_index_unchecked(index: usize) -> Self {
         debug_assert!(index <= Self::MAX_INDEX);
-        Self(index)
+        // SAFETY: we checked that our MAX_INDEX is not above Repr::MAX_INDEX
+        Self(unsafe { Repr::from_index_unchecked(index) })
+    }
+
+    #[inline(always)]
+    fn index(self) -> usize {
+        self.0.index()
     }
 }
+
+// SAFETY: we ensure that the newtype wrapped type is `Id` and thus `Send`
+unsafe impl<const MAX_INDEX: usize, Repr: Id> Send for GenericId<MAX_INDEX, Repr> {}
+
+// SAFETY: we ensure that the newtype wrapped type is `Id` and thus `Sync`
+unsafe impl<const MAX_INDEX: usize, Repr: Id> Sync for GenericId<MAX_INDEX, Repr> {}
 
 pub use id_types::{Id16, Id32, Id64, Id8, IdSize};

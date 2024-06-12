@@ -4,7 +4,7 @@ use syn::DeriveInput;
 
 use crate::{require_repr_transparent, resolve_crate, ReprTransparent};
 
-pub fn derive_id(input: DeriveInput) -> syn::Result<TokenStream> {
+pub fn derive_id(input: DeriveInput, internal_generic_id: bool) -> syn::Result<TokenStream> {
     #![allow(non_snake_case)]
 
     let DeriveInput {
@@ -27,6 +27,7 @@ pub fn derive_id(input: DeriveInput) -> syn::Result<TokenStream> {
     let bool = quote![::core::primitive::bool];
 
     let Id = quote![#imctk_ids::Id];
+    let ConstIdFromIndex = quote![#imctk_ids::ConstIdFromIndex];
 
     let Clone = quote![::core::prelude::rust_2021::Clone];
     let Copy = quote![::core::prelude::rust_2021::Copy];
@@ -45,51 +46,78 @@ pub fn derive_id(input: DeriveInput) -> syn::Result<TokenStream> {
     let target_ident = ident;
     let (impl_generics, type_generics, where_clause) = generics.split_for_impl();
 
+    let mut from_const_index_generics = generics.clone();
+    from_const_index_generics
+        .params
+        .push(syn::parse_quote!(const INDEX: usize));
+
+    let (from_const_index_impl_generics, _, _) = from_const_index_generics.split_for_impl();
+
     let target_type = quote![#target_ident #type_generics];
 
-    Ok(quote! {
-        // SAFETY: forwarding to an existing implementation
-        unsafe impl #impl_generics #Id for #target_type #where_clause {
-            type Base = <#inner as #Id>::Base;
-            type Generic = <#inner as #Id>::Generic;
+    let non_generic = if internal_generic_id {
+        quote! {}
+    } else {
+        quote! {
+            impl #from_const_index_impl_generics #ConstIdFromIndex<INDEX> for #target_type #where_clause {
+                type Id = Self;
+                const ID: Self = {
+                    assert!(INDEX <= <Self as Id>::MAX_INDEX);
+                    #target_ident {
+                        #field: <<#inner as #Id>::FromConstIndex<INDEX> as #ConstIdFromIndex<INDEX>>::ID
+                        #extra_init
+                    }
+                };
+            }
 
-            const MAX_INDEX: #usize = <#inner as #Id>::MAX_INDEX;
-            const MIN: Self = Self { #field: <#inner as #Id>::MIN #extra_init };
-            const MAX: Self = Self { #field: <#inner as #Id>::MAX #extra_init };
+            // SAFETY: forwarding to an existing implementation
+            unsafe impl #impl_generics #Id for #target_type #where_clause {
+                type Base = <#inner as #Id>::Base;
+                type Generic = <#inner as #Id>::Generic;
+                const MAX_INDEX: #usize = <#inner as #Id>::MAX_INDEX;
+                type FromConstIndex<const INDEX: usize> = Self;
 
-            #[inline(always)]
-            unsafe fn from_index_unchecked(index: #usize) -> Self {
-                // SAFETY: forwarding to an existing implementation
-                Self {
-                    #field: unsafe { <#inner as #Id>::from_index_unchecked(index) }
-                    #extra_init
+                const MIN: Self = Self { #field: <#inner as #Id>::MIN #extra_init };
+                const MAX: Self = Self { #field: <#inner as #Id>::MAX #extra_init };
+
+                #[inline(always)]
+                unsafe fn from_index_unchecked(index: #usize) -> Self {
+                    // SAFETY: forwarding to an existing implementation
+                    Self {
+                        #field: unsafe { <#inner as #Id>::from_index_unchecked(index) }
+                        #extra_init
+                    }
+                }
+
+                #[inline(always)]
+                fn from_index(index: #usize) -> Self {
+                    Self { #field: <#inner as #Id>::from_index(index) #extra_init }
+                }
+
+                #[inline(always)]
+                fn try_from_index(index: #usize) -> #Option<Self> {
+                    Some(Self { #field: <#inner as #Id>::try_from_index(index)? #extra_init })
+                }
+
+                #[inline(always)]
+                fn index(self) -> #usize {
+                    let Self { #field: inner #extra_init } = self;
+                    inner.index()
                 }
             }
 
-            #[inline(always)]
-            fn from_index(index: #usize) -> Self {
-                Self { #field: <#inner as #Id>::from_index(index) #extra_init }
+            // SAFETY: we ensure that the newtype wrapped type is `Id` and thus `Send`
+            unsafe impl #impl_generics #Send for #target_type #where_clause {
             }
 
-            #[inline(always)]
-            fn try_from_index(index: #usize) -> #Option<Self> {
-                Some(Self { #field: <#inner as #Id>::try_from_index(index)? #extra_init })
-            }
-
-            #[inline(always)]
-            fn index(self) -> #usize {
-                let Self { #field: inner #extra_init } = self;
-                inner.index()
+            // SAFETY: we ensure that the newtype wrapped type is `Id` and thus `Sync`
+            unsafe impl #impl_generics #Sync for #target_type #where_clause {
             }
         }
+    };
 
-        // SAFETY: we ensure that the newtype wrapped type is `Id` and thus `Send`
-        unsafe impl #impl_generics #Send for #target_type #where_clause {
-        }
-
-        // SAFETY: we ensure that the newtype wrapped type is `Id` and thus `Sync`
-        unsafe impl #impl_generics #Sync for #target_type #where_clause {
-        }
+    Ok(quote! {
+        #non_generic
 
         impl #impl_generics #Copy for #target_type #where_clause {
         }

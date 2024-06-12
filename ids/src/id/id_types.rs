@@ -1,7 +1,7 @@
 mod id8 {
     use imctk_transparent::SubtypeCast;
 
-    use crate::id::{u8_range_types::NonMaxHighNibbleU8, GenericId, Id};
+    use crate::id::{u8_range_types::NonMaxHighNibbleU8, ConstIdFromIndex, GenericId, Id};
     use core::{fmt, fmt::Debug, hash::Hash};
 
     /// [`Id`] type representing indices in the range `0..0xf0`.
@@ -137,10 +137,17 @@ mod id8 {
         }
     }
 
+    impl<const INDEX: usize> ConstIdFromIndex<INDEX> for Id8 {
+        type Id = Self;
+        const ID: Self = Self::from_index_const(INDEX);
+    }
+
     // SAFETY: the only purpose of all code for this type is to uphold the documented Id safety
     // requirements.
     unsafe impl Id for Id8 {
+        type Base = Self;
         type Generic = GenericId<{ Self::MAX_INDEX }>;
+        type FromConstIndex<const INDEX: usize> = Self;
 
         #[inline(always)]
         fn index(self) -> usize {
@@ -164,15 +171,13 @@ mod id8 {
             // SAFETY: we require index to be <= MAX_INDEX which still holds after the primitive cast
             unsafe { Self::from_u8_unchecked(index as u8) }
         }
-
-        type Base = Self;
     }
 }
 
 mod id16 {
     use imctk_transparent::SubtypeCast;
 
-    use crate::id::{u8_range_types::NonMaxU8, GenericId, Id};
+    use crate::id::{u8_range_types::NonMaxU8, ConstIdFromIndex, GenericId, Id};
     use core::{fmt, fmt::Debug, hash::Hash};
 
     /// [`Id`] type representing indices in the range `0..0xff00`.
@@ -321,10 +326,17 @@ mod id16 {
         }
     }
 
+    impl<const INDEX: usize> ConstIdFromIndex<INDEX> for Id16 {
+        type Id = Self;
+        const ID: Self = Self::from_index_const(INDEX);
+    }
+
     // SAFETY: the only purpose of all code for this type is to uphold the documented Id safety
     // requirements.
     unsafe impl Id for Id16 {
+        type Base = Self;
         type Generic = GenericId<{ Self::MAX_INDEX }>;
+        type FromConstIndex<const INDEX: usize> = Self;
 
         #[inline(always)]
         fn index(self) -> usize {
@@ -348,15 +360,13 @@ mod id16 {
             // SAFETY: we require index to be <= MAX_INDEX which still holds after the primitive cast
             unsafe { Self::from_u16_unchecked(index as u16) }
         }
-
-        type Base = Self;
     }
 }
 
 mod id32 {
     use imctk_transparent::SubtypeCast;
 
-    use crate::id::{u8_range_types::NonMaxU8, GenericId, Id};
+    use crate::id::{u8_range_types::NonMaxU8, ConstIdFromIndex, GenericId, Id};
     use core::{fmt, fmt::Debug, hash::Hash};
 
     /// [`Id`] type representing indices in the range `0..0xff00_0000`.
@@ -505,10 +515,17 @@ mod id32 {
         }
     }
 
+    impl<const INDEX: usize> ConstIdFromIndex<INDEX> for Id32 {
+        type Id = Self;
+        const ID: Self = Self::from_index_const(INDEX);
+    }
+
     // SAFETY: the only purpose of all code for this type is to uphold the documented Id safety
     // requirements.
     unsafe impl Id for Id32 {
+        type Base = Self;
         type Generic = GenericId<{ Self::MAX_INDEX }>;
+        type FromConstIndex<const INDEX: usize> = Self;
 
         #[inline(always)]
         fn index(self) -> usize {
@@ -539,15 +556,13 @@ mod id32 {
             // SAFETY: we require index to be <= MAX_INDEX which still holds after the primitive cast
             unsafe { Self::from_u32_unchecked(index as u32) }
         }
-
-        type Base = Self;
     }
 }
 
 mod id64 {
     use imctk_transparent::SubtypeCast;
 
-    use crate::id::{u8_range_types::NonMaxU8, GenericId, Id};
+    use crate::id::{u8_range_types::NonMaxU8, ConstIdFromIndex, GenericId, Id};
     use core::{fmt, fmt::Debug, hash::Hash};
 
     /// [`Id`] type representing indices in the range `0..0xff00_0000_0000_0000`.
@@ -696,10 +711,17 @@ mod id64 {
         }
     }
 
+    impl<const INDEX: usize> ConstIdFromIndex<INDEX> for Id64 {
+        type Id = Self;
+        const ID: Self = Self::from_index_const(INDEX);
+    }
+
     // SAFETY: the only purpose of all code for this type is to uphold the documented Id safety
     // requirements.
     unsafe impl Id for Id64 {
+        type Base = Self;
         type Generic = GenericId<{ Self::MAX_INDEX }>;
+        type FromConstIndex<const INDEX: usize> = Self;
 
         #[inline(always)]
         fn index(self) -> usize {
@@ -730,15 +752,13 @@ mod id64 {
             // SAFETY: we require index to be <= MAX_INDEX which still holds after the primitive cast
             unsafe { Self::from_u64_unchecked(index as u64) }
         }
-
-        type Base = Self;
     }
 }
 
 mod id_size {
     use imctk_transparent::SubtypeCast;
 
-    use crate::id::{u8_range_types::NonMaxMsbU8, GenericId, Id};
+    use crate::id::{u8_range_types::NonMaxMsbU8, ConstIdFromIndex, GenericId, Id};
     use core::{fmt, fmt::Debug, hash::Hash};
 
     const LSBS: usize = (usize::BITS as usize / 8) - 1;
@@ -896,10 +916,17 @@ mod id_size {
         }
     }
 
+    impl<const INDEX: usize> ConstIdFromIndex<INDEX> for IdSize {
+        type Id = Self;
+        const ID: Self = Self::from_index_const(INDEX);
+    }
+
     // SAFETY: the only purpose of all code for this type is to uphold the documented Id safety
     // requirements.
     unsafe impl Id for IdSize {
+        type Base = Self;
         type Generic = GenericId<{ Self::MAX_INDEX }>;
+        type FromConstIndex<const INDEX: usize> = Self;
 
         #[inline(always)]
         fn index(self) -> usize {
@@ -923,8 +950,6 @@ mod id_size {
             // SAFETY: delegated to caller
             unsafe { Self::from_usize_unchecked(index) }
         }
-
-        type Base = Self;
     }
 }
 
