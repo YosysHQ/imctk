@@ -1,4 +1,5 @@
 //! Indexed sequence of low-level hash tables with explicit hashing and associated helper types.
+use core::fmt;
 use std::{marker::PhantomData, mem::ManuallyDrop};
 
 use hashbrown::HashTable;
@@ -42,6 +43,23 @@ pub struct TableSeq<T> {
     defrag_counter: u16,
     allocator_sweep: usize,
     chunks: Vec<Chunk<T>>,
+}
+
+impl<T: fmt::Debug> fmt::Debug for TableSeq<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        #[derive(Clone)]
+        struct SubtableFmt<'a, T>(&'a TableSeq<T>, usize);
+
+        impl<'a, T: fmt::Debug> fmt::Debug for SubtableFmt<'a, T> {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                f.debug_set().entries(self.0.subtable_iter(self.1)).finish()
+            }
+        }
+
+        f.debug_list()
+            .entries((0..self.len()).map(|subtable| SubtableFmt(self, subtable)))
+            .finish()
+    }
 }
 
 impl<T> Default for TableSeq<T> {
