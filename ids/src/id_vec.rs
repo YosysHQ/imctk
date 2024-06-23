@@ -11,9 +11,9 @@ use crate::{Id, IdRange};
 /// Transparent [`[V]`][`slice`] wrapper, representing a collection that maps `K` keys to `V`
 /// values.
 ///
-/// It has entries `(k, v)` with `v` being the item at position [`k.index()`][Id::index] of the
-/// wrapped slice. This means the keys always span a contiguous range of ids starting at at
-/// [`K::MIN`][Id::MIN], having index `0`.
+/// It has entries `(k, v)` with `v` being the item at position [`k.id_index()`][Id::id_index] of
+/// the wrapped slice. This means the keys always span a contiguous range of ids starting at at
+/// [`K::MIN_ID`][Id::MIN_ID], having index `0`.
 ///
 /// It comes with a guarantee that all entries have distinct and valid keys. Depending on the used
 /// id type, this guarantee limits the maximum allowed length of the wrapped slice.
@@ -32,7 +32,7 @@ impl<K: Id, V> IdSlice<K, V> {
     /// Panics when `K` cannot index the full length of the slice.
     #[inline]
     pub fn from_slice(slice: &[V]) -> &Self {
-        assert!(slice.len() <= K::MAX_INDEX.saturating_add(1));
+        assert!(slice.len() <= K::MAX_ID_INDEX.saturating_add(1));
         // SAFETY: explicit assert above
         unsafe { Self::from_slice_unchecked(slice) }
     }
@@ -44,7 +44,7 @@ impl<K: Id, V> IdSlice<K, V> {
     /// The caller has to ensure that `K` can index the full length of the slice.
     #[inline(always)]
     pub unsafe fn from_slice_unchecked(slice: &[V]) -> &Self {
-        debug_assert!(slice.len() <= K::MAX_INDEX.saturating_add(1));
+        debug_assert!(slice.len() <= K::MAX_ID_INDEX.saturating_add(1));
         // SAFETY: transparent cast
         unsafe { &*(slice as *const [V] as *const Self) }
     }
@@ -56,7 +56,7 @@ impl<K: Id, V> IdSlice<K, V> {
     /// Panics when `K` cannot index the full length of the slice.
     #[inline]
     pub fn from_mut_slice(slice: &mut [V]) -> &mut Self {
-        assert!(slice.len() <= K::MAX_INDEX.saturating_add(1));
+        assert!(slice.len() <= K::MAX_ID_INDEX.saturating_add(1));
         // SAFETY: explicit assert above
         unsafe { Self::from_mut_slice_unchecked(slice) }
     }
@@ -69,7 +69,7 @@ impl<K: Id, V> IdSlice<K, V> {
     /// The caller has to ensure that `K` can index the full length of the slice.
     #[inline(always)]
     pub unsafe fn from_mut_slice_unchecked(slice: &mut [V]) -> &mut Self {
-        debug_assert!(slice.len() <= K::MAX_INDEX.saturating_add(1));
+        debug_assert!(slice.len() <= K::MAX_ID_INDEX.saturating_add(1));
         // SAFETY: transparent cast
         unsafe { &mut *(slice as *mut [V] as *mut Self) }
     }
@@ -132,7 +132,7 @@ impl<K: Id, V> IdSlice<K, V> {
     /// The caller has to ensure that the key is valid for this mapping.
     #[inline(always)]
     pub unsafe fn get_unchecked(&self, key: K) -> &V {
-        let index = key.index();
+        let index = key.id_index();
         debug_assert!(index < self.values.len());
         // SAFETY: caller requirements
         unsafe { self.values.get_unchecked(index) }
@@ -146,10 +146,26 @@ impl<K: Id, V> IdSlice<K, V> {
     /// The caller has to ensure that the key is valid for this mapping.
     #[inline(always)]
     pub unsafe fn get_unchecked_mut(&mut self, key: K) -> &mut V {
-        let index = key.index();
+        let index = key.id_index();
         debug_assert!(index < self.values.len());
         // SAFETY: caller requirements
         unsafe { self.values.get_unchecked_mut(index) }
+    }
+
+    /// Returns a reference to the value associated with the given key.
+    ///
+    /// Returns `None` when the key is out-of-bounds.
+    #[inline(always)]
+    pub fn get(&self, key: K) -> Option<&V> {
+        self.values.get(key.id_index())
+    }
+
+    /// Returns a mutable reference to the value associated with the given key.
+    ///
+    /// Returns `None` when the key is out-of-bounds.
+    #[inline(always)]
+    pub fn get_mut(&mut self, key: K) -> Option<&mut V> {
+        self.values.get_mut(key.id_index())
     }
 }
 
@@ -164,7 +180,7 @@ impl<'a, K: Id, V> IntoIterator for &'a IdSlice<K, V> {
         let len = self.values.len();
         let values = &self.values;
         // SAFETY: safe by struct level invariant
-        (0..len).map(move |i| unsafe { (K::from_index_unchecked(i), values.get_unchecked(i)) })
+        (0..len).map(move |i| unsafe { (K::from_id_index_unchecked(i), values.get_unchecked(i)) })
     }
 }
 
@@ -180,7 +196,7 @@ impl<'a, K: Id, V> IntoIterator for &'a mut IdSlice<K, V> {
         let ptr = self.values.as_mut_ptr();
         // SAFETY: safe by struct level invariant. Also note that we can't use a &mut slice as the
         // borrow checker doesn't know every yielded `i` is distinct
-        (0..len).map(move |i| unsafe { (K::from_index_unchecked(i), &mut *ptr.add(i)) })
+        (0..len).map(move |i| unsafe { (K::from_id_index_unchecked(i), &mut *ptr.add(i)) })
     }
 }
 
@@ -189,14 +205,14 @@ impl<K: Id, V> Index<K> for IdSlice<K, V> {
 
     #[inline(always)]
     fn index(&self, index: K) -> &Self::Output {
-        &self.values[index.index()]
+        &self.values[index.id_index()]
     }
 }
 
 impl<K: Id, V> IndexMut<K> for IdSlice<K, V> {
     #[inline(always)]
     fn index_mut(&mut self, index: K) -> &mut Self::Output {
-        &mut self.values[index.index()]
+        &mut self.values[index.id_index()]
     }
 }
 
@@ -251,15 +267,15 @@ impl<K: Id, V: fmt::Debug> Debug for IdSlice<K, V> {
 
 /// Transparent [`Vec`] wrapper, representing a collection that maps `K` keys to `V` values.
 ///
-/// It has entries `(k, v)` with `v` being the item at position [`k.index()`][Id::index] of the
-/// wrapped vector. This means the keys always span a contiguous range of ids starting at at
-/// [`K::MIN`][Id::MIN], having index `0`.
+/// It has entries `(k, v)` with `v` being the item at position [`k.id_index()`][Id::id_index] of
+/// the wrapped vector. This means the keys always span a contiguous range of ids starting at at
+/// [`K::MIN_ID`][Id::MIN_ID], having index `0`.
 ///
 /// It comes with a guarantee that all entries have distinct and valid keys. Depending on the used
 /// id type, this guarantee limits the maximum allowed length of the wrapped vector.
 #[repr(transparent)]
 pub struct IdVec<K, V> {
-    // SAFETY: invariant `values.len() <= K::MAX_INDEX.saturating_add(1)``
+    // SAFETY: invariant `values.len() <= K::MAX_ID_INDEX.saturating_add(1)``
     values: Vec<V>,
     _phantom: PhantomData<K>,
 }
@@ -306,7 +322,7 @@ impl<K: Id, V> IdVec<K, V> {
     /// Creates an `IdVec` from a vector of values.
     #[inline]
     pub fn from_vec(vec: Vec<V>) -> Self {
-        assert!(vec.len() <= K::MAX_INDEX.saturating_add(1));
+        assert!(vec.len() <= K::MAX_ID_INDEX.saturating_add(1));
         // SAFETY: explicit assert above
         unsafe { Self::from_vec_unchecked(vec) }
     }
@@ -318,7 +334,7 @@ impl<K: Id, V> IdVec<K, V> {
     /// The caller has to ensure that `K` can index the full length of the vector.
     #[inline(always)]
     pub unsafe fn from_vec_unchecked(vec: Vec<V>) -> Self {
-        debug_assert!(vec.len() <= K::MAX_INDEX.saturating_add(1));
+        debug_assert!(vec.len() <= K::MAX_ID_INDEX.saturating_add(1));
         // SAFETY: transparent cast
         Self {
             values: vec,
@@ -333,7 +349,7 @@ impl<K: Id, V> IdVec<K, V> {
     /// Panics when `K` cannot index the full length of the vector.
     #[inline]
     pub fn from_vec_ref(vec: &Vec<V>) -> &Self {
-        assert!(vec.len() <= K::MAX_INDEX.saturating_add(1));
+        assert!(vec.len() <= K::MAX_ID_INDEX.saturating_add(1));
         // SAFETY: explicit assert above
         unsafe { Self::from_vec_ref_unchecked(vec) }
     }
@@ -345,7 +361,7 @@ impl<K: Id, V> IdVec<K, V> {
     /// The caller has to ensure that `K` can index the full length of the vector.
     #[inline(always)]
     pub unsafe fn from_vec_ref_unchecked(vec: &Vec<V>) -> &Self {
-        debug_assert!(vec.len() <= K::MAX_INDEX.saturating_add(1));
+        debug_assert!(vec.len() <= K::MAX_ID_INDEX.saturating_add(1));
         // SAFETY: transparent cast
         unsafe { &*(vec as *const Vec<V> as *const Self) }
     }
@@ -357,7 +373,7 @@ impl<K: Id, V> IdVec<K, V> {
     /// Panics when `K` cannot index the full length of the vector.
     #[inline]
     pub fn from_vec_mut_ref(vec: &mut Vec<V>) -> &mut Self {
-        assert!(vec.len() <= K::MAX_INDEX.saturating_add(1));
+        assert!(vec.len() <= K::MAX_ID_INDEX.saturating_add(1));
         // SAFETY: explicit assert above
         unsafe { Self::from_vec_mut_ref_unchecked(vec) }
     }
@@ -370,7 +386,7 @@ impl<K: Id, V> IdVec<K, V> {
     /// The caller has to ensure that `K` can index the full length of the vector.
     #[inline(always)]
     pub unsafe fn from_vec_mut_ref_unchecked(vec: &mut Vec<V>) -> &mut Self {
-        debug_assert!(vec.len() <= K::MAX_INDEX.saturating_add(1));
+        debug_assert!(vec.len() <= K::MAX_ID_INDEX.saturating_add(1));
         // SAFETY: transparent cast
         unsafe { &mut *(vec as *mut Vec<V> as *mut Self) }
     }
@@ -410,7 +426,7 @@ impl<K: Id, V> IdVec<K, V> {
     #[inline(always)]
     pub fn push(&mut self, value: V) -> (K, &mut V) {
         let index = self.values.len();
-        let key = K::from_index(index);
+        let key = K::from_id_index(index);
         self.values.push(value);
 
         // SAFETY: the `K::from_index` calls performs the requried checks for our invariant
@@ -421,8 +437,15 @@ impl<K: Id, V> IdVec<K, V> {
     #[inline(always)]
     pub fn pop(&mut self) -> Option<(K, V)> {
         let value = self.values.pop()?;
-        let key = K::from_index(self.values.len());
+        let key = K::from_id_index(self.values.len());
         Some((key, value))
+    }
+
+    /// Returns the id with the smallest available index.
+    ///
+    /// This is the same key that would be used when calling [`push`][Self::push].
+    pub fn next_unused_key(&self) -> K {
+        K::from_id_index(self.len())
     }
 }
 
@@ -435,7 +458,7 @@ impl<K: Id, V> IntoIterator for IdVec<K, V> {
     fn into_iter(self) -> Self::IntoIter {
         self.values.into_iter().enumerate().map(|(i, v)| {
             // SAFETY: safe by struct level invariant
-            (unsafe { K::from_index_unchecked(i) }, v)
+            (unsafe { K::from_id_index_unchecked(i) }, v)
         })
     }
 }

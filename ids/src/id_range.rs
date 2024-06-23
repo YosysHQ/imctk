@@ -15,7 +15,7 @@ impl<I: Id> From<Range<I>> for IdRange<I> {
     #[inline(always)]
     fn from(value: Range<I>) -> Self {
         // SAFETY: Indices are in bounds as they come from an `I` value
-        unsafe { Self::from_index_range_unchecked(value.start.index()..value.end.index()) }
+        unsafe { Self::from_index_range_unchecked(value.start.id_index()..value.end.id_index()) }
     }
 }
 
@@ -27,7 +27,7 @@ impl<I: Id> IdRange<I> {
     /// Panics when the range contains indices that are not valid for `I`.
     #[inline]
     pub fn from_index_range(range: Range<usize>) -> Self {
-        assert!(range.end <= I::MAX_INDEX.saturating_add(1));
+        assert!(range.end <= I::MAX_ID_INDEX.saturating_add(1));
         // SAFETY: explicit asserts above
         unsafe { Self::from_index_range_unchecked(range) }
     }
@@ -41,7 +41,7 @@ impl<I: Id> IdRange<I> {
     pub unsafe fn from_index_range_unchecked(range: Range<usize>) -> Self {
         let Range { start, end } = range;
         debug_assert!(start <= end);
-        debug_assert!(end <= I::MAX_INDEX.saturating_add(1));
+        debug_assert!(end <= I::MAX_ID_INDEX.saturating_add(1));
         Self {
             start,
             end,
@@ -71,7 +71,7 @@ impl<I: Id> IntoIterator for IdRange<I> {
     #[inline(always)]
     fn into_iter(self) -> Self::IntoIter {
         // SAFETY: safe by struct level invariant
-        (self.start..self.end).map(|index| unsafe { I::from_index_unchecked(index) })
+        (self.start..self.end).map(|index| unsafe { I::from_id_index_unchecked(index) })
     }
 }
 

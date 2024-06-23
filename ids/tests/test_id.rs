@@ -13,7 +13,7 @@ const N: usize = 1024;
 const M: usize = 64;
 
 fn scale<T: Id>(i: usize, n: usize) -> usize {
-    (((i as u128) * (T::MAX_INDEX as u128)) / (n as u128)) as usize
+    (((i as u128) * (T::MAX_ID_INDEX as u128)) / (n as u128)) as usize
 }
 
 fn basic_tests<T: Id>(forward_debug: bool) {
@@ -21,35 +21,35 @@ fn basic_tests<T: Id>(forward_debug: bool) {
 
     for i in 0..=N {
         let index = scale::<usize>(i, N);
-        let id = T::try_from_index(index);
-        assert_eq!(id.is_some(), index <= T::MAX_INDEX);
+        let id = T::try_from_id_index(index);
+        assert_eq!(id.is_some(), index <= T::MAX_ID_INDEX);
         if let Some(value) = id {
-            assert_eq!(value.index(), index);
+            assert_eq!(value.id_index(), index);
         }
     }
 
-    for index in T::MAX_INDEX.saturating_sub(N)..=T::MAX_INDEX.saturating_add(N) {
-        let id = T::try_from_index(index);
-        assert_eq!(id.is_some(), index <= T::MAX_INDEX);
+    for index in T::MAX_ID_INDEX.saturating_sub(N)..=T::MAX_ID_INDEX.saturating_add(N) {
+        let id = T::try_from_id_index(index);
+        assert_eq!(id.is_some(), index <= T::MAX_ID_INDEX);
         if let Some(value) = id {
-            assert_eq!(value.index(), index);
+            assert_eq!(value.id_index(), index);
         }
     }
 
     let scale = scale::<T>;
 
-    for index in 0..=T::MAX_INDEX.min(N) {
-        let id = T::from_index(index);
-        assert_eq!(id.index(), index);
+    for index in 0..=T::MAX_ID_INDEX.min(N) {
+        let id = T::from_id_index(index);
+        assert_eq!(id.id_index(), index);
         if forward_debug {
             assert_eq!(format!("{:?}", id), format!("{:?}", index));
         } else {
             assert!(format!("{:?}", id).contains(&format!("{:?}", index)));
         }
     }
-    for index in T::MAX_INDEX.saturating_sub(N)..=T::MAX_INDEX {
-        let id = T::from_index(index);
-        assert_eq!(id.index(), index);
+    for index in T::MAX_ID_INDEX.saturating_sub(N)..=T::MAX_ID_INDEX {
+        let id = T::from_id_index(index);
+        assert_eq!(id.id_index(), index);
         if forward_debug {
             assert_eq!(format!("{:?}", id), format!("{:?}", index));
         } else {
@@ -58,8 +58,8 @@ fn basic_tests<T: Id>(forward_debug: bool) {
     }
     for i in 0..=N {
         let index = scale(i, N);
-        let id = T::from_index(index);
-        assert_eq!(id.index(), index);
+        let id = T::from_id_index(index);
+        assert_eq!(id.id_index(), index);
         if forward_debug {
             assert_eq!(format!("{:?}", id), format!("{:?}", index));
         } else {
@@ -68,18 +68,18 @@ fn basic_tests<T: Id>(forward_debug: bool) {
     }
     for i in 0..=M {
         let index_i = scale(i, M);
-        let id_i = T::from_index(index_i);
+        let id_i = T::from_id_index(index_i);
         for j in 0..=M {
             let index_j = scale(j, M);
-            let id_j = T::from_index(index_j);
+            let id_j = T::from_id_index(index_j);
             assert_eq!(index_i < index_j, id_i < id_j);
             assert_eq!(index_i <= index_j, id_i <= id_j);
             assert_eq!(index_i > index_j, id_i > id_j);
             assert_eq!(index_i >= index_j, id_i >= id_j);
             assert_eq!(index_i == index_j, id_i == id_j);
             assert_eq!(index_i.partial_cmp(&index_j), id_i.partial_cmp(&id_j));
-            assert_eq!(index_i.max(index_j), id_i.max(id_j).index());
-            assert_eq!(index_i.min(index_j), id_i.min(id_j).index());
+            assert_eq!(index_i.max(index_j), id_i.max(id_j).id_index());
+            assert_eq!(index_i.min(index_j), id_i.min(id_j).id_index());
             assert!(
                 index_i != index_j
                     || ({ build_hasher.hash_one(id_i) }) == { build_hasher.hash_one(id_j) }
@@ -94,10 +94,10 @@ fn basic_tests<T: Id>(forward_debug: bool) {
             if index_i <= index_j {
                 for k in 0..=M {
                     let index_k = scale(k, M);
-                    let id_k = T::from_index(index_k);
+                    let id_k = T::from_id_index(index_k);
                     assert_eq!(
                         index_k.clamp(index_i, index_j),
-                        id_k.clamp(id_i, id_j).index()
+                        id_k.clamp(id_i, id_j).id_index()
                     );
                 }
             }
@@ -105,44 +105,44 @@ fn basic_tests<T: Id>(forward_debug: bool) {
     }
 }
 
-fn base_conversion_tests<T: Id, U: Id<Base = T::Base>>() {
-    for index in 0..=T::MAX_INDEX.min(N) {
-        let id = T::from_index(index);
+fn base_conversion_tests<T: Id, U: Id<BaseId = T::BaseId>>() {
+    for index in 0..=T::MAX_ID_INDEX.min(N) {
+        let id = T::from_id_index(index);
         let id = U::from_base_id(id.into_base_id());
-        assert_eq!(id.index(), index);
+        assert_eq!(id.id_index(), index);
     }
-    for index in T::MAX_INDEX.saturating_sub(N)..=T::MAX_INDEX {
-        let id = T::from_index(index);
+    for index in T::MAX_ID_INDEX.saturating_sub(N)..=T::MAX_ID_INDEX {
+        let id = T::from_id_index(index);
         let id = U::from_base_id(id.into_base_id());
-        assert_eq!(id.index(), index);
+        assert_eq!(id.id_index(), index);
     }
     for i in 0..=N {
         let index = scale::<T>(i, N);
-        let id = T::from_index(index);
+        let id = T::from_id_index(index);
         let id = U::from_base_id(id.into_base_id());
-        assert_eq!(id.index(), index);
+        assert_eq!(id.id_index(), index);
     }
 }
 
-fn generic_conversion_tests<T: Id, U: Id<Generic = T::Generic>>() {
-    for index in 0..=T::MAX_INDEX.min(N) {
-        let id = U::cast_from_id(T::from_index(index));
-        let id2 = T::from_index(index).cast_into_id();
+fn generic_conversion_tests<T: Id, U: Id<GenericId = T::GenericId>>() {
+    for index in 0..=T::MAX_ID_INDEX.min(N) {
+        let id = U::cast_from_id(T::from_id_index(index));
+        let id2 = T::from_id_index(index).cast_into_id();
         assert_eq!(id, id2);
-        assert_eq!(id.index(), index);
+        assert_eq!(id.id_index(), index);
     }
-    for index in T::MAX_INDEX.saturating_sub(N)..=T::MAX_INDEX {
-        let id = U::cast_from_id(T::from_index(index));
-        let id2 = T::from_index(index).cast_into_id();
+    for index in T::MAX_ID_INDEX.saturating_sub(N)..=T::MAX_ID_INDEX {
+        let id = U::cast_from_id(T::from_id_index(index));
+        let id2 = T::from_id_index(index).cast_into_id();
         assert_eq!(id, id2);
-        assert_eq!(id.index(), index);
+        assert_eq!(id.id_index(), index);
     }
     for i in 0..=N {
         let index = scale::<T>(i, N);
-        let id = U::cast_from_id(T::from_index(index));
-        let id2 = T::from_index(index).cast_into_id();
+        let id = U::cast_from_id(T::from_id_index(index));
+        let id2 = T::from_id_index(index).cast_into_id();
         assert_eq!(id, id2);
-        assert_eq!(id.index(), index);
+        assert_eq!(id.id_index(), index);
     }
 }
 
@@ -182,7 +182,7 @@ pub struct CustomDebug(Id32);
 
 impl core::fmt::Debug for CustomDebug {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self.index())
+        write!(f, "{:?}", self.id_index())
     }
 }
 

@@ -1,7 +1,7 @@
 mod id8 {
     use imctk_transparent::SubtypeCast;
 
-    use crate::id::{u8_range_types::NonMaxHighNibbleU8, ConstIdFromIndex, GenericId, Id};
+    use crate::id::{u8_range_types::NonMaxHighNibbleU8, ConstIdFromIdIndex, GenericId, Id};
     use core::{fmt, fmt::Debug, hash::Hash};
 
     /// [`Id`] type representing indices in the range `0..0xf0`.
@@ -24,19 +24,19 @@ mod id8 {
 
         #[inline(always)]
         const unsafe fn from_u8_unchecked(index: u8) -> Self {
-            debug_assert!(index as usize <= Self::MAX_INDEX);
+            debug_assert!(index as usize <= Self::MAX_ID_INDEX);
             // SAFETY: delegated to caller
             unsafe { std::mem::transmute::<u8, Self>(index) }
         }
 
         /// Returns the id with a given index, panicking when the index is invalid.
         ///
-        /// Unlike the [`Id::from_index`] this is a `const fn`.
+        /// Unlike the [`Id::from_id_index`] this is a `const fn`.
         ///
-        /// This panics if and only if `index > Self::MAX_INDEX`.
+        /// This panics if and only if `index > Self::MAX_ID_INDEX`.
         #[inline]
         pub const fn from_index_const(index: usize) -> Self {
-            assert!(index <= Self::MAX_INDEX);
+            assert!(index <= Self::MAX_ID_INDEX);
             // SAFETY: preceding assert checks the precondition
             unsafe { Self::from_u8_unchecked(index as u8) }
         }
@@ -137,7 +137,7 @@ mod id8 {
         }
     }
 
-    impl<const INDEX: usize> ConstIdFromIndex<INDEX> for Id8 {
+    impl<const INDEX: usize> ConstIdFromIdIndex<INDEX> for Id8 {
         type Id = Self;
         const ID: Self = Self::from_index_const(INDEX);
     }
@@ -145,30 +145,30 @@ mod id8 {
     // SAFETY: the only purpose of all code for this type is to uphold the documented Id safety
     // requirements.
     unsafe impl Id for Id8 {
-        type Base = Self;
-        type Generic = GenericId<{ Self::MAX_INDEX }>;
-        type FromConstIndex<const INDEX: usize> = Self;
+        type BaseId = Self;
+        type GenericId = GenericId<{ Self::MAX_ID_INDEX }>;
+        type FromConstIdIndex<const INDEX: usize> = Self;
 
         #[inline(always)]
-        fn index(self) -> usize {
+        fn id_index(self) -> usize {
             self.as_u8() as usize
         }
 
-        const MAX_INDEX: usize = 0xef;
+        const MAX_ID_INDEX: usize = 0xef;
 
-        const MIN: Self = {
-            // SAFETY: zero is always <= MAX_INDEX
+        const MIN_ID: Self = {
+            // SAFETY: zero is always <= MAX_ID_INDEX
             unsafe { Self::from_u8_unchecked(0) }
         };
 
-        const MAX: Self = {
-            // SAFETY: MAX_INDEX is always <= MAX_INDEX
-            unsafe { Self::from_u8_unchecked(Self::MAX_INDEX as u8) }
+        const MAX_ID: Self = {
+            // SAFETY: MAX_ID_INDEX is always <= MAX_ID_INDEX
+            unsafe { Self::from_u8_unchecked(Self::MAX_ID_INDEX as u8) }
         };
 
         #[inline(always)]
-        unsafe fn from_index_unchecked(index: usize) -> Self {
-            // SAFETY: we require index to be <= MAX_INDEX which still holds after the primitive cast
+        unsafe fn from_id_index_unchecked(index: usize) -> Self {
+            // SAFETY: we require index to be <= MAX_ID_INDEX which still holds after the primitive cast
             unsafe { Self::from_u8_unchecked(index as u8) }
         }
     }
@@ -177,7 +177,7 @@ mod id8 {
 mod id16 {
     use imctk_transparent::SubtypeCast;
 
-    use crate::id::{u8_range_types::NonMaxU8, ConstIdFromIndex, GenericId, Id};
+    use crate::id::{u8_range_types::NonMaxU8, ConstIdFromIdIndex, GenericId, Id};
     use core::{fmt, fmt::Debug, hash::Hash};
 
     /// [`Id`] type representing indices in the range `0..0xff00`.
@@ -213,19 +213,19 @@ mod id16 {
 
         #[inline(always)]
         const unsafe fn from_u16_unchecked(index: u16) -> Self {
-            debug_assert!(index as usize <= Self::MAX_INDEX);
+            debug_assert!(index as usize <= Self::MAX_ID_INDEX);
             // SAFETY: delegated to caller
             unsafe { std::mem::transmute::<u16, Self>(index) }
         }
 
         /// Returns the id with a given index, panicking when the index is invalid.
         ///
-        /// Unlike the [`Id::from_index`] this is a `const fn`.
+        /// Unlike the [`Id::from_id_index`] this is a `const fn`.
         ///
-        /// This panics if and only if `index > Self::MAX_INDEX`.
+        /// This panics if and only if `index > Self::MAX_ID_INDEX`.
         #[inline]
         pub const fn from_index_const(index: usize) -> Self {
-            assert!(index <= Self::MAX_INDEX);
+            assert!(index <= Self::MAX_ID_INDEX);
             // SAFETY: preceding assert checks the precondition
             unsafe { Self::from_u16_unchecked(index as u16) }
         }
@@ -326,7 +326,7 @@ mod id16 {
         }
     }
 
-    impl<const INDEX: usize> ConstIdFromIndex<INDEX> for Id16 {
+    impl<const INDEX: usize> ConstIdFromIdIndex<INDEX> for Id16 {
         type Id = Self;
         const ID: Self = Self::from_index_const(INDEX);
     }
@@ -334,30 +334,30 @@ mod id16 {
     // SAFETY: the only purpose of all code for this type is to uphold the documented Id safety
     // requirements.
     unsafe impl Id for Id16 {
-        type Base = Self;
-        type Generic = GenericId<{ Self::MAX_INDEX }>;
-        type FromConstIndex<const INDEX: usize> = Self;
+        type BaseId = Self;
+        type GenericId = GenericId<{ Self::MAX_ID_INDEX }>;
+        type FromConstIdIndex<const INDEX: usize> = Self;
 
         #[inline(always)]
-        fn index(self) -> usize {
+        fn id_index(self) -> usize {
             self.as_u16() as usize
         }
 
-        const MAX_INDEX: usize = 0xfeff;
+        const MAX_ID_INDEX: usize = 0xfeff;
 
-        const MIN: Self = {
-            // SAFETY: zero is always <= MAX_INDEX
+        const MIN_ID: Self = {
+            // SAFETY: zero is always <= MAX_ID_INDEX
             unsafe { Self::from_u16_unchecked(0) }
         };
 
-        const MAX: Self = {
-            // SAFETY: MAX_INDEX is always <= MAX_INDEX
-            unsafe { Self::from_u16_unchecked(Self::MAX_INDEX as u16) }
+        const MAX_ID: Self = {
+            // SAFETY: MAX_ID_INDEX is always <= MAX_ID_INDEX
+            unsafe { Self::from_u16_unchecked(Self::MAX_ID_INDEX as u16) }
         };
 
         #[inline(always)]
-        unsafe fn from_index_unchecked(index: usize) -> Self {
-            // SAFETY: we require index to be <= MAX_INDEX which still holds after the primitive cast
+        unsafe fn from_id_index_unchecked(index: usize) -> Self {
+            // SAFETY: we require index to be <= MAX_ID_INDEX which still holds after the primitive cast
             unsafe { Self::from_u16_unchecked(index as u16) }
         }
     }
@@ -366,7 +366,7 @@ mod id16 {
 mod id32 {
     use imctk_transparent::SubtypeCast;
 
-    use crate::id::{u8_range_types::NonMaxU8, ConstIdFromIndex, GenericId, Id};
+    use crate::id::{u8_range_types::NonMaxU8, ConstIdFromIdIndex, GenericId, Id};
     use core::{fmt, fmt::Debug, hash::Hash};
 
     /// [`Id`] type representing indices in the range `0..0xff00_0000`.
@@ -402,19 +402,19 @@ mod id32 {
 
         #[inline(always)]
         const unsafe fn from_u32_unchecked(index: u32) -> Self {
-            debug_assert!(index as usize <= Self::MAX_INDEX);
+            debug_assert!(index as usize <= Self::MAX_ID_INDEX);
             // SAFETY: delegated to caller
             unsafe { std::mem::transmute::<u32, Self>(index) }
         }
 
         /// Returns the id with a given index, panicking when the index is invalid.
         ///
-        /// Unlike the [`Id::from_index`] this is a `const fn`.
+        /// Unlike the [`Id::from_id_index`] this is a `const fn`.
         ///
-        /// This panics if and only if `index > Self::MAX_INDEX`.
+        /// This panics if and only if `index > Self::MAX_ID_INDEX`.
         #[inline]
         pub const fn from_index_const(index: usize) -> Self {
-            assert!(index <= Self::MAX_INDEX);
+            assert!(index <= Self::MAX_ID_INDEX);
             // SAFETY: preceding assert checks the precondition
             unsafe { Self::from_u32_unchecked(index as u32) }
         }
@@ -515,7 +515,7 @@ mod id32 {
         }
     }
 
-    impl<const INDEX: usize> ConstIdFromIndex<INDEX> for Id32 {
+    impl<const INDEX: usize> ConstIdFromIdIndex<INDEX> for Id32 {
         type Id = Self;
         const ID: Self = Self::from_index_const(INDEX);
     }
@@ -523,16 +523,16 @@ mod id32 {
     // SAFETY: the only purpose of all code for this type is to uphold the documented Id safety
     // requirements.
     unsafe impl Id for Id32 {
-        type Base = Self;
-        type Generic = GenericId<{ Self::MAX_INDEX }>;
-        type FromConstIndex<const INDEX: usize> = Self;
+        type BaseId = Self;
+        type GenericId = GenericId<{ Self::MAX_ID_INDEX }>;
+        type FromConstIdIndex<const INDEX: usize> = Self;
 
         #[inline(always)]
-        fn index(self) -> usize {
+        fn id_index(self) -> usize {
             self.as_u32() as usize
         }
 
-        const MAX_INDEX: usize = {
+        const MAX_ID_INDEX: usize = {
             let max_index = 0xfeff_ffffu32;
             if (max_index as usize as u32) == max_index {
                 max_index as usize
@@ -541,19 +541,19 @@ mod id32 {
             }
         };
 
-        const MIN: Self = {
-            // SAFETY: zero is always <= MAX_INDEX
+        const MIN_ID: Self = {
+            // SAFETY: zero is always <= MAX_ID_INDEX
             unsafe { Self::from_u32_unchecked(0) }
         };
 
-        const MAX: Self = {
-            // SAFETY: MAX_INDEX is always <= MAX_INDEX
-            unsafe { Self::from_u32_unchecked(Self::MAX_INDEX as u32) }
+        const MAX_ID: Self = {
+            // SAFETY: MAX_ID_INDEX is always <= MAX_ID_INDEX
+            unsafe { Self::from_u32_unchecked(Self::MAX_ID_INDEX as u32) }
         };
 
         #[inline(always)]
-        unsafe fn from_index_unchecked(index: usize) -> Self {
-            // SAFETY: we require index to be <= MAX_INDEX which still holds after the primitive cast
+        unsafe fn from_id_index_unchecked(index: usize) -> Self {
+            // SAFETY: we require index to be <= MAX_ID_INDEX which still holds after the primitive cast
             unsafe { Self::from_u32_unchecked(index as u32) }
         }
     }
@@ -562,7 +562,7 @@ mod id32 {
 mod id64 {
     use imctk_transparent::SubtypeCast;
 
-    use crate::id::{u8_range_types::NonMaxU8, ConstIdFromIndex, GenericId, Id};
+    use crate::id::{u8_range_types::NonMaxU8, ConstIdFromIdIndex, GenericId, Id};
     use core::{fmt, fmt::Debug, hash::Hash};
 
     /// [`Id`] type representing indices in the range `0..0xff00_0000_0000_0000`.
@@ -598,19 +598,19 @@ mod id64 {
 
         #[inline(always)]
         const unsafe fn from_u64_unchecked(index: u64) -> Self {
-            debug_assert!(index as usize <= Self::MAX_INDEX);
+            debug_assert!(index as usize <= Self::MAX_ID_INDEX);
             // SAFETY: delegated to caller
             unsafe { std::mem::transmute::<u64, Self>(index) }
         }
 
         /// Returns the id with a given index, panicking when the index is invalid.
         ///
-        /// Unlike the [`Id::from_index`] this is a `const fn`.
+        /// Unlike the [`Id::from_id_index`] this is a `const fn`.
         ///
-        /// This panics if and only if `index > Self::MAX_INDEX`.
+        /// This panics if and only if `index > Self::MAX_ID_INDEX`.
         #[inline]
         pub const fn from_index_const(index: usize) -> Self {
-            assert!(index <= Self::MAX_INDEX);
+            assert!(index <= Self::MAX_ID_INDEX);
             // SAFETY: preceding assert checks the precondition
             unsafe { Self::from_u64_unchecked(index as u64) }
         }
@@ -711,7 +711,7 @@ mod id64 {
         }
     }
 
-    impl<const INDEX: usize> ConstIdFromIndex<INDEX> for Id64 {
+    impl<const INDEX: usize> ConstIdFromIdIndex<INDEX> for Id64 {
         type Id = Self;
         const ID: Self = Self::from_index_const(INDEX);
     }
@@ -719,16 +719,16 @@ mod id64 {
     // SAFETY: the only purpose of all code for this type is to uphold the documented Id safety
     // requirements.
     unsafe impl Id for Id64 {
-        type Base = Self;
-        type Generic = GenericId<{ Self::MAX_INDEX }>;
-        type FromConstIndex<const INDEX: usize> = Self;
+        type BaseId = Self;
+        type GenericId = GenericId<{ Self::MAX_ID_INDEX }>;
+        type FromConstIdIndex<const INDEX: usize> = Self;
 
         #[inline(always)]
-        fn index(self) -> usize {
+        fn id_index(self) -> usize {
             self.as_u64() as usize
         }
 
-        const MAX_INDEX: usize = {
+        const MAX_ID_INDEX: usize = {
             let max_index = 0xfeff_ffff_ffff_ffffu64;
             if (max_index as usize as u64) == max_index {
                 max_index as usize
@@ -737,19 +737,19 @@ mod id64 {
             }
         };
 
-        const MIN: Self = {
-            // SAFETY: zero is always <= MAX_INDEX
+        const MIN_ID: Self = {
+            // SAFETY: zero is always <= MAX_ID_INDEX
             unsafe { Self::from_u64_unchecked(0) }
         };
 
-        const MAX: Self = {
-            // SAFETY: MAX_INDEX is always <= MAX_INDEX
-            unsafe { Self::from_u64_unchecked(Self::MAX_INDEX as u64) }
+        const MAX_ID: Self = {
+            // SAFETY: MAX_ID_INDEX is always <= MAX_ID_INDEX
+            unsafe { Self::from_u64_unchecked(Self::MAX_ID_INDEX as u64) }
         };
 
         #[inline(always)]
-        unsafe fn from_index_unchecked(index: usize) -> Self {
-            // SAFETY: we require index to be <= MAX_INDEX which still holds after the primitive cast
+        unsafe fn from_id_index_unchecked(index: usize) -> Self {
+            // SAFETY: we require index to be <= MAX_ID_INDEX which still holds after the primitive cast
             unsafe { Self::from_u64_unchecked(index as u64) }
         }
     }
@@ -758,7 +758,7 @@ mod id64 {
 mod id_size {
     use imctk_transparent::SubtypeCast;
 
-    use crate::id::{u8_range_types::NonMaxMsbU8, ConstIdFromIndex, GenericId, Id};
+    use crate::id::{u8_range_types::NonMaxMsbU8, ConstIdFromIdIndex, GenericId, Id};
     use core::{fmt, fmt::Debug, hash::Hash};
 
     const LSBS: usize = (usize::BITS as usize / 8) - 1;
@@ -801,19 +801,19 @@ mod id_size {
 
         #[inline(always)]
         const unsafe fn from_usize_unchecked(index: usize) -> Self {
-            debug_assert!(index <= Self::MAX_INDEX);
+            debug_assert!(index <= Self::MAX_ID_INDEX);
             // SAFETY: delegated to caller
             unsafe { std::mem::transmute::<usize, Self>(index) }
         }
 
         /// Returns the id with a given index, panicking when the index is invalid.
         ///
-        /// Unlike the [`Id::from_index`] this is a `const fn`.
+        /// Unlike the [`Id::from_id_index`] this is a `const fn`.
         ///
-        /// This panics if and only if `index > Self::MAX_INDEX`.
+        /// This panics if and only if `index > Self::MAX_ID_INDEX`.
         #[inline]
         pub const fn from_index_const(index: usize) -> Self {
-            assert!(index <= Self::MAX_INDEX);
+            assert!(index <= Self::MAX_ID_INDEX);
             // SAFETY: preceding assert checks the precondition
             unsafe { Self::from_usize_unchecked(index) }
         }
@@ -916,7 +916,7 @@ mod id_size {
         }
     }
 
-    impl<const INDEX: usize> ConstIdFromIndex<INDEX> for IdSize {
+    impl<const INDEX: usize> ConstIdFromIdIndex<INDEX> for IdSize {
         type Id = Self;
         const ID: Self = Self::from_index_const(INDEX);
     }
@@ -924,29 +924,29 @@ mod id_size {
     // SAFETY: the only purpose of all code for this type is to uphold the documented Id safety
     // requirements.
     unsafe impl Id for IdSize {
-        type Base = Self;
-        type Generic = GenericId<{ Self::MAX_INDEX }>;
-        type FromConstIndex<const INDEX: usize> = Self;
+        type BaseId = Self;
+        type GenericId = GenericId<{ Self::MAX_ID_INDEX }>;
+        type FromConstIdIndex<const INDEX: usize> = Self;
 
         #[inline(always)]
-        fn index(self) -> usize {
+        fn id_index(self) -> usize {
             self.as_usize()
         }
 
-        const MAX_INDEX: usize = isize::MAX as usize;
+        const MAX_ID_INDEX: usize = isize::MAX as usize;
 
-        const MIN: Self = {
-            // SAFETY: zero is always <= MAX_INDEX
+        const MIN_ID: Self = {
+            // SAFETY: zero is always <= MAX_ID_INDEX
             unsafe { Self::from_usize_unchecked(0) }
         };
 
-        const MAX: Self = {
-            // SAFETY: MAX_INDEX is always <= MAX_INDEX
-            unsafe { Self::from_usize_unchecked(Self::MAX_INDEX) }
+        const MAX_ID: Self = {
+            // SAFETY: MAX_ID_INDEX is always <= MAX_ID_INDEX
+            unsafe { Self::from_usize_unchecked(Self::MAX_ID_INDEX) }
         };
 
         #[inline(always)]
-        unsafe fn from_index_unchecked(index: usize) -> Self {
+        unsafe fn from_id_index_unchecked(index: usize) -> Self {
             // SAFETY: delegated to caller
             unsafe { Self::from_usize_unchecked(index) }
         }
