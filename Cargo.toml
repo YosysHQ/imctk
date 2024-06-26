@@ -5,9 +5,13 @@ members = [
     "derive",
     "transparent",
     "table_seq",
+    "imctk",
 
     # comment to force multi-line layout
 ]
 
 [profile.release]
 debug = true
+
+[profile.dev]
+opt-level = 1

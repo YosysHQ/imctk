@@ -1,0 +1,17 @@
+[package]
+name = "imctk"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+flussab-aiger = "0.1.0"
+hashbrown = { version = "0.14.5", default-features = false, features = ["inline-more"] }
+imctk-derive = { version = "0.1.0", path = "../derive" }
+imctk-ids = { path = "../ids" }
+indexmap = "2.2.6"
+log = "0.4.21"
+table_seq = { version = "0.1.0", path = "../table_seq" }
+zwohash = "0.1.2"
+
+[dev-dependencies]
+env_logger = "0.11.3"
