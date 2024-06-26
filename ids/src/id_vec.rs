@@ -420,7 +420,7 @@ impl<K: Id, V> IdVec<K, V> {
         &mut self.values
     }
 
-    /// Inserts a values as a new entry, using the id with the smallest available index as key.
+    /// Inserts a value as a new entry, using the id with the smallest available index as key.
     ///
     /// This returns the used key and a mutable reference to the just inserted value.
     #[inline(always)]
@@ -444,8 +444,26 @@ impl<K: Id, V> IdVec<K, V> {
     /// Returns the id with the smallest available index.
     ///
     /// This is the same key that would be used when calling [`push`][Self::push].
+    #[inline(always)]
     pub fn next_unused_key(&self) -> K {
         K::from_id_index(self.len())
+    }
+
+    /// Appends default values until there is an entry with the given key.
+    #[inline(always)]
+    pub fn grow_for_key(&mut self, key: K)
+    where
+        V: Default,
+    {
+        self.grow_for_key_with(key, Default::default)
+    }
+
+    /// Appends values using the given closure until there is an entry with the given key.
+    #[inline(always)]
+    pub fn grow_for_key_with(&mut self, key: K, f: impl Fn() -> V) {
+        if self.len() <= key.id_index() {
+            self.values.resize_with(key.id_index() + 1, f)
+        }
     }
 }
 
