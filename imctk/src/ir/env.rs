@@ -12,7 +12,7 @@ use crate::ir::{
 use super::{
     index::DynamicIndex,
     node::{
-        expr::{Expr, ExprNode},
+        value::{Value, ValueNode},
         DynNode, Node, Nodes,
     },
     var::{Lit, Var},
@@ -23,7 +23,7 @@ pub mod config {
 
     use crate::ir::{
         index::{DefsIndex, DynamicIndex, FoundNode, StructuralHashIndex, UsesIndex},
-        node::{expr::Expr, DynNode, Node, NodeId, Nodes},
+        node::{value::Value, DynNode, Node, NodeId, Nodes},
         var::{Lit, Var},
     };
 
@@ -40,10 +40,10 @@ pub mod config {
         {
             #[allow(unused_variables)]
             #[inline(always)]
-            fn find_expr<T: Expr>(
+            fn find_value<T: Value>(
                 &self,
                 context: DynamicIndexContext,
-                expr: &T,
+                value: &T,
             ) -> Option<(NodeId, T::Output)> {
                 None
             }
@@ -212,12 +212,12 @@ pub mod config {
 
     impl EnvConfig for StructuralHashing {}
     impl sealed::EnvConfigDetail for StructuralHashing {
-        fn find_expr<T: Expr>(
+        fn find_value<T: Value>(
             &self,
             context: DynamicIndexContext,
-            expr: &T,
+            value: &T,
         ) -> Option<(NodeId, T::Output)> {
-            self.structural_hash_index.find_expr(context.nodes, expr)
+            self.structural_hash_index.find_value(context.nodes, value)
         }
     }
 
@@ -314,12 +314,12 @@ pub mod config {
     impl EnvConfig for Indexed {}
     impl sealed::EnvConfigDetail for Indexed {
         #[inline(always)]
-        fn find_expr<T: Expr>(
+        fn find_value<T: Value>(
             &self,
             context: DynamicIndexContext,
-            expr: &T,
+            value: &T,
         ) -> Option<(NodeId, T::Output)> {
-            self.structural_hash_index.find_expr(context.nodes, expr)
+            self.structural_hash_index.find_value(context.nodes, value)
         }
 
         #[inline(always)]
@@ -614,20 +614,20 @@ impl<Config: EnvConfig> Env<Config> {
         self.var_defs.var_defs.push(encoded_var_repr).0
     }
 
-    /// Ensures the presence of an [expression node][ExprNode] for the given [expression][Expr],
-    /// retrieving its node id and its output.
+    /// Ensures the presence of a [value node][ValueNode] for the given [value][Value], retrieving
+    /// its node id and its output.
     ///
-    /// If there is an existing expression node for the given expression, this returns a tuple
-    /// containing its [`NodeId`], its output variable/literal and `false`. Otherwise this inserts a
-    /// new expression node and returns a tuple containing the new node's [`NodeId`], output and
+    /// If there is an existing value node for the given value, this returns a tuple containing the
+    /// existing node's [`NodeId`], its output variable/literal and `false`. Otherwise this inserts
+    /// a new value node and returns a tuple containing the new node's [`NodeId`], output and
     /// `true`.
     ///
-    /// Before looking for an existing expression node, the given expression is canonicalized w.r.t.
-    /// the known variable/literal equivalences.
-    pub fn insert_expr_node<T: Expr>(&mut self, expr: T) -> (NodeId, T::Output, bool) {
+    /// Before looking for an existing value node, the given value is canonicalized w.r.t. the known
+    /// variable/literal equivalences.
+    pub fn insert_value_node<T: Value>(&mut self, value: T) -> (NodeId, T::Output, bool) {
         if let Some((node_id, output)) = self
             .config
-            .find_expr(DynamicIndexContext { nodes: &self.nodes }, &expr)
+            .find_value(DynamicIndexContext { nodes: &self.nodes }, &value)
         {
             return (node_id, output, false);
         }
@@ -635,18 +635,18 @@ impl<Config: EnvConfig> Env<Config> {
         let (new_var, _) = self.var_defs.var_defs.push(EncodedVarDef::default());
         let output = <T::Output as VarOrLit>::from_var_with_pol_for_lit(new_var, Pol::Pos);
 
-        let (node_id, _) = self.insert_unique_canonical_node(ExprNode { output, expr });
+        let (node_id, _) = self.insert_unique_canonical_node(ValueNode { output, value });
 
         (node_id, output, true)
     }
 
-    /// Ensures the presence of an [expression node][ExprNode] for the given [expression][Expr],
-    /// retrieving its output.
+    /// Ensures the presence of a [value node][ValueNode] for the given [value][Value], retrieving
+    /// its output.
     ///
-    /// This calls [`insert_expr_node`][Self::insert_expr_node], returning only the output variable
-    /// or literal.
-    pub fn insert_expr<T: Expr>(&mut self, expr: T) -> T::Output {
-        self.insert_expr_node(expr).1
+    /// This calls [`insert_value_node`][Self::insert_value_node], returning only the output
+    /// variable or literal.
+    pub fn insert_value<T: Value>(&mut self, value: T) -> T::Output {
+        self.insert_value_node(value).1
     }
 
     /// Ensures the presence of a given node, retrieving its node id.

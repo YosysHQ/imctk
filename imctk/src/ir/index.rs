@@ -9,7 +9,7 @@ use crate::ir::node::{DynNode, Node, NodeId, Nodes};
 
 use super::{
     env::NodeRole,
-    node::expr::{Expr, ExprNode},
+    node::value::{Value, ValueNode},
     var::Lit,
 };
 
@@ -77,7 +77,7 @@ pub trait DynamicIndex {
     fn add_equiv(&mut self, context: Self::Context<'_>, repr: Lit, equiv: Var);
 }
 
-/// Index to look up a [`NodeId`] given a defining [`Node`] or [`Expr`].
+/// Index to look up a [`NodeId`] given a defining [`Node`] or [`Value`].
 #[derive(Default)]
 pub struct StructuralHashIndex {
     tables: TableSeq<NodeId>,
@@ -157,18 +157,18 @@ pub struct FoundNode {
 }
 
 impl StructuralHashIndex {
-    /// Find an existing [`ExprNode`] for a given [`Expr`].
-    pub fn find_expr<T: Expr>(&self, nodes: &Nodes, expr: &T) -> Option<(NodeId, T::Output)> {
-        let hash = expr.def_hash();
-        let var = expr.representative_input_var();
+    /// Find an existing [`ValueNode`] for a given [`Value`].
+    pub fn find_value<T: Value>(&self, nodes: &Nodes, value: &T) -> Option<(NodeId, T::Output)> {
+        let hash = value.def_hash();
+        let var = value.representative_input_var();
 
         if var.index() < self.tables.len() {
             let mut output = <T::Output>::default();
             let node_id = *self.tables
                 .find(var.index(), hash, |&candidate| {
                     let Some(candidate_ref) = nodes.get(candidate) else {return false};
-                    let Some(candidate_ref) = candidate_ref.dyn_cast::<ExprNode<T>>() else {return false};
-                    let eq = candidate_ref.expr == *expr;
+                    let Some(candidate_ref) = candidate_ref.dyn_cast::<ValueNode<T>>() else {return false};
+                    let eq = candidate_ref.value == *value;
                     if eq {
                         output = candidate_ref.output;
                     }

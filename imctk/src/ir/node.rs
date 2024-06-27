@@ -9,6 +9,6 @@ mod nodes;
 pub use node_trait::{DynNode, Node, NodeDyn, NodeDynAuto, NodeType};
 pub use nodes::{NodeError, NodeId, Nodes};
 
-pub mod expr;
+pub mod value;
 
 pub mod fine;

@@ -3,13 +3,13 @@ use imctk_ids::{Id, Id32};
 
 use crate::{
     ir::{
-        node::expr::{Expr, ExprNode},
+        node::value::{Value, ValueNode},
         var::{Lit, Pol, Var},
     },
     unordered_pair::UnorderedPair,
 };
 
-/// Expression representing a logical 'and'.
+/// Boolean 'and' of two values.
 ///
 /// This is a combinational operation.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -18,10 +18,10 @@ pub struct And {
     pub inputs: UnorderedPair<Lit>,
 }
 
-/// Node representing a logical 'and'.
-pub type AndNode = ExprNode<And>;
+/// Node representing the Boolean 'and' of two values.
+pub type AndNode = ValueNode<And>;
 
-impl Expr for And {
+impl Value for And {
     type Output = Lit;
 
     const NAME: &'static str = "And";
@@ -44,7 +44,7 @@ impl Expr for And {
     }
 }
 
-/// Expression representing a logical 'exclusive or' / 'xor'.
+/// Boolean 'xor' ('exclusive or').
 ///
 /// This is a combinational operation.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -53,10 +53,10 @@ pub struct Xor {
     pub inputs: UnorderedPair<Var>,
 }
 
-/// Node representing a logical 'exclusive or' / 'xor'.
-pub type XorNode = ExprNode<Xor>;
+/// Node representing the Boolean 'xor' ('exclusive or').
+pub type XorNode = ValueNode<Xor>;
 
-impl Expr for Xor {
+impl Value for Xor {
     type Output = Lit;
     const NAME: &'static str = "Xor";
 
@@ -76,7 +76,7 @@ impl Expr for Xor {
     }
 }
 
-/// Expression representing a steady input or an unconstrained steady value.
+/// Steady input or unconstrained steady value.
 ///
 /// An important use case is unconstrained register initialization, where this provides the initial
 /// value.
@@ -85,9 +85,9 @@ impl Expr for Xor {
 pub struct SteadyInput(Id32);
 
 /// Node representing a steady input or a steady unconstrained constant value.
-pub type SteadyInputNode = ExprNode<SteadyInput>;
+pub type SteadyInputNode = ValueNode<SteadyInput>;
 
-impl Expr for SteadyInput {
+impl Value for SteadyInput {
     type Output = Lit;
     const NAME: &'static str = "Init";
 
@@ -100,15 +100,15 @@ impl Expr for SteadyInput {
     }
 }
 
-/// Expression representing a time-varying input or an unconstrained time-varying value.
+/// Time-varying input or unconstrained time-varying value.
 #[derive(Id, Debug)]
 #[repr(transparent)]
 pub struct Input(Id32);
 
 /// Node representing a time-varying input or an unconstrained time-varying value.
-pub type InputNode = ExprNode<Input>;
+pub type InputNode = ValueNode<Input>;
 
-impl Expr for Input {
+impl Value for Input {
     type Output = Lit;
     const NAME: &'static str = "Input";
 
@@ -121,8 +121,7 @@ impl Expr for Input {
     }
 }
 
-/// Expression representing a register that updates with each transition of the represented state
-/// system.
+/// Register that updates with each transition of the represented state transition system.
 ///
 /// In the initial state it transparently passes through the `init` input, and after every
 /// transition it will output the value the `next` input had before the transition.
@@ -139,10 +138,10 @@ pub struct Reg {
 }
 
 /// Node representing a register that updates with each transition of the represented state
-/// system.
-pub type RegNode = ExprNode<Reg>;
+/// transition system.
+pub type RegNode = ValueNode<Reg>;
 
-impl Expr for Reg {
+impl Value for Reg {
     type Output = Lit;
     const NAME: &'static str = "Reg";
 

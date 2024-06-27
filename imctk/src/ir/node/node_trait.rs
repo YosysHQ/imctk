@@ -31,15 +31,15 @@ pub trait Node: NodeDyn + Debug + Eq + Hash + Clone + 'static {
 
     /// Returns whether two nodes can be treated as equivalent.
     ///
-    /// In particular for [`ExprNode`][crate::ir::node::expr::ExprNode] nodes, the output variable
-    /// or literal is ignored, as it is fully defined in terms of the input variables.
+    /// In particular for [`ValueNode`][crate::ir::node::value::ValueNode] nodes, the output variable
+    /// or literal is ignored as it is fully defined in terms of the input variables.
     ///
     /// This defaults to forwarding to [`Eq`], which is correct for constraint nodes.
     fn def_eq(&self, other: &Self) -> bool {
         self == other
     }
 
-    /// Rewrites all variables in the expression using a given mapping.
+    /// Rewrites all variables in the value using a given mapping.
     fn apply_var_map(&mut self, var_map: impl FnMut(Var) -> Lit) {
         let _ = var_map;
 
@@ -53,8 +53,8 @@ pub trait Node: NodeDyn + Debug + Eq + Hash + Clone + 'static {
 pub trait NodeDyn: NodeDynAuto + Debug {
     /// Returns a hash value of the defining part of a node.
     ///
-    /// In particular for [`ExprNode`][crate::ir::node::expr::ExprNode] nodes, the output variable
-    /// or literal is ignored, as it is fully defined in terms of the input variables.
+    /// In particular for [`ValueNode`][crate::ir::node::value::ValueNode] nodes, the output
+    /// variable or literal is ignored as it is fully defined in terms of the input variables.
     ///
     /// This defaults to forwarding to [`Hash`] using a [`ZwoHasher`].
     fn def_hash(&self) -> u64 {
