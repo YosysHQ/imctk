@@ -4,10 +4,7 @@ use std::mem::swap;
 use config::{DynamicIndexContext, EnvConfig, EnvConfigDetail};
 use imctk_ids::{id_vec::IdVec, Id, Id32};
 
-use crate::ir::{
-    node::NodeId,
-    var::{Pol, VarOrLit},
-};
+use crate::ir::{node::NodeId, var::VarOrLit};
 
 use super::{
     index::DynamicIndex,
@@ -633,7 +630,7 @@ impl<Config: EnvConfig> Env<Config> {
         }
 
         let (new_var, _) = self.var_defs.var_defs.push(EncodedVarDef::default());
-        let output = <T::Output as VarOrLit>::from_var_with_pol_for_lit(new_var, Pol::Pos);
+        let output = <T::Output>::build_var_or_lit(new_var, |var| var, |var| var.as_pos());
 
         let (node_id, _) = self.insert_unique_canonical_node(ValueNode { output, value });
 

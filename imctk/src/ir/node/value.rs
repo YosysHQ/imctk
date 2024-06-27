@@ -6,7 +6,7 @@ use std::{
 
 use zwohash::ZwoHasher;
 
-use crate::ir::var::{Lit, Pol, Var, VarOrLit};
+use crate::ir::var::{Lit, Var, VarOrLit};
 
 use super::{Node, NodeDyn};
 
@@ -92,15 +92,26 @@ impl<T: Value> Node for ValueNode<T> {
     }
 
     fn apply_var_map(&mut self, mut var_map: impl FnMut(Var) -> Lit) {
-        let mut new_output_lit = self.output.as_lit().map_var_to_lit(&mut var_map);
+        let mut new_output_lit = self
+            .output
+            .process_var_or_lit(|var| var.as_pos(), |lit| lit)
+            .map_var_to_lit(&mut var_map);
 
         let value_pol = self.value.apply_var_map(var_map);
 
         new_output_lit ^= value_pol.into();
 
-        let (new_output, Pol::Pos) = <T::Output>::from_lit_with_residue_pol(new_output_lit) else {
-            panic!("Value output of non-Boolean type mapped to negative literal");
-        };
+        let new_output = <T::Output>::build_var_or_lit(
+            new_output_lit,
+            |lit| {
+                assert!(
+                    lit.is_pos(),
+                    "Value output of non-Boolean type mapped to negative literal"
+                );
+                lit.var()
+            },
+            |lit| lit,
+        );
 
         self.output = new_output
     }
@@ -116,10 +127,12 @@ impl<T: Value> NodeDyn for ValueNode<T> {
     }
 
     fn output_var(&self) -> Option<Var> {
-        Some(self.output.var())
+        Some(self.output.process_var_or_lit(|var| var, |lit| lit.var()))
     }
 
     fn max_var(&self) -> Var {
-        self.output.var().max(self.value.max_var())
+        self.output
+            .process_var_or_lit(|var| var, |lit| lit.var())
+            .max(self.value.max_var())
     }
 }

@@ -83,7 +83,7 @@ impl std::fmt::Display for Var {
         if var_index == 0 {
             return write!(f, "0");
         }
-        let rev_var_index = Var::MAX_ID_INDEX - var_index;
+        let rev_var_index = Self::MAX_ID_INDEX - var_index;
         if rev_var_index < var_index {
             write!(f, "r{}", rev_var_index)
         } else {
@@ -101,7 +101,7 @@ impl std::fmt::Display for Lit {
                 Pol::Neg => write!(f, "1"),
             };
         }
-        let rev_var_index = Var::MAX_ID_INDEX - var_index;
+        let rev_var_index = Self::MAX_ID_INDEX - var_index;
         let prefix = match self.pol() {
             Pol::Pos => "",
             Pol::Neg => "!",
@@ -379,38 +379,26 @@ pub trait VarOrLit:
     + Eq
     + Ord
     + Hash
-    + 'static
     + seal_var_or_lit::Sealed
     + ops::BitXor<Self::Pol, Output = Self>
     + ops::BitXorAssign<Self::Pol>
 {
-    /// This is [`Pol`] for [`Lit`] and `()`` for [`Var`].
+    /// This is [`Pol`] for [`Lit`] and `()` for [`Var`].
     type Pol: Copy + Debug + Into<Pol>;
 
-    /// Returns the variable itself or the literal's variable.
-    fn var(self) -> Var;
-    /// Returns the polarity of a literal or `None` for a variable.
-    fn try_pol(self) -> Option<Pol>;
+    /// Returns a variable or a literal by selecting among closures for constructing either.
+    fn build_var_or_lit<T>(
+        input: T,
+        build_var: impl FnOnce(T) -> Var,
+        build_lit: impl FnOnce(T) -> Lit,
+    ) -> Self;
 
-    /// Returns the polarity of a literal or `()` for a variable.
-    fn pol_for_lit(self) -> Self::Pol;
-
-    /// Constructs a literal from the variable or polarity or returns the variable ignoring the
-    /// polarity.
-    fn from_var_with_pol_for_lit(var: Var, pol: Pol) -> Self;
-    /// Returns the given literal or discards the literal's polarity returning only its variable.
-    fn from_lit_ignoring_pol_for_var(lit: Lit) -> Self;
-
-    /// Returns a positive polarity literal for the same variable.
-    fn as_pos(self) -> Lit;
-    /// Returns a negative polarity literal for the same variable.
-    fn as_neg(self) -> Lit;
-
-    /// Returns the literal itself or a positive polarity literal for a given variable.
-    fn as_lit(self) -> Lit;
-
-    /// Returns the unique value `(r, p)` such that `r.as_lit() ^ p == lit`.
-    fn from_lit_with_residue_pol(lit: Lit) -> (Self, Pol);
+    /// Produces a value from a variable or a literal by selecting among closure consuming either.
+    fn process_var_or_lit<T>(
+        self,
+        from_var: impl FnOnce(Var) -> T,
+        from_lit: impl FnOnce(Lit) -> T,
+    ) -> T;
 }
 
 impl From<()> for Pol {
@@ -436,95 +424,38 @@ impl ops::BitXorAssign<()> for Var {
 impl VarOrLit for Var {
     type Pol = ();
 
-    #[inline(always)]
-    fn var(self) -> Var {
-        self
+    fn build_var_or_lit<T>(
+        input: T,
+        build_var: impl FnOnce(T) -> Var,
+        _build_lit: impl FnOnce(T) -> Lit,
+    ) -> Self {
+        build_var(input)
     }
 
-    #[inline(always)]
-    fn try_pol(self) -> Option<Pol> {
-        None
-    }
-
-    #[inline(always)]
-    fn from_var_with_pol_for_lit(var: Var, _pol: Pol) -> Self {
-        var
-    }
-
-    #[inline(always)]
-    fn from_lit_ignoring_pol_for_var(lit: Lit) -> Self {
-        lit.var()
-    }
-
-    #[inline(always)]
-    fn pol_for_lit(self) -> Self::Pol {}
-
-    #[inline(always)]
-    fn as_pos(self) -> Lit {
-        self.as_pos()
-    }
-
-    #[inline(always)]
-    fn as_neg(self) -> Lit {
-        self.as_neg()
-    }
-
-    #[inline(always)]
-    fn as_lit(self) -> Lit {
-        self.as_pos()
-    }
-
-    #[inline(always)]
-    fn from_lit_with_residue_pol(lit: Lit) -> (Self, Pol) {
-        (lit.var(), lit.pol())
+    fn process_var_or_lit<T>(
+        self,
+        from_var: impl FnOnce(Var) -> T,
+        _from_lit: impl FnOnce(Lit) -> T,
+    ) -> T {
+        from_var(self)
     }
 }
 
 impl VarOrLit for Lit {
     type Pol = Pol;
-
-    #[inline(always)]
-    fn var(self) -> Var {
-        self.var()
+    fn build_var_or_lit<T>(
+        input: T,
+        _build_var: impl FnOnce(T) -> Var,
+        build_lit: impl FnOnce(T) -> Lit,
+    ) -> Self {
+        build_lit(input)
     }
 
-    #[inline(always)]
-    fn try_pol(self) -> Option<Pol> {
-        Some(self.pol())
-    }
-
-    #[inline(always)]
-    fn from_var_with_pol_for_lit(var: Var, pol: Pol) -> Self {
-        var.lit(pol)
-    }
-
-    #[inline(always)]
-    fn from_lit_ignoring_pol_for_var(lit: Lit) -> Self {
-        lit
-    }
-
-    #[inline(always)]
-    fn pol_for_lit(self) -> Self::Pol {
-        self.pol()
-    }
-
-    #[inline(always)]
-    fn as_pos(self) -> Lit {
-        self.as_pos()
-    }
-
-    #[inline(always)]
-    fn as_neg(self) -> Lit {
-        self.as_neg()
-    }
-
-    #[inline(always)]
-    fn as_lit(self) -> Lit {
-        self
-    }
-
-    #[inline(always)]
-    fn from_lit_with_residue_pol(lit: Lit) -> (Self, Pol) {
-        (lit, Pol::Pos)
+    fn process_var_or_lit<T>(
+        self,
+        _from_var: impl FnOnce(Var) -> T,
+        from_lit: impl FnOnce(Lit) -> T,
+    ) -> T {
+        from_lit(self)
     }
 }
