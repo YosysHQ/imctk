@@ -465,6 +465,23 @@ impl<K: Id, V> IdVec<K, V> {
             self.values.resize_with(key.id_index() + 1, f)
         }
     }
+
+    /// Resizes the collection, creating new entries by cloning the given value.
+    #[inline]
+    pub fn resize(&mut self, len: usize, value: V)
+    where
+        V: Clone,
+    {
+        assert!(len <= K::MAX_ID_INDEX.saturating_add(1));
+        self.values.resize(len, value)
+    }
+
+    /// Resizes the collection, creating new entries by calling the given closure.
+    #[inline]
+    pub fn resize_with(&mut self, len: usize, value: impl FnMut() -> V) {
+        assert!(len <= K::MAX_ID_INDEX.saturating_add(1));
+        self.values.resize_with(len, value)
+    }
 }
 
 impl<K: Id, V> IntoIterator for IdVec<K, V> {
