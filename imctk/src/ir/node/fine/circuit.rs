@@ -3,7 +3,10 @@ use imctk_ids::{Id, Id32};
 
 use crate::{
     ir::{
-        node::value::{Value, ValueNode},
+        node::{
+            builder::NodeBuilder,
+            generic::{Value, ValueDyn, ValueNode},
+        },
         var::{Lit, Pol, Var},
     },
     unordered_pair::UnorderedPair,
@@ -30,17 +33,41 @@ impl Value for And {
         self.inputs.map(|lit| lit.var()).into_iter()
     }
 
+    fn apply_var_map(&mut self, var_map: impl FnMut(Var) -> Lit) -> Pol {
+        self.inputs.apply_var_map(var_map);
+        Pol::Pos
+    }
+
+    fn reduce(&mut self, _builder: &mut impl NodeBuilder) -> Option<Self::Output> {
+        let [a, b] = *self.inputs;
+
+        if a.var() == b.var() {
+            if a == b {
+                Some(a)
+            } else {
+                Some(Lit::FALSE)
+            }
+        } else if a.is_const() {
+            if a == Lit::FALSE {
+                Some(Lit::FALSE)
+            } else {
+                Some(b)
+            }
+        } else {
+            None
+        }
+    }
+
+    // TODO node reductions
+}
+
+impl ValueDyn for And {
     fn representative_input_var(&self) -> Var {
         self.inputs[1].var()
     }
 
     fn max_var(&self) -> Var {
         self.inputs.max_element().var()
-    }
-
-    fn apply_var_map(&mut self, var_map: impl FnMut(Var) -> Lit) -> Pol {
-        self.inputs.apply_var_map(var_map);
-        Pol::Pos
     }
 }
 
@@ -64,15 +91,29 @@ impl Value for Xor {
         self.inputs.into_iter()
     }
 
-    fn representative_input_var(&self) -> Var {
-        self.inputs[1]
-    }
-
     fn apply_var_map(
         &mut self,
         var_map: impl FnMut(Var) -> Lit,
     ) -> <Self::Output as crate::ir::var::VarOrLit>::Pol {
         self.inputs.apply_var_map_compose_pol(var_map)
+    }
+
+    fn reduce(&mut self, _builder: &mut impl NodeBuilder) -> Option<Self::Output> {
+        let [a, b] = *self.inputs;
+
+        if a == b {
+            Some(Lit::FALSE)
+        } else if a == Var::FALSE {
+            Some(b.as_pos())
+        } else {
+            None
+        }
+    }
+}
+
+impl ValueDyn for Xor {
+    fn representative_input_var(&self) -> Var {
+        self.inputs[1]
     }
 }
 
@@ -100,6 +141,8 @@ impl Value for SteadyInput {
     }
 }
 
+impl ValueDyn for SteadyInput {}
+
 /// Time-varying input or unconstrained time-varying value.
 #[derive(Id, Debug)]
 #[repr(transparent)]
@@ -120,6 +163,8 @@ impl Value for Input {
         Pol::Pos
     }
 }
+
+impl ValueDyn for Input {}
 
 /// Register that updates with each transition of the represented state transition system.
 ///
@@ -153,10 +198,6 @@ impl Value for Reg {
         [self.init.var()].into_iter()
     }
 
-    fn representative_input_var(&self) -> Var {
-        self.next
-    }
-
     fn apply_var_map(&mut self, mut var_map: impl FnMut(Var) -> Lit) -> Pol {
         let mapped_next = var_map(self.next);
         let mapped_init = self.init.map_var_to_lit(var_map);
@@ -167,5 +208,19 @@ impl Value for Reg {
         };
 
         mapped_next.pol()
+    }
+
+    fn reduce(&mut self, _builder: &mut impl NodeBuilder) -> Option<Self::Output> {
+        if self.next == Var::FALSE && self.init == Lit::FALSE {
+            Some(Lit::FALSE)
+        } else {
+            None
+        }
+    }
+}
+
+impl ValueDyn for Reg {
+    fn representative_input_var(&self) -> Var {
+        self.next
     }
 }

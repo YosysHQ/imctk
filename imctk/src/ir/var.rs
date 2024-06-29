@@ -399,6 +399,13 @@ pub trait VarOrLit:
         from_var: impl FnOnce(Var) -> T,
         from_lit: impl FnOnce(Lit) -> T,
     ) -> T;
+
+    /// Produces a value from a default value for variables or from a polarity for literals.
+    fn process_pol<T>(
+        pol: Self::Pol,
+        from_var_pol: impl FnOnce() -> T,
+        from_lit_pol: impl FnOnce(Pol) -> T,
+    ) -> T;
 }
 
 impl From<()> for Pol {
@@ -439,6 +446,14 @@ impl VarOrLit for Var {
     ) -> T {
         from_var(self)
     }
+
+    fn process_pol<T>(
+        (): Self::Pol,
+        from_var_pol: impl FnOnce() -> T,
+        _from_lit_pol: impl FnOnce(Pol) -> T,
+    ) -> T {
+        from_var_pol()
+    }
 }
 
 impl VarOrLit for Lit {
@@ -457,5 +472,13 @@ impl VarOrLit for Lit {
         from_lit: impl FnOnce(Lit) -> T,
     ) -> T {
         from_lit(self)
+    }
+
+    fn process_pol<T>(
+        pol: Self::Pol,
+        _from_var_pol: impl FnOnce() -> T,
+        from_lit_pol: impl FnOnce(Pol) -> T,
+    ) -> T {
+        from_lit_pol(pol)
     }
 }

@@ -1,16 +1,21 @@
 //! Environments for storing and maintaining the internal representation.
-use std::mem::swap;
+use std::mem::take;
 
-use config::{DynamicIndexContext, EnvConfig, EnvConfigDetail};
+use config::{DynamicIndexContext, EnvConfig, EnvConfigEgraph};
 use imctk_ids::{id_vec::IdVec, Id, Id32};
+use imctk_transparent::{NewtypeCast, SubtypeCast};
 
-use crate::ir::{node::NodeId, var::VarOrLit};
+use crate::{give_take::Take, ir::var::VarOrLit};
 
 use super::{
-    index::DynamicIndex,
     node::{
-        value::{Value, ValueNode},
-        DynNode, Node, Nodes,
+        builder::{NodeBuilder, NodeBuilderDyn},
+        collections::{
+            buf::{NodeBuf, NodeBufVarMap},
+            nodes::Nodes,
+        },
+        generic::{dyn_value_into_dyn_value_node, DynNode, DynValue, Node, Value, ValueNode},
+        NodeId,
     },
     var::{Lit, Var},
 };
@@ -18,17 +23,27 @@ use super::{
 pub mod config {
     //! Static environment configuration.
 
+    use std::mem::swap;
+
     use crate::ir::{
         index::{DefsIndex, DynamicIndex, FoundNode, StructuralHashIndex, UsesIndex},
-        node::{value::Value, DynNode, Node, NodeId, Nodes},
+        node::{
+            collections::nodes::Nodes,
+            generic::{DynNode, DynValue, Node, Value},
+            NodeId,
+        },
         var::{Lit, Var},
     };
 
     use super::NodeRole;
 
-    pub(crate) use sealed::EnvConfigDetail;
+    #[allow(unused_imports)] // rustdoc only
+    use super::Env;
 
     mod sealed {
+
+        use crate::ir::node::generic::DynValue;
+
         use super::*;
 
         // TODO some of this probably should be public
@@ -42,6 +57,16 @@ pub mod config {
                 context: DynamicIndexContext,
                 value: &T,
             ) -> Option<(NodeId, T::Output)> {
+                None
+            }
+
+            #[allow(unused_variables)]
+            #[inline(always)]
+            fn find_dyn_value(
+                &self,
+                context: DynamicIndexContext,
+                value: &DynValue,
+            ) -> Option<(NodeId, Lit)> {
                 None
             }
 
@@ -71,12 +96,25 @@ pub mod config {
                 0
             }
         }
+
+        pub trait EnvConfigEgraphDetail {
+            fn take_pending_equivs(&mut self, equivs: &mut Vec<Var>);
+
+            fn defs_index(&self) -> &DefsIndex;
+            fn uses_index(&self) -> &UsesIndex;
+        }
     }
 
     /// Static environment configuration.
     ///
-    /// See [`Env`][super::Env].
-    pub trait EnvConfig: sealed::EnvConfigDetail {}
+    /// See [`Env`].
+    pub trait EnvConfig: sealed::EnvConfigDetail + 'static {}
+
+    /// Environment configuration supporting egraph rebuilding.
+    ///
+    /// See [`Env::rebuild_egraph``].
+
+    pub trait EnvConfigEgraph: EnvConfig + sealed::EnvConfigEgraphDetail + 'static {}
 
     /// Context provided to dynamic indices of an [`EnvConfig`].
     pub struct DynamicIndexContext<'a> {
@@ -100,7 +138,7 @@ pub mod config {
             &mut self,
             _context: Self::Context<'_>,
             _node_id: crate::ir::node::NodeId,
-            _node: &crate::ir::node::DynNode,
+            _node: &crate::ir::node::generic::DynNode,
 
             _node_role: NodeRole,
         ) {
@@ -111,7 +149,7 @@ pub mod config {
             &mut self,
             _context: Self::Context<'_>,
             _node_id: crate::ir::node::NodeId,
-            _node: &crate::ir::node::DynNode,
+            _node: &crate::ir::node::generic::DynNode,
             _node_role: NodeRole,
         ) {
         }
@@ -148,14 +186,14 @@ pub mod config {
             &mut self,
             context: Self::Context<'_>,
             node_id: crate::ir::node::NodeId,
-            node: &crate::ir::node::DynNode,
+            node: &crate::ir::node::generic::DynNode,
             node_role: NodeRole,
         ) {
             self.structural_hash_index
                 .add_dyn_node(context.nodes, node_id, node, node_role)
         }
 
-        fn add_node<T: crate::ir::node::Node>(
+        fn add_node<T: crate::ir::node::generic::Node>(
             &mut self,
             context: Self::Context<'_>,
             node_id: NodeId,
@@ -170,14 +208,14 @@ pub mod config {
             &mut self,
             context: Self::Context<'_>,
             node_id: crate::ir::node::NodeId,
-            node: &crate::ir::node::DynNode,
+            node: &crate::ir::node::generic::DynNode,
             node_role: NodeRole,
         ) {
             self.structural_hash_index
                 .remove_dyn_node(context.nodes, node_id, node, node_role)
         }
 
-        fn remove_node<T: crate::ir::node::Node>(
+        fn remove_node<T: crate::ir::node::generic::Node>(
             &mut self,
             context: Self::Context<'_>,
             node_id: NodeId,
@@ -216,6 +254,14 @@ pub mod config {
         ) -> Option<(NodeId, T::Output)> {
             self.structural_hash_index.find_value(context.nodes, value)
         }
+        fn find_dyn_value(
+            &self,
+            context: DynamicIndexContext,
+            value: &DynValue,
+        ) -> Option<(NodeId, Lit)> {
+            self.structural_hash_index
+                .find_dyn_value(context.nodes, value)
+        }
     }
 
     /// Environment configuration containing a default set of indices.
@@ -235,7 +281,7 @@ pub mod config {
             &mut self,
             context: Self::Context<'_>,
             node_id: crate::ir::node::NodeId,
-            node: &crate::ir::node::DynNode,
+            node: &crate::ir::node::generic::DynNode,
             node_role: NodeRole,
         ) {
             self.structural_hash_index
@@ -244,7 +290,7 @@ pub mod config {
             self.uses_index.add_dyn_node((), node_id, node, node_role);
         }
 
-        fn add_node<T: crate::ir::node::Node>(
+        fn add_node<T: crate::ir::node::generic::Node>(
             &mut self,
             context: Self::Context<'_>,
             node_id: NodeId,
@@ -261,7 +307,7 @@ pub mod config {
             &mut self,
             context: Self::Context<'_>,
             node_id: crate::ir::node::NodeId,
-            node: &crate::ir::node::DynNode,
+            node: &crate::ir::node::generic::DynNode,
             node_role: NodeRole,
         ) {
             self.uses_index
@@ -272,7 +318,7 @@ pub mod config {
                 .remove_dyn_node(context.nodes, node_id, node, node_role);
         }
 
-        fn remove_node<T: crate::ir::node::Node>(
+        fn remove_node<T: crate::ir::node::generic::Node>(
             &mut self,
             context: Self::Context<'_>,
             node_id: NodeId,
@@ -333,6 +379,21 @@ pub mod config {
         #[inline(always)]
         fn rewrite_cost(&self, var: Var) -> usize {
             self.uses_index.use_count(var) + self.defs_index.non_primary_def_count(var)
+        }
+    }
+
+    impl EnvConfigEgraph for Indexed {}
+    impl sealed::EnvConfigEgraphDetail for Indexed {
+        fn take_pending_equivs(&mut self, equivs: &mut Vec<Var>) {
+            swap(&mut self.pending_equivs, equivs);
+        }
+
+        fn defs_index(&self) -> &DefsIndex {
+            &self.defs_index
+        }
+
+        fn uses_index(&self) -> &UsesIndex {
+            &self.uses_index
         }
     }
 }
@@ -432,10 +493,22 @@ impl EncodedVarDef {
 ///
 /// This combines a polarity-aware union-find data structure over all equivalent literals with a map
 /// storing the defining node for each equivalence class representative.
-// TODO expand and explain the level bound
-#[derive(Default)]
+///
+/// It also maintains a best-effort upper bound on the level for each variable. The level is defined
+/// as the height of the DAG that defines a variable in terms of the inputs. While these bounds are
+/// correctly updated when adding value nodes, equivalences and during egraph rebuilding, other
+/// operations may not do so. This means correctness of these bounds is not a general environment
+/// invariant.
 pub struct VarDefs {
     var_defs: IdVec<Var, EncodedVarDef>,
+}
+
+impl Default for VarDefs {
+    fn default() -> Self {
+        Self {
+            var_defs: IdVec::from_vec(vec![Default::default()]),
+        }
+    }
 }
 
 impl VarDefs {
@@ -447,7 +520,7 @@ impl VarDefs {
     }
 
     /// Returns the canonical representative literal equivalent to the given literal.
-    fn lit_repr(&self, mut lit: Lit) -> Lit {
+    pub fn lit_repr(&self, mut lit: Lit) -> Lit {
         while let Some(VarDef::Equiv(repr)) = self.var_def(lit.var()) {
             lit = repr ^ lit.pol();
         }
@@ -455,12 +528,23 @@ impl VarDefs {
         lit
     }
 
+    fn update_lit_repr(&mut self, mut lit: Lit) -> Lit {
+        let repr = self.lit_repr(lit);
+
+        while let Some(VarDef::Equiv(parent)) = self.var_def(lit.var()) {
+            self.var_defs[lit.var()].set_equiv_var_repr(repr ^ lit.pol());
+            lit = parent ^ lit.pol();
+        }
+
+        repr
+    }
+
     /// Returns the canonical representative variable for the given variable.
     ///
     /// This ignores polarities, and thus might return a variable that's equivalent to the negation
     /// of the passed variable. Most of the time, [`lit_repr`][Self::lit_repr] should be used
     /// instead.
-    fn var_repr(&self, mut var: Var) -> Var {
+    pub fn var_repr(&self, mut var: Var) -> Var {
         while let Some(VarDef::Equiv(repr)) = self.var_def(var) {
             var = repr.var()
         }
@@ -470,12 +554,22 @@ impl VarDefs {
 
     /// Returns a best-effort upper bound on the level of the node that defines a given variable.
     // TODO go into more detail on how this is maintained, intended to be used, guarded inputs, etc.
-    fn level_bound(&self, var: Var) -> u32 {
+    pub fn level_bound(&self, var: Var) -> u32 {
         if let Some(repr) = self.var_defs.get(self.var_repr(var)) {
             repr.level_bound()
         } else {
             0
         }
+    }
+
+    /// Returns the number of assigned variables.
+    pub fn len(&self) -> usize {
+        self.var_defs.len()
+    }
+
+    /// Returns whether no variables have been assigned.
+    pub fn is_empty(&self) -> bool {
+        self.var_defs.is_empty()
     }
 }
 
@@ -484,10 +578,12 @@ impl VarDefs {
 /// The environment is parametrized by an [`EnvConfig`] configuration, which affects the invariants
 /// and indices maintained for the environment.
 // TODO add a general overview, as this is the main entry point for the IR
-pub struct Env<Config: EnvConfig> {
+pub struct Env<Config: EnvConfig = config::Indexed> {
     nodes: Nodes,
     var_defs: VarDefs,
     config: Config,
+    node_buf: NodeBuf,
+    node_buf_var_map: NodeBufVarMap,
 }
 
 impl<Config: EnvConfig> Default for Env<Config> {
@@ -496,38 +592,52 @@ impl<Config: EnvConfig> Default for Env<Config> {
             nodes: Default::default(),
             var_defs: Default::default(),
             config: Default::default(),
+            node_buf: Default::default(),
+            node_buf_var_map: Default::default(),
         }
     }
 }
 
-impl<Config: EnvConfig> Env<Config> {
-    /// Returns a read-only view of the [nodes][`Nodes`] stored in this environment.
-    pub fn nodes(&self) -> &Nodes {
-        &self.nodes
+/// Environment wrapper that provides lower-level access to an [environment's][Env] [nodes][Node].
+#[derive(SubtypeCast, NewtypeCast)]
+#[repr(transparent)]
+pub struct RawEnvNodes<Config: EnvConfig>(Env<Config>);
+
+impl<Config: EnvConfig> RawEnvNodes<Config> {
+    /// Returns the a mutable reference to the wrapped environment.
+    pub fn env_mut(&mut self) -> &mut Env<Config> {
+        &mut self.0
     }
 
-    /// Insert a node, assuming it is canonicalized and not yet part of the environment.
+    /// Returns a reference to the wrapped environment.
+    pub fn env(&self) -> &Env<Config> {
+        &self.0
+    }
+
+    /// Insert a node, assuming it is already fully reduced and not yet part of the environment.
+    ///
+    /// This assumes the value is already fully reduced and will not perform automatic reduction.
     ///
     /// While it is memory-safe to violate the canonicity or uniqueness assumptions, doing so may
     /// prevent the environment from maintaining the configured invariants and indices.
-    pub fn insert_unique_canonical_node<T: Node>(&mut self, node: T) -> (NodeId, &T) {
-        self.var_defs.var_defs.grow_for_key(node.max_var());
+    pub fn insert_unique_irreducible_node<T: Node>(&mut self, node: T) -> (NodeId, &T) {
+        self.0.var_defs.var_defs.grow_for_key(node.max_var());
 
         let output_var = node.output_var();
 
-        let (node_id, node_ref, nodes) = self.nodes.insert_and_get(node);
+        let (node_id, node_ref, nodes) = self.0.nodes.insert_and_get(node);
 
         let node_role = if let Some(output_var) = output_var {
-            let mut encoded_var_repr = &mut self.var_defs.var_defs[output_var];
+            let mut encoded_var_repr = &mut self.0.var_defs.var_defs[output_var];
             if encoded_var_repr.var_repr_is_none() {
                 encoded_var_repr.set_node_var_repr(node_id);
 
                 let mut level_bound = 0;
 
                 for var in node_ref.unguarded_input_var_iter() {
-                    level_bound = level_bound.max(self.var_defs.level_bound(var) + 1);
+                    level_bound = level_bound.max(self.0.var_defs.level_bound(var) + 1);
                 }
-                encoded_var_repr = &mut self.var_defs.var_defs[output_var];
+                encoded_var_repr = &mut self.0.var_defs.var_defs[output_var];
 
                 encoded_var_repr.set_level_bound(level_bound);
                 NodeRole::PrimaryDef(output_var)
@@ -538,10 +648,297 @@ impl<Config: EnvConfig> Env<Config> {
             NodeRole::Constraint
         };
 
-        self.config
+        self.0
+            .config
             .add_node(DynamicIndexContext { nodes }, node_id, node_ref, node_role);
 
         (node_id, node_ref)
+    }
+
+    /// Insert a dynamically typed node, assuming it is already fully reduced and not yet part of
+    /// the environment.
+    ///
+    /// This assumes the value is already fully reduced and will not perform automatic reduction.
+    ///
+    /// While it is memory-safe to violate the canonicity or uniqueness assumptions, doing so may
+    /// prevent the environment from maintaining the configured invariants and indices.
+    pub fn insert_unique_irreducible_dyn_node(
+        &mut self,
+        node: Take<DynNode>,
+    ) -> (NodeId, &DynNode) {
+        self.0.var_defs.var_defs.grow_for_key(node.max_var());
+
+        let output_var = node.output_var();
+
+        let (node_id, node_ref, nodes) = self.0.nodes.insert_and_get_dyn(node);
+
+        let node_role = if let Some(output_var) = output_var {
+            let mut encoded_var_repr = &mut self.0.var_defs.var_defs[output_var];
+            if encoded_var_repr.var_repr_is_none() {
+                encoded_var_repr.set_node_var_repr(node_id);
+
+                let mut level_bound = 0;
+
+                node_ref.dyn_foreach_unguarded_input_var(&mut |var| {
+                    level_bound = level_bound.max(self.0.var_defs.level_bound(var) + 1);
+                    true
+                });
+
+                encoded_var_repr = &mut self.0.var_defs.var_defs[output_var];
+
+                encoded_var_repr.set_level_bound(level_bound);
+                NodeRole::PrimaryDef(output_var)
+            } else {
+                NodeRole::Equivalence(output_var)
+            }
+        } else {
+            NodeRole::Constraint
+        };
+
+        self.0
+            .config
+            .add_dyn_node(DynamicIndexContext { nodes }, node_id, node_ref, node_role);
+
+        (node_id, node_ref)
+    }
+
+    /// Remove a node from the environment.
+    ///
+    /// This does not remove any variables and thus calling this can leave used variables without
+    /// any primary definition.
+    pub fn discard_node(&mut self, node_id: NodeId) -> bool {
+        let Some((node_ref, node_role)) =
+            <Env<Config>>::get_node_with_role(&self.0.nodes, &self.0.var_defs, node_id)
+        else {
+            return false;
+        };
+
+        self.0.config.remove_dyn_node(
+            DynamicIndexContext {
+                nodes: &self.0.nodes,
+            },
+            node_id,
+            node_ref,
+            node_role,
+        );
+
+        if let NodeRole::PrimaryDef(output_var) = node_role {
+            self.0.var_defs.var_defs[output_var] = Default::default();
+        }
+
+        self.0.nodes.discard(node_id);
+
+        true
+    }
+
+    /// Ensures the presence of a [value node][ValueNode] for the given [value][Value], retrieving
+    /// its node id and its output.
+    ///
+    /// This assumes the value is already fully reduced and will not perform automatic reduction.
+    ///
+    /// If there is an existing value node for the given value, this returns a tuple containing the
+    /// existing node's [`NodeId`], its output variable/literal and `false`. Otherwise this inserts
+    /// a new value node and returns a tuple containing the new node's [`NodeId`], output and
+    /// `true`.
+    // TODO update docs for the canonical part
+    pub fn insert_irreducible_value_node<T: Value>(
+        &mut self,
+        value: T,
+    ) -> (NodeId, T::Output, bool) {
+        if let Some((node_id, output)) = self.0.config.find_value(
+            DynamicIndexContext {
+                nodes: &self.0.nodes,
+            },
+            &value,
+        ) {
+            return (node_id, output, false);
+        }
+
+        let (new_var, _) = self.0.var_defs.var_defs.push(EncodedVarDef::default());
+        let output = <T::Output>::build_var_or_lit(new_var, |var| var, |var| var.as_pos());
+
+        let (node_id, _) = self.insert_unique_irreducible_node(ValueNode { output, value });
+
+        (node_id, output, true)
+    }
+    /// Ensures the presence of a [value node][ValueNode] for the given dynamically typed
+    /// [value][Value], retrieving its node id and its output.
+    ///
+    /// This assumes the value is already fully reduced and will not perform automatic reduction.
+    ///
+    /// If there is an existing value node for the given value, this returns a tuple containing the
+    /// existing node's [`NodeId`], its output variable/literal and `false`. Otherwise this inserts
+    /// a new value node and returns a tuple containing the new node's [`NodeId`], output and
+    /// `true`.
+    pub fn insert_irreducible_dyn_value_node(
+        &mut self,
+        value: Take<DynValue>,
+    ) -> (NodeId, Lit, bool) {
+        if let Some((node_id, output)) = self.0.config.find_dyn_value(
+            DynamicIndexContext {
+                nodes: &self.0.nodes,
+            },
+            &*value,
+        ) {
+            return (node_id, output, false);
+        }
+
+        let (new_var, _) = self.0.var_defs.var_defs.push(EncodedVarDef::default());
+        let output = new_var.as_pos();
+
+        let (node_id, _) = dyn_value_into_dyn_value_node(output, value, |node| {
+            self.insert_unique_irreducible_dyn_node(node)
+        });
+
+        (node_id, output, true)
+    }
+
+    pub(crate) fn insert_irreducible_dyn_value(&mut self, value: Take<DynValue>) -> Lit {
+        self.insert_irreducible_dyn_value_node(value).1
+    }
+
+    /// Ensures the presence of a [value node][ValueNode] for the given [value][Value], retrieving
+    /// its output.
+    ///
+    /// This calls [`insert_irreducible_value_node`][Self::insert_irreducible_value_node], returning
+    /// only the output variable or literal.
+    pub fn insert_irreducible_value<T: Value>(&mut self, value: T) -> T::Output {
+        self.insert_irreducible_value_node(value).1
+    }
+
+    /// Ensures the presence of a given node, retrieving its node id.
+    ///
+    /// This assumes the value is already fully reduced and will not perform automatic reduction.
+    ///
+    /// If the node is already present, it returns a pair of the [`NodeId`] of the existing node and
+    /// `false`, otherwise it returns a pair of the newly inserted node's id and `true`.
+    ///
+    /// If the passed node defines an output variable and there is an existing node that differs
+    /// only in their output variable/literal, this makes both output variables/literals equivalent
+    /// and considers the node to be already present.
+    pub fn insert_irreducible_node<T: Node>(&mut self, node: T) -> (NodeId, bool) {
+        if let Some(found_node) = self.0.config.find_node(
+            DynamicIndexContext {
+                nodes: &self.0.nodes,
+            },
+            &node,
+        ) {
+            if let Some(equiv) = found_node.equiv {
+                self.0.insert_equiv(equiv);
+            }
+            return (found_node.node, false);
+        }
+
+        let node_id = self.insert_unique_irreducible_node(node).0;
+        (node_id, true)
+    }
+
+    /// Ensures the presence of a given dynamically typed node, retrieving its node id.
+    ///
+    /// This assumes the value is already fully reduced and will not perform automatic reduction.
+    ///
+    /// If the node is already present, it returns a pair of the [`NodeId`] of the existing node and
+    /// `false`, otherwise it returns a pair of the newly inserted node's id and `true`.
+    ///
+    /// If the passed node defines an output variable and there is an existing node that differs
+    /// only in their output variable/literal, this makes both output variables/literals equivalent
+    /// and considers the node to be already present.
+    pub fn insert_irreducible_dyn_node(&mut self, node: Take<DynNode>) -> (NodeId, bool) {
+        if let Some(found_node) = self.0.config.find_dyn_node(
+            DynamicIndexContext {
+                nodes: &self.0.nodes,
+            },
+            &*node,
+        ) {
+            if let Some(equiv) = found_node.equiv {
+                self.0.insert_equiv(equiv);
+            }
+            return (found_node.node, false);
+        }
+
+        let node_id = self.insert_unique_irreducible_dyn_node(node).0;
+        (node_id, true)
+    }
+}
+
+impl<Config: EnvConfig> NodeBuilderDyn for Env<Config> {
+    fn dyn_value(&mut self, mut value: Take<DynValue>) -> Lit {
+        let pol = value.dyn_apply_var_map(&mut |var| self.var_defs.update_lit_repr(var.as_pos()));
+
+        if let Some(output) = value.dyn_reduce_into_buf(&mut self.node_buf) {
+            let mut node_buf = take(&mut self.node_buf);
+            let mut node_buf_var_map = take(&mut self.node_buf_var_map);
+            node_buf.drain_into_node_builder(self, &mut node_buf_var_map);
+            self.node_buf = node_buf;
+            self.node_buf_var_map = node_buf_var_map;
+
+            return output.map_var_to_lit(|var| self.node_buf_var_map.map_var(var)) ^ pol;
+        }
+
+        self.raw_nodes().insert_irreducible_dyn_value(value) ^ pol
+    }
+
+    fn dyn_node(&mut self, mut node: Take<DynNode>) {
+        node.dyn_apply_var_map(&mut |var| self.var_defs.update_lit_repr(var.as_pos()));
+
+        if node.dyn_reduce_into_buf(&mut self.node_buf) {
+            let mut node_buf = take(&mut self.node_buf);
+            let mut node_buf_var_map = take(&mut self.node_buf_var_map);
+            node_buf.drain_into_node_builder(self, &mut node_buf_var_map);
+            self.node_buf = node_buf;
+            self.node_buf_var_map = node_buf_var_map;
+            return;
+        }
+
+        self.raw_nodes().insert_irreducible_dyn_node(node);
+    }
+
+    fn equiv(&mut self, equiv: [Lit; 2]) {
+        self.insert_equiv(equiv);
+    }
+
+    fn valid_temporary_vars(&self, count: usize) -> bool {
+        (Var::MAX_ID_INDEX.saturating_add(1) - self.var_defs.len()) >= count
+    }
+}
+
+impl<Config: EnvConfig> NodeBuilder for Env<Config> {
+    fn value<T: Value>(&mut self, mut value: T) -> T::Output {
+        let pol = value.apply_var_map(|var| self.var_defs.update_lit_repr(var.as_pos()));
+
+        if let Some(output) = value.reduce(self) {
+            return output ^ pol;
+        }
+
+        self.raw_nodes().insert_irreducible_value(value) ^ pol
+    }
+
+    fn node<T: Node>(&mut self, mut node: T) {
+        node.apply_var_map(|var| self.var_defs.update_lit_repr(var.as_pos()));
+
+        if node.reduce(self) {
+            return;
+        }
+
+        self.raw_nodes().insert_irreducible_node(node);
+    }
+}
+
+impl<Config: EnvConfig> Env<Config> {
+    /// Returns a read-only view of the [nodes][`Nodes`] stored in this environment.
+    pub fn nodes(&self) -> &Nodes {
+        &self.nodes
+    }
+
+    /// Provides lower-level access to an environment's [nodes][`Node`].
+    pub fn raw_nodes(&mut self) -> &mut RawEnvNodes<Config> {
+        RawEnvNodes::from_repr_mut(self)
+    }
+
+    /// Returns a read-only view of the primary definitions and level bounds for all variables in
+    /// the environment.
+    pub fn var_defs(&self) -> &VarDefs {
+        &self.var_defs
     }
 
     fn get_node_with_role<'a>(
@@ -549,7 +946,7 @@ impl<Config: EnvConfig> Env<Config> {
         var_reprs: &VarDefs,
         node_id: NodeId,
     ) -> Option<(&'a DynNode, NodeRole)> {
-        let node_ref = nodes.get(node_id)?;
+        let node_ref = nodes.get_dyn(node_id)?;
 
         let output_var = node_ref.output_var();
 
@@ -564,33 +961,6 @@ impl<Config: EnvConfig> Env<Config> {
         };
 
         Some((node_ref, node_role))
-    }
-
-    /// Remove a node from the environment.
-    ///
-    /// This does not remove any variables and thus calling this can leave used variables without
-    /// any primary definition.
-    pub fn discard_node(&mut self, node_id: NodeId) -> bool {
-        let Some((node_ref, node_role)) =
-            Self::get_node_with_role(&self.nodes, &self.var_defs, node_id)
-        else {
-            return false;
-        };
-
-        self.config.remove_dyn_node(
-            DynamicIndexContext { nodes: &self.nodes },
-            node_id,
-            node_ref,
-            node_role,
-        );
-
-        if let NodeRole::PrimaryDef(output_var) = node_role {
-            self.var_defs.var_defs[output_var] = Default::default();
-        }
-
-        self.nodes.discard(node_id);
-
-        true
     }
 
     /// Adds and returns a new variable to the environment.
@@ -611,68 +981,6 @@ impl<Config: EnvConfig> Env<Config> {
         self.var_defs.var_defs.push(encoded_var_repr).0
     }
 
-    /// Ensures the presence of a [value node][ValueNode] for the given [value][Value], retrieving
-    /// its node id and its output.
-    ///
-    /// If there is an existing value node for the given value, this returns a tuple containing the
-    /// existing node's [`NodeId`], its output variable/literal and `false`. Otherwise this inserts
-    /// a new value node and returns a tuple containing the new node's [`NodeId`], output and
-    /// `true`.
-    ///
-    /// Before looking for an existing value node, the given value is canonicalized w.r.t. the known
-    /// variable/literal equivalences.
-    pub fn insert_value_node<T: Value>(&mut self, value: T) -> (NodeId, T::Output, bool) {
-        if let Some((node_id, output)) = self
-            .config
-            .find_value(DynamicIndexContext { nodes: &self.nodes }, &value)
-        {
-            return (node_id, output, false);
-        }
-
-        let (new_var, _) = self.var_defs.var_defs.push(EncodedVarDef::default());
-        let output = <T::Output>::build_var_or_lit(new_var, |var| var, |var| var.as_pos());
-
-        let (node_id, _) = self.insert_unique_canonical_node(ValueNode { output, value });
-
-        (node_id, output, true)
-    }
-
-    /// Ensures the presence of a [value node][ValueNode] for the given [value][Value], retrieving
-    /// its output.
-    ///
-    /// This calls [`insert_value_node`][Self::insert_value_node], returning only the output
-    /// variable or literal.
-    pub fn insert_value<T: Value>(&mut self, value: T) -> T::Output {
-        self.insert_value_node(value).1
-    }
-
-    /// Ensures the presence of a given node, retrieving its node id.
-    ///
-    /// If the node is already present, it returns a pair of the [`NodeId`] of the existing node and
-    /// `false`, otherwise it returns a pair of the newly inserted node's id and `true`.
-    ///
-    /// If the passed node defines an output variable and there is an existing node that differs
-    /// only in their output variable/literal, this makes both output variables/literals equivalent
-    /// and considers the node to be already present.
-    pub fn insert_node<T: Node>(&mut self, mut node: T) -> (NodeId, bool) {
-        node.apply_var_map(|var| self.var_defs.lit_repr(var.as_pos()));
-
-        // TODO decay based on local constants or equivalences (also update docs!)
-
-        if let Some(found_node) = self
-            .config
-            .find_node(DynamicIndexContext { nodes: &self.nodes }, &node)
-        {
-            if let Some(equiv) = found_node.equiv {
-                self.insert_equiv(equiv);
-            }
-            return (found_node.node, false);
-        }
-
-        let node_id = self.insert_unique_canonical_node(node).0;
-        (node_id, true)
-    }
-
     /// Makes two literals equivalent.
     ///
     /// This will chose a representative for the newly merged equivalence class by considering
@@ -684,8 +992,8 @@ impl<Config: EnvConfig> Env<Config> {
     /// definition graph.
     ///
     /// This will panic when attempting to make a literal equivalent to its negation.
-    pub fn insert_equiv(&mut self, equiv: [Lit; 2]) -> bool {
-        let [mut a, mut b] = equiv.map(|lit| self.var_defs.lit_repr(lit));
+    pub(crate) fn insert_equiv(&mut self, equiv: [Lit; 2]) -> bool {
+        let [mut a, mut b] = equiv.map(|lit| self.var_defs.update_lit_repr(lit));
 
         self.var_defs.var_defs.grow_for_key(a.max(b).var());
 
@@ -699,12 +1007,21 @@ impl<Config: EnvConfig> Env<Config> {
             // always prefer a constant value as representative
             (a, b) = (b, a);
         } else {
-            // then use the level bound to avoid introducing primary definition cycles
-            match self
-                .var_defs
-                .level_bound(a.var())
-                .cmp(&self.var_defs.level_bound(b.var()))
-            {
+            let a_def = matches!(
+                self.var_defs.var_defs[a.var()].var_def(),
+                Some(VarDef::Node(_))
+            );
+            let b_def = matches!(
+                self.var_defs.var_defs[b.var()].var_def(),
+                Some(VarDef::Node(_))
+            );
+            // prefer a node with a primary definition as representative, then use the level bound
+            // to avoid introducing primary definition cycles
+            match a_def.cmp(&b_def).then_with(|| {
+                self.var_defs
+                    .level_bound(a.var())
+                    .cmp(&self.var_defs.level_bound(b.var()))
+            }) {
                 std::cmp::Ordering::Less => (a, b) = (b, a),
                 std::cmp::Ordering::Greater => (),
                 std::cmp::Ordering::Equal => {
@@ -727,6 +1044,14 @@ impl<Config: EnvConfig> Env<Config> {
                 Some(node_id),
                 None,
             );
+
+            debug_assert!(
+                repr.is_const()
+                    || matches!(
+                        self.var_defs.var_defs[repr.var()].var_def(),
+                        Some(VarDef::Node(_))
+                    )
+            );
         }
 
         self.var_defs.var_defs[equiv].set_equiv_var_repr(repr);
@@ -737,31 +1062,34 @@ impl<Config: EnvConfig> Env<Config> {
     }
 }
 
-impl Env<config::Indexed> {
-    // TODO use a trait bound instead of concrete config::Indexed
-
-    /// Restore egraph invariants for the environment's node graph.
-    // TODO go into more detail
+impl<Config: EnvConfigEgraph> Env<Config> {
+    /// Incrementally restores the egraph invariants for the full environment.
+    ///
+    /// Note that using [`Env::raw_nodes`] it may be possible to violate the egraph invariants in
+    /// ways that this method cannot repair. This does not happen when using the envrionment's
+    /// [`NodeBuilder`] methods.
     pub fn rebuild_egraph(&mut self) {
         let mut node_ids = vec![];
         let mut pending = vec![];
 
         let mut renamed_vars = 0;
         let mut rewritten_nodes = 0;
+        let mut reduced_nodes = 0;
         let mut redundant_nodes = 0;
         let mut found_congruences = 0;
         let mut passes = 0;
 
+        let mut node_buf = take(&mut self.node_buf);
+        let mut node_buf_var_map = take(&mut self.node_buf_var_map);
+
         loop {
-            swap(&mut pending, &mut self.config.pending_equivs);
+            self.config.take_pending_equivs(&mut pending);
             if pending.is_empty() {
                 break;
             }
 
-            log::trace!(
-                "egraph rebuild pass {passes}: (len {}) {pending:?}",
-                pending.len(),
-            );
+            log::trace!("egraph rebuild pass {passes}: len {}", pending.len());
+            log::trace!("egraph rebuild pending {pending:?}");
 
             passes += 1;
             renamed_vars += pending.len();
@@ -769,8 +1097,12 @@ impl Env<config::Indexed> {
             for var in pending.drain(..) {
                 log::trace!("egraph rebuild var {var}");
                 node_ids.clear();
-                node_ids.extend(self.config.defs_index.find_non_primary_defs_unordered(var));
-                node_ids.extend(self.config.uses_index.find_uses_unordered(var));
+                node_ids.extend(
+                    self.config
+                        .defs_index()
+                        .find_non_primary_defs_unordered(var),
+                );
+                node_ids.extend(self.config.uses_index().find_uses_unordered(var));
                 node_ids.extend(self.var_defs.var_defs[var].var_def_node());
                 node_ids.sort_unstable();
                 node_ids.dedup();
@@ -809,17 +1141,26 @@ impl Env<config::Indexed> {
                     rewritten_nodes += 1;
 
                     self.nodes
-                        .get_mut(node_id)
+                        .get_dyn_mut(node_id)
                         .unwrap()
-                        .dyn_apply_var_map(&mut |var| self.var_defs.lit_repr(var.as_pos()));
+                        .dyn_apply_var_map(&mut |var| self.var_defs.update_lit_repr(var.as_pos()));
 
-                    let node = self.nodes.get(node_id).unwrap();
+                    let node = self.nodes.get_dyn_mut(node_id).unwrap();
+
+                    if node.dyn_reduce_into_buf(&mut node_buf) {
+                        reduced_nodes += 1;
+                        self.nodes.discard(node_id);
+                        node_buf.drain_into_node_builder(self, &mut node_buf_var_map);
+                        continue;
+                    }
+
+                    let node = self.nodes.get_dyn(node_id).unwrap();
 
                     if let Some(found_node) = self
                         .config
                         .find_dyn_node(DynamicIndexContext { nodes: &self.nodes }, node)
                     {
-                        let other_node = self.nodes.get(found_node.node).unwrap();
+                        let other_node = self.nodes.get_dyn(found_node.node).unwrap();
 
                         if let Some(equiv) = found_node.equiv {
                             log::trace!("egraph congruence {equiv:?} {node:?} {other_node:?}");
@@ -852,7 +1193,11 @@ impl Env<config::Indexed> {
             }
         }
 
+        self.node_buf = node_buf;
+        self.node_buf_var_map = node_buf_var_map;
+
         log::debug!("egraph passes={passes}");
+        log::debug!("egraph reduced_nodes={reduced_nodes}");
         log::debug!("egraph renamed_vars={renamed_vars}");
         log::debug!("egraph rewritten_nodes={rewritten_nodes}");
         log::debug!("egraph found_congruences={found_congruences}");

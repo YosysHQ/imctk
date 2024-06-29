@@ -5,11 +5,15 @@ use zwohash::ZwoHasher;
 
 use crate::ir::var::Var;
 
-use crate::ir::node::{DynNode, Node, NodeId, Nodes};
+use crate::ir::node::{
+    collections::nodes::Nodes,
+    generic::{DynNode, Node},
+    NodeId,
+};
 
 use super::{
     env::NodeRole,
-    node::value::{Value, ValueNode},
+    node::generic::{DynValue, Value, ValueNode},
     var::Lit,
 };
 
@@ -104,7 +108,7 @@ impl DynamicIndex for StructuralHashIndex {
 
         self.tables
             .insert_unique(var.index(), hash, node_id, |&node_id| {
-                nodes.get(node_id).unwrap().def_hash()
+                nodes.get_dyn(node_id).unwrap().def_hash()
             });
     }
 
@@ -125,12 +129,12 @@ impl DynamicIndex for StructuralHashIndex {
                     var.index(),
                     hash,
                     |&candidate| candidate == node_id,
-                    |&node_id| nodes.get(node_id).unwrap().def_hash(),
+                    |&node_id| nodes.get_dyn(node_id).unwrap().def_hash(),
                 )
                 .is_some(),
             "removed node is missing {} {node_id:?} {:?}",
             var,
-            nodes.get(node_id)
+            nodes.get_dyn(node_id)
         );
     }
 
@@ -166,14 +170,37 @@ impl StructuralHashIndex {
             let mut output = <T::Output>::default();
             let node_id = *self.tables
                 .find(var.index(), hash, |&candidate| {
-                    let Some(candidate_ref) = nodes.get(candidate) else {return false};
+                    let Some(candidate_ref) = nodes.get_dyn(candidate) else {return false};
                     let Some(candidate_ref) = candidate_ref.dyn_cast::<ValueNode<T>>() else {return false};
-                    let eq = candidate_ref.value == *value;
+                    let eq = candidate_ref.value.def_eq(value);
                     if eq {
                         output = candidate_ref.output;
                     }
                     eq
                 })?;
+
+            Some((node_id, output))
+        } else {
+            None
+        }
+    }
+
+    /// Find an existing [`ValueNode`] for a given dynamically typed [`Value`].
+    pub fn find_dyn_value(&self, nodes: &Nodes, value: &DynValue) -> Option<(NodeId, Lit)> {
+        let hash = value.def_hash();
+        let var = value.representative_input_var();
+
+        if var.index() < self.tables.len() {
+            let mut output = Lit::FALSE;
+            let node_id = *self.tables.find(var.index(), hash, |&candidate| {
+                let Some(candidate_ref) = nodes.get_dyn(candidate) else { return false };
+                let Some(candidate_value_ref) = candidate_ref.dyn_value() else { return false };
+                let eq = candidate_value_ref.dyn_def_eq(value);
+                if eq {
+                    output = candidate_ref.output_lit().unwrap();
+                }
+                eq
+            })?;
 
             Some((node_id, output))
         } else {
@@ -192,13 +219,13 @@ impl StructuralHashIndex {
         }
 
         let found = *self.tables.find(var.index(), hash, |&candidate| {
-            node.dyn_def_eq(nodes.get(candidate).unwrap())
+            node.dyn_def_eq(nodes.get_dyn(candidate).unwrap())
         })?;
 
         let mut equiv = None;
 
         if let Some(node_output) = node.output_lit() {
-            let found_node = nodes.get(found).unwrap();
+            let found_node = nodes.get_dyn(found).unwrap();
 
             if let Some(found_output) = found_node.output_lit() {
                 equiv = Some([node_output, found_output]);
@@ -221,13 +248,13 @@ impl StructuralHashIndex {
         }
 
         let found = *self.tables.find(var.index(), hash, |&candidate| {
-            node.dyn_def_eq(nodes.get(candidate).unwrap())
+            node.dyn_def_eq(nodes.get_dyn(candidate).unwrap())
         })?;
 
         let mut equiv = None;
 
         if let Some(node_output) = node.output_lit() {
-            let found_node = nodes.get(found).unwrap();
+            let found_node = nodes.get_dyn(found).unwrap();
 
             if let Some(found_output) = found_node.output_lit() {
                 equiv = Some([node_output, found_output]);

@@ -1,14 +1,25 @@
-//! Nodes of the internal representation graph.
-//!
-//! This module defines the [`Node`] trait for internal representation nodes and the [`Nodes`] type
-//! holding a heterogeneous collection of such nodes.
+//! Nodes and values that form the internal representation graph.
 
-mod node_trait;
-mod nodes;
+use std::fmt;
 
-pub use node_trait::{DynNode, Node, NodeDyn, NodeDynAuto, NodeType};
-pub use nodes::{NodeError, NodeId, Nodes};
+use imctk_ids::{Id, Id32};
 
-pub mod value;
+mod vtables;
+
+pub mod collections;
+
+pub mod builder;
+pub mod generic;
 
 pub mod fine;
+
+/// Identifies an individual node within a collection of nodes.
+#[derive(Id)]
+#[repr(transparent)]
+pub struct NodeId(Id32);
+
+impl fmt::Debug for NodeId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "n{}", self.id_index())
+    }
+}

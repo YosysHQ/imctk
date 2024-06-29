@@ -1,3 +1,4 @@
+//! Heterogeneous collection of [`Node`] values supporting dynamic updates.
 use std::{
     alloc::Layout,
     fmt::{self, Debug},
@@ -7,16 +8,18 @@ use std::{
 };
 
 use hashbrown::HashTable;
-use imctk_ids::{Id, Id32};
+use imctk_ids::Id;
 use indexmap::IndexSet;
 use zwohash::ZwoHasher;
 
-use super::{
-    node_trait::{DynNodeType, GenericNodeType, KnownNodeType},
-    DynNode, Node, NodeType,
+use crate::{give_take::Take, ir::node::NodeId};
+
+use crate::ir::node::{
+    generic::{DynNode, Node, NodeType},
+    vtables::{DynNodeType, GenericNodeType, KnownNodeType},
 };
 
-pub(super) union ChunkSlot<T> {
+pub(crate) union ChunkSlot<T> {
     _entry: ManuallyDrop<T>,
     _next: u16,
 }
@@ -441,22 +444,9 @@ impl Debug for Nodes {
     }
 }
 
-/// Identifies individual nodes within a collection of [`Nodes`].
-#[derive(Id)]
-#[repr(transparent)]
-pub struct NodeId(Id32);
-
-impl Debug for NodeId {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "n{}", self.id_index())
-    }
-}
-
-impl NodeId {
-    fn split_id(self) -> (usize, usize) {
-        let id_index = self.id_index();
-        (id_index / CHUNK_SIZE, id_index % CHUNK_SIZE)
-    }
+fn split_id(id: NodeId) -> (usize, usize) {
+    let id_index = id.id_index();
+    (id_index / CHUNK_SIZE, id_index % CHUNK_SIZE)
 }
 
 /// Error cases for accesses a [`Node`] among [`Nodes`] using a given [`NodeId`] and [`NodeType`].
@@ -574,11 +564,37 @@ impl Nodes {
         )
     }
 
+    #[inline(always)]
+    pub(crate) fn insert_and_get_dyn(&mut self, node: Take<DynNode>) -> (NodeId, &DynNode, &Self) {
+        let (node_id, node_ptr) = self.insert_dyn_raw(node);
+
+        // SAFETY: we own the node and the resulting reference takes a borrow of self
+        (node_id, unsafe { &*node_ptr.cast_const() }, self)
+    }
+
+    pub(crate) fn insert_dyn(&mut self, node: Take<DynNode>) -> (NodeId, &mut DynNode) {
+        let (node_id, node_ptr) = self.insert_dyn_raw(node);
+        // SAFETY: we own the node and the resulting mutable reference takes a mutable borrow of
+        // self
+        (node_id, unsafe { &mut *node_ptr })
+    }
+
+    pub(crate) fn insert_dyn_raw(&mut self, node: Take<DynNode>) -> (NodeId, *mut DynNode) {
+        let node_type = DynNodeType(node.node_type());
+        // SAFETY: as required, we're transferring ownership using `into_raw_ptr`
+        let (node_id, node_ptr) =
+            unsafe { node_type.insert_raw_dyn(self, node.into_raw_ptr() as *mut u8) };
+
+        // SAFETY: the returned raw pointer will point to the same node, so we can use the same
+        // NodeType to construct a trait object pointer
+        (node_id, unsafe { node_type.cast_mut_ptr(node_ptr) })
+    }
+
     /// Returns a trait object reference to the node with a given [`NodeId`].
     ///
     /// Returns `None` if the collection has no node of the given id.
-    pub fn get(&self, node_id: NodeId) -> Option<&DynNode> {
-        let (chunk_index, chunk_slot) = node_id.split_id();
+    pub fn get_dyn(&self, node_id: NodeId) -> Option<&DynNode> {
+        let (chunk_index, chunk_slot) = split_id(node_id);
 
         self.chunks.get(chunk_index)?.get(chunk_slot)
     }
@@ -586,8 +602,8 @@ impl Nodes {
     /// Returns a mutable trait object reference to the node with a given [`NodeId`].
     ///
     /// Returns `None` if the collection has no node of the given id.
-    pub fn get_mut(&mut self, node_id: NodeId) -> Option<&mut DynNode> {
-        let (chunk_index, chunk_slot) = node_id.split_id();
+    pub fn get_dyn_mut(&mut self, node_id: NodeId) -> Option<&mut DynNode> {
+        let (chunk_index, chunk_slot) = split_id(node_id);
 
         self.chunks.get_mut(chunk_index)?.get_mut(chunk_slot)
     }
@@ -601,7 +617,7 @@ impl Nodes {
     /// See [`discard`][`Self::discard`] for a method that removes nodes of arbitrary node types,
     /// dropping the removed node in-place.
     pub fn remove<T: Node>(&mut self, node_id: NodeId) -> Result<T, NodeError> {
-        let (chunk_index, chunk_slot) = node_id.split_id();
+        let (chunk_index, chunk_slot) = split_id(node_id);
         if let Some(chunk) = self.chunks.get_mut(chunk_index) {
             match chunk.as_known_mut::<T>() {
                 Some(chunk) => match chunk.remove(chunk_slot) {
@@ -630,6 +646,39 @@ impl Nodes {
         }
     }
 
+    /// Removes the [`Node`] with a given [`NodeId`], passing an ownership-transferring dynamically
+    /// typed reference to a callback closure.
+    ///
+    /// When a node with the given id was found, this will return the callback result and `None`
+    /// otherwise.
+    pub fn remove_dyn_with<R>(
+        &mut self,
+        node_id: NodeId,
+        f: impl for<'a> FnOnce(Take<'a, DynNode>) -> R,
+    ) -> Option<R> {
+        let (chunk_index, chunk_slot) = split_id(node_id);
+        let chunk = self.chunks.get_mut(chunk_index)?;
+        let slot_mut = chunk.get_mut(chunk_slot)?;
+        let slot_ptr = slot_mut as *mut DynNode;
+
+        chunk.take_present(chunk_slot);
+
+        // SAFETY: even though the slot is already marked as free by take_present, we maintain
+        // ownership of the storage until we return (after that point re-use of the slot would be
+        // possible). Since we pass the resulting `Take` reference to a HRTB closure, the `Take`
+        // reference cannot escape and we know that no one is still using the storage when we
+        // return.
+        let result = f(unsafe { Take::from_raw_ptr(slot_ptr) });
+
+        self.len -= 1;
+        // SAFETY: the type_index value of a chunk is always in bounds
+        unsafe {
+            self.types.get_unchecked_mut(chunk.type_index as usize).len -= 1;
+        }
+
+        Some(result)
+    }
+
     /// Removes the [`Node`] with a given [`NodeId`].
     ///
     /// Returns `false` when there was no node of the given id and `true` when such a node was
@@ -638,7 +687,7 @@ impl Nodes {
     /// This drops the node in-place, see [`remove`][Self::remove] for a method that returns the
     /// removed node, but requires a statically known node type.
     pub fn discard(&mut self, node_id: NodeId) -> bool {
-        let (chunk_index, chunk_slot) = node_id.split_id();
+        let (chunk_index, chunk_slot) = split_id(node_id);
         let Some(chunk) = self.chunks.get_mut(chunk_index) else { return false };
 
         let dropped = chunk.drop(chunk_slot);

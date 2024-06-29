@@ -8,10 +8,15 @@ flussab-aiger = "0.1.0"
 hashbrown = { version = "0.14.5", default-features = false, features = ["inline-more"] }
 imctk-derive = { version = "0.1.0", path = "../derive" }
 imctk-ids = { path = "../ids" }
+imctk-transparent = { version = "0.1.0", path = "../transparent" }
 indexmap = "2.2.6"
 log = "0.4.21"
 table_seq = { version = "0.1.0", path = "../table_seq" }
 zwohash = "0.1.2"
 
 [dev-dependencies]
+anstyle = "1.0.7"
+clap = { version = "4.5.7", features = ["derive"] }
 env_logger = "0.11.3"
+indicatif = "0.17.8"
+libc = "0.2.155"
