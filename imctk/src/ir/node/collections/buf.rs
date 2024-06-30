@@ -8,10 +8,8 @@ use crate::{
     ir::{
         node::{
             builder::{NodeBuilder, NodeBuilderDyn},
-            generic::{
-                dyn_value_into_dyn_value_wrapper, DynNode, DynValue, Node, Value, ValueWrapper,
-            },
-            vtables::{DynNodeType, DynValueType, GenericNodeType, GenericValueType},
+            generic::{dyn_term_into_dyn_term_wrapper, DynNode, DynTerm, Node, Term, TermWrapper},
+            vtables::{DynNodeType, DynTermType, GenericNodeType, GenericTermType},
             NodeId,
         },
         var::{Lit, Var, VarOrLit},
@@ -20,7 +18,7 @@ use crate::{
 
 #[derive(Debug)]
 enum NodeBufEntry {
-    Value(NodeId),
+    Term(NodeId),
     Node(NodeId),
     Equiv([Lit; 2]),
 }
@@ -29,7 +27,7 @@ enum NodeBufEntry {
 pub struct NodeBuf {
     nodes: super::nodes::Nodes,
     entries: Vec<NodeBufEntry>,
-    values: usize,
+    terms: usize,
     recycle: usize,
 }
 
@@ -48,16 +46,16 @@ impl NodeBufVarMap {
 }
 
 impl NodeBuilderDyn for NodeBuf {
-    fn dyn_value(&mut self, value: Take<DynValue>) -> Lit {
-        let lit = Var::from_index(Var::MAX_ID_INDEX.checked_sub(self.values).unwrap()).as_pos();
+    fn dyn_term(&mut self, term: Take<DynTerm>) -> Lit {
+        let lit = Var::from_index(Var::MAX_ID_INDEX.checked_sub(self.terms).unwrap()).as_pos();
 
-        self.entries.push(NodeBufEntry::Value(
+        self.entries.push(NodeBufEntry::Term(
             self.nodes
-                .insert_dyn(dyn_value_into_dyn_value_wrapper(value))
+                .insert_dyn(dyn_term_into_dyn_term_wrapper(term))
                 .0,
         ));
 
-        self.values += 1;
+        self.terms += 1;
 
         lit
     }
@@ -73,10 +71,10 @@ impl NodeBuilderDyn for NodeBuf {
 }
 
 impl NodeBuilder for NodeBuf {
-    fn value<T: Value>(&mut self, value: T) -> T::Output {
-        let lit = Var::from_index(Var::MAX_ID_INDEX.checked_sub(self.values).unwrap()).as_pos();
-        self.entries.push(NodeBufEntry::Value(
-            self.nodes.insert(ValueWrapper { value }).0,
+    fn term<T: Term>(&mut self, term: T) -> T::Output {
+        let lit = Var::from_index(Var::MAX_ID_INDEX.checked_sub(self.terms).unwrap()).as_pos();
+        self.entries.push(NodeBufEntry::Term(
+            self.nodes.insert(TermWrapper { term }).0,
         ));
 
         <T::Output as VarOrLit>::build_var_or_lit(lit, |lit| lit.var(), |lit| lit)
@@ -97,7 +95,7 @@ impl NodeBuf {
         // We multiply by 2 since the builder will start allocating variables for our temporary
         // variables and we need to avoid any overlap until the very end.
         assert!(
-            builder.valid_temporary_vars(self.values * 2),
+            builder.valid_temporary_vars(self.terms * 2),
             "NodeBuf uses more temporary variables than available in the target builder"
         );
         var_map.map.clear();
@@ -107,25 +105,25 @@ impl NodeBuf {
 
         for entry in self.entries.drain(..) {
             match entry {
-                NodeBufEntry::Value(node_id) => {
+                NodeBufEntry::Term(node_id) => {
                     self.nodes
                         .remove_dyn_with(node_id, |node| {
-                            let value_type =
-                                DynNodeType(node.node_type()).wrapped_value_type().unwrap();
+                            let term_type =
+                                DynNodeType(node.node_type()).wrapped_term_type().unwrap();
                             // SAFETY: we know (and dynamically verified by calling
-                            // `wrapped_value_type`) that the target node is a ValueWrapper which is
-                            // a transparent wrapper for a Value. We're also using the correct
-                            // `ValueType` obtained from the wrapper's `NodeType`.
-                            let mut value = unsafe {
+                            // `wrapped_term_type`) that the target node is a TermWrapper which is
+                            // a transparent wrapper for a Term. We're also using the correct
+                            // `TermType` obtained from the wrapper's `NodeType`.
+                            let mut term = unsafe {
                                 Take::from_raw_ptr(
-                                    DynValueType(value_type)
+                                    DynTermType(term_type)
                                         .cast_mut_ptr(node.into_raw_ptr() as *mut u8),
                                 )
                             };
 
-                            let map_pol = value.dyn_apply_var_map(&mut |var| var_map.map_var(var));
+                            let map_pol = term.dyn_apply_var_map(&mut |var| var_map.map_var(var));
 
-                            let output_lit = builder.dyn_value(value);
+                            let output_lit = builder.dyn_term(term);
 
                             var_map.map.push(output_lit ^ map_pol);
                         })

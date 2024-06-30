@@ -14,7 +14,7 @@ use super::{
             buf::{NodeBuf, NodeBufVarMap},
             nodes::Nodes,
         },
-        generic::{dyn_value_into_dyn_value_node, DynNode, DynValue, Node, Value, ValueNode},
+        generic::{dyn_term_into_dyn_term_node, DynNode, DynTerm, Node, Term, TermNode},
         NodeId,
     },
     var::{Lit, Var},
@@ -29,7 +29,7 @@ pub mod config {
         index::{DefsIndex, DynamicIndex, FoundNode, StructuralHashIndex, UsesIndex},
         node::{
             collections::nodes::Nodes,
-            generic::{DynNode, DynValue, Node, Value},
+            generic::{DynNode, DynTerm, Node, Term},
             NodeId,
         },
         var::{Lit, Var},
@@ -42,7 +42,7 @@ pub mod config {
 
     mod sealed {
 
-        use crate::ir::node::generic::DynValue;
+        use crate::ir::node::generic::DynTerm;
 
         use super::*;
 
@@ -52,20 +52,20 @@ pub mod config {
         {
             #[allow(unused_variables)]
             #[inline(always)]
-            fn find_value<T: Value>(
+            fn find_term<T: Term>(
                 &self,
                 context: DynamicIndexContext,
-                value: &T,
+                term: &T,
             ) -> Option<(NodeId, T::Output)> {
                 None
             }
 
             #[allow(unused_variables)]
             #[inline(always)]
-            fn find_dyn_value(
+            fn find_dyn_term(
                 &self,
                 context: DynamicIndexContext,
-                value: &DynValue,
+                term: &DynTerm,
             ) -> Option<(NodeId, Lit)> {
                 None
             }
@@ -247,20 +247,20 @@ pub mod config {
 
     impl EnvConfig for StructuralHashing {}
     impl sealed::EnvConfigDetail for StructuralHashing {
-        fn find_value<T: Value>(
+        fn find_term<T: Term>(
             &self,
             context: DynamicIndexContext,
-            value: &T,
+            term: &T,
         ) -> Option<(NodeId, T::Output)> {
-            self.structural_hash_index.find_value(context.nodes, value)
+            self.structural_hash_index.find_term(context.nodes, term)
         }
-        fn find_dyn_value(
+        fn find_dyn_term(
             &self,
             context: DynamicIndexContext,
-            value: &DynValue,
+            term: &DynTerm,
         ) -> Option<(NodeId, Lit)> {
             self.structural_hash_index
-                .find_dyn_value(context.nodes, value)
+                .find_dyn_term(context.nodes, term)
         }
     }
 
@@ -357,12 +357,12 @@ pub mod config {
     impl EnvConfig for Indexed {}
     impl sealed::EnvConfigDetail for Indexed {
         #[inline(always)]
-        fn find_value<T: Value>(
+        fn find_term<T: Term>(
             &self,
             context: DynamicIndexContext,
-            value: &T,
+            term: &T,
         ) -> Option<(NodeId, T::Output)> {
-            self.structural_hash_index.find_value(context.nodes, value)
+            self.structural_hash_index.find_term(context.nodes, term)
         }
 
         #[inline(always)]
@@ -496,7 +496,7 @@ impl EncodedVarDef {
 ///
 /// It also maintains a best-effort upper bound on the level for each variable. The level is defined
 /// as the height of the DAG that defines a variable in terms of the inputs. While these bounds are
-/// correctly updated when adding value nodes, equivalences and during egraph rebuilding, other
+/// correctly updated when adding term nodes, equivalences and during egraph rebuilding, other
 /// operations may not do so. This means correctness of these bounds is not a general environment
 /// invariant.
 pub struct VarDefs {
@@ -616,7 +616,7 @@ impl<Config: EnvConfig> RawEnvNodes<Config> {
 
     /// Insert a node, assuming it is already fully reduced and not yet part of the environment.
     ///
-    /// This assumes the value is already fully reduced and will not perform automatic reduction.
+    /// This assumes the node is already fully reduced and will not perform automatic reduction.
     ///
     /// While it is memory-safe to violate the canonicity or uniqueness assumptions, doing so may
     /// prevent the environment from maintaining the configured invariants and indices.
@@ -658,7 +658,7 @@ impl<Config: EnvConfig> RawEnvNodes<Config> {
     /// Insert a dynamically typed node, assuming it is already fully reduced and not yet part of
     /// the environment.
     ///
-    /// This assumes the value is already fully reduced and will not perform automatic reduction.
+    /// This assumes the node is already fully reduced and will not perform automatic reduction.
     ///
     /// While it is memory-safe to violate the canonicity or uniqueness assumptions, doing so may
     /// prevent the environment from maintaining the configured invariants and indices.
@@ -731,25 +731,20 @@ impl<Config: EnvConfig> RawEnvNodes<Config> {
         true
     }
 
-    /// Ensures the presence of a [value node][ValueNode] for the given [value][Value], retrieving
-    /// its node id and its output.
+    /// Ensures the presence of a [term node][TermNode] for the given [term][Term], retrieving its
+    /// node id and its output.
     ///
-    /// This assumes the value is already fully reduced and will not perform automatic reduction.
+    /// This assumes the term is already fully reduced and will not perform automatic reduction.
     ///
-    /// If there is an existing value node for the given value, this returns a tuple containing the
+    /// If there is an existing term node for the given term, this returns a tuple containing the
     /// existing node's [`NodeId`], its output variable/literal and `false`. Otherwise this inserts
-    /// a new value node and returns a tuple containing the new node's [`NodeId`], output and
-    /// `true`.
-    // TODO update docs for the canonical part
-    pub fn insert_irreducible_value_node<T: Value>(
-        &mut self,
-        value: T,
-    ) -> (NodeId, T::Output, bool) {
-        if let Some((node_id, output)) = self.0.config.find_value(
+    /// a new term node and returns a tuple containing the new node's [`NodeId`], output and `true`.
+    pub fn insert_irreducible_term_node<T: Term>(&mut self, term: T) -> (NodeId, T::Output, bool) {
+        if let Some((node_id, output)) = self.0.config.find_term(
             DynamicIndexContext {
                 nodes: &self.0.nodes,
             },
-            &value,
+            &term,
         ) {
             return (node_id, output, false);
         }
@@ -757,28 +752,24 @@ impl<Config: EnvConfig> RawEnvNodes<Config> {
         let (new_var, _) = self.0.var_defs.var_defs.push(EncodedVarDef::default());
         let output = <T::Output>::build_var_or_lit(new_var, |var| var, |var| var.as_pos());
 
-        let (node_id, _) = self.insert_unique_irreducible_node(ValueNode { output, value });
+        let (node_id, _) = self.insert_unique_irreducible_node(TermNode { output, term });
 
         (node_id, output, true)
     }
-    /// Ensures the presence of a [value node][ValueNode] for the given dynamically typed
-    /// [value][Value], retrieving its node id and its output.
+    /// Ensures the presence of a [term node][TermNode] for the given dynamically typed
+    /// [term][Term], retrieving its node id and its output.
     ///
-    /// This assumes the value is already fully reduced and will not perform automatic reduction.
+    /// This assumes the term is already fully reduced and will not perform automatic reduction.
     ///
-    /// If there is an existing value node for the given value, this returns a tuple containing the
+    /// If there is an existing term node for the given term, this returns a tuple containing the
     /// existing node's [`NodeId`], its output variable/literal and `false`. Otherwise this inserts
-    /// a new value node and returns a tuple containing the new node's [`NodeId`], output and
-    /// `true`.
-    pub fn insert_irreducible_dyn_value_node(
-        &mut self,
-        value: Take<DynValue>,
-    ) -> (NodeId, Lit, bool) {
-        if let Some((node_id, output)) = self.0.config.find_dyn_value(
+    /// a new term node and returns a tuple containing the new node's [`NodeId`], output and `true`.
+    pub fn insert_irreducible_dyn_term_node(&mut self, term: Take<DynTerm>) -> (NodeId, Lit, bool) {
+        if let Some((node_id, output)) = self.0.config.find_dyn_term(
             DynamicIndexContext {
                 nodes: &self.0.nodes,
             },
-            &*value,
+            &*term,
         ) {
             return (node_id, output, false);
         }
@@ -786,29 +777,29 @@ impl<Config: EnvConfig> RawEnvNodes<Config> {
         let (new_var, _) = self.0.var_defs.var_defs.push(EncodedVarDef::default());
         let output = new_var.as_pos();
 
-        let (node_id, _) = dyn_value_into_dyn_value_node(output, value, |node| {
+        let (node_id, _) = dyn_term_into_dyn_term_node(output, term, |node| {
             self.insert_unique_irreducible_dyn_node(node)
         });
 
         (node_id, output, true)
     }
 
-    pub(crate) fn insert_irreducible_dyn_value(&mut self, value: Take<DynValue>) -> Lit {
-        self.insert_irreducible_dyn_value_node(value).1
+    pub(crate) fn insert_irreducible_dyn_term(&mut self, term: Take<DynTerm>) -> Lit {
+        self.insert_irreducible_dyn_term_node(term).1
     }
 
-    /// Ensures the presence of a [value node][ValueNode] for the given [value][Value], retrieving
+    /// Ensures the presence of a [term node][TermNode] for the given [term][Term], retrieving
     /// its output.
     ///
-    /// This calls [`insert_irreducible_value_node`][Self::insert_irreducible_value_node], returning
+    /// This calls [`insert_irreducible_term_node`][Self::insert_irreducible_term_node], returning
     /// only the output variable or literal.
-    pub fn insert_irreducible_value<T: Value>(&mut self, value: T) -> T::Output {
-        self.insert_irreducible_value_node(value).1
+    pub fn insert_irreducible_term<T: Term>(&mut self, term: T) -> T::Output {
+        self.insert_irreducible_term_node(term).1
     }
 
     /// Ensures the presence of a given node, retrieving its node id.
     ///
-    /// This assumes the value is already fully reduced and will not perform automatic reduction.
+    /// This assumes the node is already fully reduced and will not perform automatic reduction.
     ///
     /// If the node is already present, it returns a pair of the [`NodeId`] of the existing node and
     /// `false`, otherwise it returns a pair of the newly inserted node's id and `true`.
@@ -835,7 +826,7 @@ impl<Config: EnvConfig> RawEnvNodes<Config> {
 
     /// Ensures the presence of a given dynamically typed node, retrieving its node id.
     ///
-    /// This assumes the value is already fully reduced and will not perform automatic reduction.
+    /// This assumes the node is already fully reduced and will not perform automatic reduction.
     ///
     /// If the node is already present, it returns a pair of the [`NodeId`] of the existing node and
     /// `false`, otherwise it returns a pair of the newly inserted node's id and `true`.
@@ -862,10 +853,10 @@ impl<Config: EnvConfig> RawEnvNodes<Config> {
 }
 
 impl<Config: EnvConfig> NodeBuilderDyn for Env<Config> {
-    fn dyn_value(&mut self, mut value: Take<DynValue>) -> Lit {
-        let pol = value.dyn_apply_var_map(&mut |var| self.var_defs.update_lit_repr(var.as_pos()));
+    fn dyn_term(&mut self, mut term: Take<DynTerm>) -> Lit {
+        let pol = term.dyn_apply_var_map(&mut |var| self.var_defs.update_lit_repr(var.as_pos()));
 
-        if let Some(output) = value.dyn_reduce_into_buf(&mut self.node_buf) {
+        if let Some(output) = term.dyn_reduce_into_buf(&mut self.node_buf) {
             let mut node_buf = take(&mut self.node_buf);
             let mut node_buf_var_map = take(&mut self.node_buf_var_map);
             node_buf.drain_into_node_builder(self, &mut node_buf_var_map);
@@ -875,7 +866,7 @@ impl<Config: EnvConfig> NodeBuilderDyn for Env<Config> {
             return output.map_var_to_lit(|var| self.node_buf_var_map.map_var(var)) ^ pol;
         }
 
-        self.raw_nodes().insert_irreducible_dyn_value(value) ^ pol
+        self.raw_nodes().insert_irreducible_dyn_term(term) ^ pol
     }
 
     fn dyn_node(&mut self, mut node: Take<DynNode>) {
@@ -903,14 +894,14 @@ impl<Config: EnvConfig> NodeBuilderDyn for Env<Config> {
 }
 
 impl<Config: EnvConfig> NodeBuilder for Env<Config> {
-    fn value<T: Value>(&mut self, mut value: T) -> T::Output {
-        let pol = value.apply_var_map(|var| self.var_defs.update_lit_repr(var.as_pos()));
+    fn term<T: Term>(&mut self, mut term: T) -> T::Output {
+        let pol = term.apply_var_map(|var| self.var_defs.update_lit_repr(var.as_pos()));
 
-        if let Some(output) = value.reduce(self) {
+        if let Some(output) = term.reduce(self) {
             return output ^ pol;
         }
 
-        self.raw_nodes().insert_irreducible_value(value) ^ pol
+        self.raw_nodes().insert_irreducible_term(term) ^ pol
     }
 
     fn node<T: Node>(&mut self, mut node: T) {

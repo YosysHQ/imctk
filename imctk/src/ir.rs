@@ -13,8 +13,8 @@ pub mod prelude {
         node::{
             builder::{NodeBuilder, NodeBuilderDyn},
             generic::{
-                DynNode, DynValue, Node, NodeDyn, NodeDynAuto, NodeType, Value, ValueDyn,
-                ValueDynAuto, ValueType,
+                DynNode, DynTerm, Node, NodeDyn, NodeDynAuto, NodeType, Term, TermDyn, TermDynAuto,
+                TermType,
             },
             NodeId,
         },

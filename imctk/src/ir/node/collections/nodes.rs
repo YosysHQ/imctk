@@ -318,7 +318,7 @@ impl<T: Node> KnownNodeChunk<T> {
         let ptr = unsafe { self.slot_ptr(index) };
 
         // SAFETY: the `take_present` check rejects empty slots
-        let value = unsafe { (ptr as *mut T).read() };
+        let node = unsafe { (ptr as *mut T).read() };
 
         // SAFETY: this writes the `_next` field of the slot union
         unsafe { (ptr as *mut u16).write(self.next) };
@@ -326,7 +326,7 @@ impl<T: Node> KnownNodeChunk<T> {
         self.next = index as u16;
         self.len -= 1;
 
-        Some(value)
+        Some(node)
     }
 
     pub fn into_dynamic(self) -> DynNodeChunk {

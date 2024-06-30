@@ -26,7 +26,7 @@ use crate::ir::{
     node::{
         builder::NodeBuilder,
         fine::circuit::{And, Input, Reg, SteadyInput},
-        generic::ValueNode,
+        generic::TermNode,
     },
     var::{Lit, Var},
 };
@@ -74,7 +74,7 @@ impl ExistingAigerVarMap {
 
         for input_index in 0..aig.input_count {
             self.var_map[Var::from_index(var_pos)]
-                .get_or_insert_with(|| env.value(Input::from_id_index(input_index)));
+                .get_or_insert_with(|| env.term(Input::from_id_index(input_index)));
             var_pos += 1;
         }
 
@@ -88,7 +88,7 @@ impl ExistingAigerVarMap {
             let init_lit =
                 self.latch_init[init].get_or_insert_with(|| match aiger_latch.initialization {
                     Some(constant) => Lit::FALSE ^ constant,
-                    None => env.value(init),
+                    None => env.term(init),
                 });
 
             self.var_map[Var::from_index(var_pos)].get_or_insert_with(|| {
@@ -105,14 +105,17 @@ impl ExistingAigerVarMap {
                 .inputs
                 .map(|lit| lit.map_var_to_lit(|var| self.var_map[var].unwrap()));
 
-            let value = And {
+            let term = And {
                 inputs: inputs.into(),
             };
 
             if let Some(lit) = self.var_map[output_aiger_var] {
-                env.node(ValueNode { output: lit, value });
+                env.node(TermNode {
+                    output: lit,
+                    term,
+                });
             } else {
-                self.var_map[output_aiger_var] = Some(env.value(value));
+                self.var_map[output_aiger_var] = Some(env.term(term));
             }
             var_pos += 1;
         }
@@ -132,9 +135,9 @@ impl ExistingAigerVarMap {
             init_lit ^= next_lit.pol();
             output_lit ^= next_lit.pol();
 
-            env.node(ValueNode {
+            env.node(TermNode {
                 output: output_lit,
-                value: Reg {
+                term: Reg {
                     init: init_lit,
                     next: next_lit.var(),
                 },

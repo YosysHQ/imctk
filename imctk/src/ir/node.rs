@@ -1,4 +1,4 @@
-//! Nodes and values that form the internal representation graph.
+//! Nodes and terms that form the internal representation graph.
 
 use std::fmt;
 

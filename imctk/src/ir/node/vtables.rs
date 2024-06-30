@@ -14,7 +14,7 @@ use crate::{
 use super::{
     collections::nodes::Nodes,
     generic::{
-        DynNode, DynValue, Node, NodeDyn, SealedWrapper, Value, ValueDyn, ValueNode, ValueWrapper,
+        DynNode, DynTerm, Node, NodeDyn, SealedWrapper, Term, TermDyn, TermNode, TermWrapper,
     },
     NodeId,
 };
@@ -28,7 +28,7 @@ pub(crate) struct NodeTypeVTable {
     drop_in_place: unsafe fn(*mut u8),
     dyn_vtable: *const u8,
     insert_raw_dyn: unsafe fn(&mut Nodes, *mut u8) -> (NodeId, *mut u8),
-    wrapped_value_type: Option<fn() -> ValueType>,
+    wrapped_term_type: Option<fn() -> TermType>,
 }
 
 impl PartialEq for NodeTypeVTable {
@@ -78,8 +78,8 @@ impl NodeTypeVTable {
                     (node_id, ptr as *mut u8)
                 }
             },
-            wrapped_value_type: {
-                if let Some(SealedWrapper(wrapper)) = T::VALUE_TYPE_FOR_VALUE_WRAPPER {
+            wrapped_term_type: {
+                if let Some(SealedWrapper(wrapper)) = T::TERM_TYPE_FOR_TERM_WRAPPER {
                     Some(wrapper)
                 } else {
                     None
@@ -89,63 +89,63 @@ impl NodeTypeVTable {
     }
 }
 
-pub(crate) struct ValueTypeVTable {
+pub(crate) struct TermTypeVTable {
     type_info: fn() -> (std::any::TypeId, &'static str),
     name: &'static str,
-    build_value_node: for<'a> unsafe fn(Lit, *mut u8, &'a mut dyn FnMut(*mut u8)),
+    build_term_node: for<'a> unsafe fn(Lit, *mut u8, &'a mut dyn FnMut(*mut u8)),
     dyn_vtable: *const u8,
-    value_node_type: NodeType,
+    term_node_type: NodeType,
     wrapper_node_type: NodeType,
 }
 
-impl PartialEq for ValueTypeVTable {
+impl PartialEq for TermTypeVTable {
     fn eq(&self, other: &Self) -> bool {
         self.type_info == other.type_info
     }
 }
 
-impl Eq for ValueTypeVTable {}
+impl Eq for TermTypeVTable {}
 
-impl Hash for ValueTypeVTable {
+impl Hash for TermTypeVTable {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         (self.type_info as usize).hash(state);
     }
 }
 
-impl Debug for ValueTypeVTable {
+impl Debug for TermTypeVTable {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} ({})", self.name, (self.type_info)().1)
     }
 }
 
-impl ValueTypeVTable {
+impl TermTypeVTable {
     #[inline(never)]
-    fn type_info<T: Value>() -> (std::any::TypeId, &'static str) {
+    fn type_info<T: Term>() -> (std::any::TypeId, &'static str) {
         (std::any::TypeId::of::<T>(), std::any::type_name::<T>())
     }
 
-    pub const fn of<T: Value>() -> Self {
-        ValueTypeVTable {
+    pub const fn of<T: Term>() -> Self {
+        TermTypeVTable {
             type_info: Self::type_info::<T>,
             name: T::NAME,
-            // SAFETY: field is an `unsafe fn`, this obtains ownership of value_ptr's target and
+            // SAFETY: field is an `unsafe fn`, this obtains ownership of term_ptr's target and
             // passes ownership on to the callback. It's documented that the storage for the
             // callback argument has a lifetime limited to the callback.
-            build_value_node: unsafe {
-                |output: Lit, value_ptr: *mut u8, callback: &mut dyn FnMut(*mut u8)| {
-                    let value_ptr = value_ptr as *mut T;
-                    let mut value_node = ManuallyDrop::new(ValueNode {
+            build_term_node: unsafe {
+                |output: Lit, term_ptr: *mut u8, callback: &mut dyn FnMut(*mut u8)| {
+                    let term_ptr = term_ptr as *mut T;
+                    let mut term_node = ManuallyDrop::new(TermNode {
                         output: VarOrLit::build_var_or_lit(output, |lit| lit.var(), |lit| lit),
-                        value: value_ptr.read(),
+                        term: term_ptr.read(),
                     });
-                    callback(&mut value_node as *mut ManuallyDrop<ValueNode<T>> as *mut u8);
+                    callback(&mut term_node as *mut ManuallyDrop<TermNode<T>> as *mut u8);
                 }
             },
-            value_node_type: NodeType::of::<ValueNode<T>>(),
-            wrapper_node_type: NodeType::of::<ValueWrapper<T>>(),
+            term_node_type: NodeType::of::<TermNode<T>>(),
+            wrapper_node_type: NodeType::of::<TermWrapper<T>>(),
             // SAFETY: see [`WidePtr`] documentation
             dyn_vtable: unsafe {
-                std::mem::transmute::<*const DynValue, WidePtr>(std::ptr::null::<T>()).vtable
+                std::mem::transmute::<*const DynTerm, WidePtr>(std::ptr::null::<T>()).vtable
             },
         }
     }
@@ -182,7 +182,7 @@ pub(super) trait GenericNodeType {
     /// within `nodes`.
     unsafe fn insert_raw_dyn(&self, nodes: &mut Nodes, node: *mut u8) -> (NodeId, *mut u8);
 
-    fn wrapped_value_type(&self) -> Option<ValueType>;
+    fn wrapped_term_type(&self) -> Option<TermType>;
 }
 
 /// The [`GenericNodeType`] implementation for a statically known node type.
@@ -256,9 +256,9 @@ impl GenericNodeType for DynNodeType {
         unsafe { (self.insert_raw_dyn)(nodes, node) }
     }
 
-    fn wrapped_value_type(&self) -> Option<ValueType> {
-        let get_value_type = self.wrapped_value_type?;
-        Some(get_value_type())
+    fn wrapped_term_type(&self) -> Option<TermType> {
+        let get_term_type = self.wrapped_term_type?;
+        Some(get_term_type())
     }
 }
 
@@ -296,76 +296,76 @@ impl<T: Node> GenericNodeType for KnownNodeType<T> {
         (node_id, ptr as *mut u8)
     }
 
-    fn wrapped_value_type(&self) -> Option<ValueType> {
-        let SealedWrapper(get_value_type) = T::VALUE_TYPE_FOR_VALUE_WRAPPER?;
-        Some(get_value_type())
+    fn wrapped_term_type(&self) -> Option<TermType> {
+        let SealedWrapper(get_term_type) = T::TERM_TYPE_FOR_TERM_WRAPPER?;
+        Some(get_term_type())
     }
 }
 
-pub(super) trait GenericValueType {
-    type RefTarget: ValueDyn + ?Sized;
-    type GenericValueNodeType: GenericNodeType;
-    type GenericValueWrapperType: GenericNodeType;
+pub(super) trait GenericTermType {
+    type RefTarget: TermDyn + ?Sized;
+    type GenericTermNodeType: GenericNodeType;
+    type GenericTermWrapperType: GenericNodeType;
 
-    /// Build a `ValueNode` out of an output literal and a `Value`, consuming the `Value`.
+    /// Build a `TermNode` out of an output literal and a `Term`, consuming the `Term`.
     ///
     /// # Safety
-    /// The `value` pointer must point to a `Value` having the correct type for `self`. The `Value`
-    /// is moved out of the storage pointed to by `value`. The closure is called with the
-    /// constructed `ValueNode` passed as only argument and obtains ownership of that `ValueNode`.
-    /// The storage for the constructed `ValueNode` is only valid for the duration of the callback.
-    unsafe fn build_value_node<R>(
+    /// The `Term` pointer must point to a `Term` having the correct type for `self`. The `Term`
+    /// is moved out of the storage pointed to by `Term`. The closure is called with the
+    /// constructed `TermNode` passed as only argument and obtains ownership of that `TermNode`.
+    /// The storage for the constructed `TermNode` is only valid for the duration of the callback.
+    unsafe fn build_term_node<R>(
         &self,
         output: Lit,
-        value: *mut u8,
+        term: *mut u8,
         f: impl FnOnce(*mut u8) -> R,
     ) -> R;
 
-    fn value_node(&self) -> Self::GenericValueNodeType;
-    fn value_wrapper(&self) -> Self::GenericValueWrapperType;
+    fn term_node(&self) -> Self::GenericTermNodeType;
+    fn term_wrapper(&self) -> Self::GenericTermWrapperType;
 
     unsafe fn cast_mut_ptr(&self, ptr: *mut u8) -> *mut Self::RefTarget;
 }
 
 /// The [`GenericNodeType`] implementation for a statically known node type.
 #[repr(transparent)]
-pub(crate) struct KnownValueType<T>(ValueType, PhantomData<T>);
+pub(crate) struct KnownTermType<T>(TermType, PhantomData<T>);
 
-impl<T: Value> KnownValueType<T> {
+impl<T: Term> KnownTermType<T> {
     pub const fn new() -> Self {
-        KnownValueType(ValueType::of::<T>(), PhantomData)
+        KnownTermType(TermType::of::<T>(), PhantomData)
     }
 }
 
-impl<T> Deref for KnownValueType<T> {
-    type Target = ValueTypeVTable;
+impl<T> Deref for KnownTermType<T> {
+    type Target = TermTypeVTable;
 
     fn deref(&self) -> &Self::Target {
         self.0 .0
     }
 }
 
-/// The [`GenericValueType`] implementation that dispatches through the [`ValueType`] vtable.
+/// The [`GenericTermType`] implementation that dispatches through the [`TermType`] vtable.
 #[repr(transparent)]
-pub(super) struct DynValueType(pub ValueType);
+pub(super) struct DynTermType(pub TermType);
 
-impl Deref for DynValueType {
-    type Target = ValueTypeVTable;
+impl Deref for DynTermType {
+    type Target = TermTypeVTable;
 
     fn deref(&self) -> &Self::Target {
         self.0 .0
     }
 }
 
-impl GenericValueType for DynValueType {
-    type RefTarget = DynValue;
-    type GenericValueNodeType = DynNodeType;
-    type GenericValueWrapperType = DynNodeType;
+impl GenericTermType for DynTermType {
+    type RefTarget = DynTerm;
+    type GenericTermNodeType = DynNodeType;
+    type GenericTermWrapperType = DynNodeType;
 
-    unsafe fn build_value_node<R>(
+    unsafe fn build_term_node<R>(
         &self,
         output: Lit,
-        value: *mut u8,
+        term: *mut u8,
         f: impl FnOnce(*mut u8) -> R,
     ) -> R {
         let mut f = ManuallyDrop::new(f);
@@ -373,18 +373,18 @@ impl GenericValueType for DynValueType {
 
         // SAFETY: the vtable method follows our documented safety requirements
         unsafe {
-            (self.build_value_node)(output, value, &mut |node: *mut u8| {
+            (self.build_term_node)(output, term, &mut |node: *mut u8| {
                 res.write(ManuallyDrop::take(&mut f)(node));
             });
             res.assume_init_read()
         }
     }
 
-    fn value_node(&self) -> Self::GenericValueNodeType {
-        DynNodeType(self.value_node_type)
+    fn term_node(&self) -> Self::GenericTermNodeType {
+        DynNodeType(self.term_node_type)
     }
 
-    fn value_wrapper(&self) -> Self::GenericValueWrapperType {
+    fn term_wrapper(&self) -> Self::GenericTermWrapperType {
         DynNodeType(self.wrapper_node_type)
     }
 
@@ -399,23 +399,23 @@ impl GenericValueType for DynValueType {
     }
 }
 
-impl<T: Value> GenericValueType for KnownValueType<T> {
+impl<T: Term> GenericTermType for KnownTermType<T> {
     type RefTarget = T;
-    type GenericValueNodeType = KnownNodeType<ValueNode<T>>;
-    type GenericValueWrapperType = KnownNodeType<ValueWrapper<T>>;
+    type GenericTermNodeType = KnownNodeType<TermNode<T>>;
+    type GenericTermWrapperType = KnownNodeType<TermWrapper<T>>;
 
-    unsafe fn build_value_node<R>(
+    unsafe fn build_term_node<R>(
         &self,
         output: Lit,
-        value: *mut u8,
+        term: *mut u8,
         f: impl FnOnce(*mut u8) -> R,
     ) -> R {
-        let value = value as *mut T;
+        let term = term as *mut T;
 
-        let node = ValueNode {
+        let node = TermNode {
             output: <T::Output as VarOrLit>::build_var_or_lit(output, |lit| lit.var(), |lit| lit),
-            // SAFETY: it's documented that we take ownership of the pointed to value
-            value: unsafe { value.read() },
+            // SAFETY: it's documented that we take ownership of the pointed to term
+            term: unsafe { term.read() },
         };
 
         give!(node = node);
@@ -423,11 +423,11 @@ impl<T: Value> GenericValueType for KnownValueType<T> {
         f(node.into_raw_ptr() as *mut u8)
     }
 
-    fn value_node(&self) -> Self::GenericValueNodeType {
+    fn term_node(&self) -> Self::GenericTermNodeType {
         KnownNodeType::new()
     }
 
-    fn value_wrapper(&self) -> Self::GenericValueWrapperType {
+    fn term_wrapper(&self) -> Self::GenericTermWrapperType {
         KnownNodeType::new()
     }
 
@@ -464,41 +464,41 @@ impl Debug for NodeType {
 }
 
 impl NodeType {
-    /// Returns the [`Node::NAME`] value of the given node type.
+    /// Returns the [`Node::NAME`] of the given node type.
     pub const fn name(&self) -> &'static str {
         self.0.name
     }
 }
 
-struct ValueTypeVTables<T>(PhantomData<T>);
+struct TermTypeVTables<T>(PhantomData<T>);
 
-impl<T: Value> ValueTypeVTables<T> {
-    const VTABLE: ValueTypeVTable = ValueTypeVTable::of::<T>();
-    const VALUE_TYPE: ValueType = ValueType(&Self::VTABLE);
+impl<T: Term> TermTypeVTables<T> {
+    const VTABLE: TermTypeVTable = TermTypeVTable::of::<T>();
+    const TERM_TYPE: TermType = TermType(&Self::VTABLE);
 }
 
-/// Dynamic type id for a [`Value`] implementation.
+/// Dynamic type id for a [`Term`] implementation.
 ///
 /// This can be seen as a [`std::any::TypeId`] that is statically known to refer to some type
-/// implementing the [`Value`] trait.
+/// implementing the [`Term`] trait.
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ValueType(&'static ValueTypeVTable);
+pub struct TermType(&'static TermTypeVTable);
 
-impl ValueType {
-    /// Returns the unique `ValueType` for a given [`Value`] implementation `T`.
-    pub const fn of<T: Value>() -> Self {
-        <ValueTypeVTables<T>>::VALUE_TYPE
+impl TermType {
+    /// Returns the unique `TermType` for a given [`Term`] implementation `T`.
+    pub const fn of<T: Term>() -> Self {
+        <TermTypeVTables<T>>::TERM_TYPE
     }
 }
 
-impl Debug for ValueType {
+impl Debug for TermType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         Debug::fmt(self.0, f)
     }
 }
 
-impl ValueType {
-    /// Returns the [`Node::NAME`] value of the given node type.
+impl TermType {
+    /// Returns the [`Node::NAME`] of the given term type.
     pub const fn name(&self) -> &'static str {
         self.0.name
     }

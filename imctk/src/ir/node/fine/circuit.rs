@@ -1,18 +1,21 @@
-//! Fine grained nodes for representing combinational and sequential circuits.
+//! Fine grained terms for representing combinational and sequential circuits.
 use imctk_ids::{Id, Id32};
 
 use crate::{
     ir::{
         node::{
             builder::NodeBuilder,
-            generic::{Value, ValueDyn, ValueNode},
+            generic::{Term, TermDyn, TermNode},
         },
         var::{Lit, Pol, Var},
     },
     unordered_pair::UnorderedPair,
 };
 
-/// Boolean 'and' of two values.
+#[allow(unused_imports)] // rustdoc
+use crate::ir::node::generic::Node;
+
+/// [`Term`] representing the Boolean 'and' of two values.
 ///
 /// This is a combinational operation.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -21,10 +24,10 @@ pub struct And {
     pub inputs: UnorderedPair<Lit>,
 }
 
-/// Node representing the Boolean 'and' of two values.
-pub type AndNode = ValueNode<And>;
+/// [`Node`] representing the Boolean 'and' of two values.
+pub type AndNode = TermNode<And>;
 
-impl Value for And {
+impl Term for And {
     type Output = Lit;
 
     const NAME: &'static str = "And";
@@ -61,7 +64,7 @@ impl Value for And {
     // TODO node reductions
 }
 
-impl ValueDyn for And {
+impl TermDyn for And {
     fn representative_input_var(&self) -> Var {
         self.inputs[1].var()
     }
@@ -71,7 +74,7 @@ impl ValueDyn for And {
     }
 }
 
-/// Boolean 'xor' ('exclusive or').
+/// [`Term`] representing Boolean 'xor' ('exclusive or').
 ///
 /// This is a combinational operation.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -80,10 +83,10 @@ pub struct Xor {
     pub inputs: UnorderedPair<Var>,
 }
 
-/// Node representing the Boolean 'xor' ('exclusive or').
-pub type XorNode = ValueNode<Xor>;
+/// [`Node`] representing the Boolean 'xor' ('exclusive or').
+pub type XorNode = TermNode<Xor>;
 
-impl Value for Xor {
+impl Term for Xor {
     type Output = Lit;
     const NAME: &'static str = "Xor";
 
@@ -109,15 +112,17 @@ impl Value for Xor {
             None
         }
     }
+
+    // TODO node reductions
 }
 
-impl ValueDyn for Xor {
+impl TermDyn for Xor {
     fn representative_input_var(&self) -> Var {
         self.inputs[1]
     }
 }
 
-/// Steady input or unconstrained steady value.
+/// [`Term`] representing a steady input or unconstrained steady value.
 ///
 /// An important use case is unconstrained register initialization, where this provides the initial
 /// value.
@@ -125,10 +130,10 @@ impl ValueDyn for Xor {
 #[repr(transparent)]
 pub struct SteadyInput(Id32);
 
-/// Node representing a steady input or a steady unconstrained constant value.
-pub type SteadyInputNode = ValueNode<SteadyInput>;
+/// [`Node`] representing a steady input or a steady unconstrained constant value.
+pub type SteadyInputNode = TermNode<SteadyInput>;
 
-impl Value for SteadyInput {
+impl Term for SteadyInput {
     type Output = Lit;
     const NAME: &'static str = "Init";
 
@@ -141,17 +146,17 @@ impl Value for SteadyInput {
     }
 }
 
-impl ValueDyn for SteadyInput {}
+impl TermDyn for SteadyInput {}
 
-/// Time-varying input or unconstrained time-varying value.
+/// [`Term`] representing a time-varying input or unconstrained time-varying value.
 #[derive(Id, Debug)]
 #[repr(transparent)]
 pub struct Input(Id32);
 
-/// Node representing a time-varying input or an unconstrained time-varying value.
-pub type InputNode = ValueNode<Input>;
+/// [`Node`] representing a time-varying input or an unconstrained time-varying value.
+pub type InputNode = TermNode<Input>;
 
-impl Value for Input {
+impl Term for Input {
     type Output = Lit;
     const NAME: &'static str = "Input";
 
@@ -164,9 +169,9 @@ impl Value for Input {
     }
 }
 
-impl ValueDyn for Input {}
+impl TermDyn for Input {}
 
-/// Register that updates with each transition of the represented state transition system.
+/// [`Term`] representing a register that updates with each transition of the represented state transition system.
 ///
 /// In the initial state it transparently passes through the `init` input, and after every
 /// transition it will output the value the `next` input had before the transition.
@@ -182,11 +187,11 @@ pub struct Reg {
     pub next: Var,
 }
 
-/// Node representing a register that updates with each transition of the represented state
+/// [`Node`] representing a register that updates with each transition of the represented state
 /// transition system.
-pub type RegNode = ValueNode<Reg>;
+pub type RegNode = TermNode<Reg>;
 
-impl Value for Reg {
+impl Term for Reg {
     type Output = Lit;
     const NAME: &'static str = "Reg";
 
@@ -219,7 +224,7 @@ impl Value for Reg {
     }
 }
 
-impl ValueDyn for Reg {
+impl TermDyn for Reg {
     fn representative_input_var(&self) -> Var {
         self.next
     }

@@ -13,7 +13,7 @@ use crate::ir::node::{
 
 use super::{
     env::NodeRole,
-    node::generic::{DynValue, Value, ValueNode},
+    node::generic::{DynTerm, Term, TermNode},
     var::Lit,
 };
 
@@ -81,7 +81,7 @@ pub trait DynamicIndex {
     fn add_equiv(&mut self, context: Self::Context<'_>, repr: Lit, equiv: Var);
 }
 
-/// Index to look up a [`NodeId`] given a defining [`Node`] or [`Value`].
+/// Index to look up a [`NodeId`] given a defining [`Node`] or [`Term`].
 #[derive(Default)]
 pub struct StructuralHashIndex {
     tables: TableSeq<NodeId>,
@@ -161,18 +161,18 @@ pub struct FoundNode {
 }
 
 impl StructuralHashIndex {
-    /// Find an existing [`ValueNode`] for a given [`Value`].
-    pub fn find_value<T: Value>(&self, nodes: &Nodes, value: &T) -> Option<(NodeId, T::Output)> {
-        let hash = value.def_hash();
-        let var = value.representative_input_var();
+    /// Find an existing [`TermNode`] for a given [`Term`].
+    pub fn find_term<T: Term>(&self, nodes: &Nodes, term: &T) -> Option<(NodeId, T::Output)> {
+        let hash = term.def_hash();
+        let var = term.representative_input_var();
 
         if var.index() < self.tables.len() {
             let mut output = <T::Output>::default();
             let node_id = *self.tables
                 .find(var.index(), hash, |&candidate| {
                     let Some(candidate_ref) = nodes.get_dyn(candidate) else {return false};
-                    let Some(candidate_ref) = candidate_ref.dyn_cast::<ValueNode<T>>() else {return false};
-                    let eq = candidate_ref.value.def_eq(value);
+                    let Some(candidate_ref) = candidate_ref.dyn_cast::<TermNode<T>>() else {return false};
+                    let eq = candidate_ref.term.def_eq(term);
                     if eq {
                         output = candidate_ref.output;
                     }
@@ -185,17 +185,17 @@ impl StructuralHashIndex {
         }
     }
 
-    /// Find an existing [`ValueNode`] for a given dynamically typed [`Value`].
-    pub fn find_dyn_value(&self, nodes: &Nodes, value: &DynValue) -> Option<(NodeId, Lit)> {
-        let hash = value.def_hash();
-        let var = value.representative_input_var();
+    /// Find an existing [`TermNode`] for a given dynamically typed [`Term`].
+    pub fn find_dyn_term(&self, nodes: &Nodes, term: &DynTerm) -> Option<(NodeId, Lit)> {
+        let hash = term.def_hash();
+        let var = term.representative_input_var();
 
         if var.index() < self.tables.len() {
             let mut output = Lit::FALSE;
             let node_id = *self.tables.find(var.index(), hash, |&candidate| {
                 let Some(candidate_ref) = nodes.get_dyn(candidate) else { return false };
-                let Some(candidate_value_ref) = candidate_ref.dyn_value() else { return false };
-                let eq = candidate_value_ref.dyn_def_eq(value);
+                let Some(candidate_term_ref) = candidate_ref.dyn_term() else { return false };
+                let eq = candidate_term_ref.dyn_def_eq(term);
                 if eq {
                     output = candidate_ref.output_lit().unwrap();
                 }

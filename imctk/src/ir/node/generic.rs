@@ -1,4 +1,4 @@
-//! Traits and utilities for writing code that is generic over node and value types.
+//! Traits and utilities for writing code that is generic over node and term types.
 use std::{
     fmt::Debug,
     hash::{BuildHasher, BuildHasherDefault, Hash},
@@ -15,7 +15,7 @@ use crate::{
 use super::{
     builder::NodeBuilder,
     collections::buf::NodeBuf,
-    vtables::{DynValueType, GenericNodeType, GenericValueType},
+    vtables::{DynTermType, GenericNodeType, GenericTermType},
 };
 
 pub(crate) mod sealed {
@@ -25,7 +25,7 @@ pub(crate) mod sealed {
 
 pub(crate) use sealed::SealedWrapper;
 
-pub use super::vtables::{NodeType, ValueType};
+pub use super::vtables::{NodeType, TermType};
 
 /// Allows using a type for internal represenation nodes.
 ///
@@ -35,7 +35,7 @@ pub trait Node: NodeDyn + Debug + Eq + Hash + Clone + 'static {
     const NAME: &'static str;
 
     #[doc(hidden)]
-    const VALUE_TYPE_FOR_VALUE_WRAPPER: Option<SealedWrapper<fn() -> ValueType>> = None;
+    const TERM_TYPE_FOR_TERM_WRAPPER: Option<SealedWrapper<fn() -> TermType>> = None;
 
     /// Returns an iterator over all input variables of the node.
     fn input_var_iter(&self) -> impl Iterator<Item = Var> + '_ {
@@ -52,7 +52,7 @@ pub trait Node: NodeDyn + Debug + Eq + Hash + Clone + 'static {
 
     /// Returns whether two nodes can be treated as equivalent.
     ///
-    /// In particular for [`ValueNode`] nodes, the output variable or literal is ignored as it is
+    /// In particular for [`TermNode`] nodes, the output variable or literal is ignored as it is
     /// fully defined in terms of the input variables.
     ///
     /// This defaults to forwarding to [`Eq`], which is correct for constraint nodes.
@@ -60,7 +60,7 @@ pub trait Node: NodeDyn + Debug + Eq + Hash + Clone + 'static {
         self == other
     }
 
-    /// Rewrites all variables in the value using a given mapping.
+    /// Rewrites all variables in the term using a given mapping.
     fn apply_var_map(&mut self, var_map: impl FnMut(Var) -> Lit) {
         let _ = var_map;
 
@@ -85,7 +85,7 @@ pub trait Node: NodeDyn + Debug + Eq + Hash + Clone + 'static {
 pub trait NodeDyn: NodeDynAuto + Debug {
     /// Returns a hash value of the defining part of a node.
     ///
-    /// In particular for [`ValueNode`] nodes, the output variable or literal is ignored as it is
+    /// In particular for [`TermNode`] nodes, the output variable or literal is ignored as it is
     /// fully defined in terms of the input variables.
     ///
     /// This defaults to forwarding to [`Hash`] using a [`ZwoHasher`].
@@ -124,9 +124,9 @@ pub trait NodeDyn: NodeDynAuto + Debug {
         self.zzz_hidden_default_max_var()
     }
 
-    /// Returns the value this node assigns to the output node or `None` if this node is not a
-    /// [`ValueNode`].
-    fn dyn_value(&self) -> Option<&DynValue> {
+    /// Returns the term whose value this node assigns to the node's output or `None` if this node
+    /// is not a [`TermNode`].
+    fn dyn_term(&self) -> Option<&DynTerm> {
         None
     }
 }
@@ -239,23 +239,23 @@ impl DynNode {
     }
 }
 
-/// Types that define a value.
+/// Types that define a value within an environment.
 ///
-/// A [`Value`] type defines a value in an [environment][crate::ir::env]. That value can be defined
-/// in terms of the values assigned to [variables][crate::ir::var] in the environment.
+/// A [`Term`] type defines a value in an [environment][crate::ir::env]. That value can be given as
+/// a function of values assigned to [variables][crate::ir::var] in the environment.
 ///
-/// A value itself is not automatically assigned a variable. This is done by wrapping a value in a
-/// [`ValueNode`].
+/// A term itself is not automatically assigned to a variable. This is done by combining a term and
+/// output variable (or literal) in a [`TermNode`].
 ///
-/// Everything that is object-safe is part of the [`ValueDyn`] supertrait.
-pub trait Value: Debug + Clone + Eq + Hash + ValueDyn + 'static {
+/// Everything that is object-safe is part of the [`TermDyn`] supertrait.
+pub trait Term: Debug + Clone + Eq + Hash + TermDyn + 'static {
     /// Whether the output can be represented as a variable or can require a literal.
     type Output: VarOrLit + 'static;
 
     /// A short name identifying the operation.
     const NAME: &'static str;
 
-    /// Returns an iterator over all input variables of the value.
+    /// Returns an iterator over all input variables of the term.
     fn input_var_iter(&self) -> impl Iterator<Item = Var> + '_;
 
     /// Returns an iterator over all input variables that should be taken into consideration when
@@ -266,22 +266,22 @@ pub trait Value: Debug + Clone + Eq + Hash + ValueDyn + 'static {
         self.input_var_iter()
     }
 
-    /// Rewrites all variables in the value using a given mapping.
+    /// Rewrites all variables in the term using a given mapping.
     fn apply_var_map(&mut self, var_map: impl FnMut(Var) -> Lit)
         -> <Self::Output as VarOrLit>::Pol;
 
-    /// Returns whether two [`Value`]s define the same value.
+    /// Returns whether two [`Term`]s define the same value.
     ///
     /// This defaults to forwarding to [`Eq`].
     fn def_eq(&self, other: &Self) -> bool {
         self == other
     }
 
-    /// Performs value-local simplifying rewrites.
+    /// Performs term-local simplifying rewrites.
     ///
-    /// This can either update the value in-place, returning `None` or produce replacement nodes in
-    /// the passed [`NodeBuilder`], returning an output variable or literal equivalent to the given
-    /// value.
+    /// This can either update the term in-place, returning `None` or produce replacement nodes in
+    /// the passed [`NodeBuilder`], returning an output variable or literal equivalent to the value
+    /// of this term.
     ///
     /// It is an error to produce nodes in the builder when returning `None`.
     #[allow(unused_variables)]
@@ -289,12 +289,12 @@ pub trait Value: Debug + Clone + Eq + Hash + ValueDyn + 'static {
         None
     }
 
-    /// Performs node-local simplifying rewrites of a value node containing this value.
+    /// Performs node-local simplifying rewrites of a term node holding this term.
     ///
-    /// This is invoked when calling [`Node::reduce`] on a [`ValueNode`].
+    /// This is invoked when calling [`Node::reduce`] on a [`TermNode`].
     ///
     /// The default implementation performs reduction using [`Self::reduce`], adding an equivalence
-    /// of the returned new output and the output previously present in the [`ValueNode`].
+    /// of the returned new output and the output previously present in the [`TermNode`].
     fn reduce_node(&mut self, output: Self::Output, builder: &mut impl NodeBuilder) -> bool {
         let Some(new_output) = self.reduce(builder) else {
             return false;
@@ -310,15 +310,15 @@ pub trait Value: Debug + Clone + Eq + Hash + ValueDyn + 'static {
     }
 }
 
-/// Object-safe supertrait for [`Value`].
-pub trait ValueDyn: Debug + ValueDynAuto {
-    /// Returns the variable with the largest id among all variables referenced by this value.
+/// Object-safe supertrait for [`Term`].
+pub trait TermDyn: Debug + TermDynAuto {
+    /// Returns the variable with the largest id among all variables referenced by this term.
     #[inline(always)]
     fn max_var(&self) -> Var {
         self.zzz_hidden_default_max_var()
     }
 
-    /// Returns a hash value of this value definition.
+    /// Returns a hash value for the value defined by this term.
     ///
     /// This defaults to forwarding to [`Hash`] using a [`ZwoHasher`].
     #[inline(always)]
@@ -336,14 +336,14 @@ pub trait ValueDyn: Debug + ValueDynAuto {
     }
 }
 
-/// Automatically implemented object-safe supertrait for [`Value`].
+/// Automatically implemented object-safe supertrait for [`Term`].
 ///
 /// This contains object-safe methods that will be automatically implemented via a blanket
-/// implementation using the provided [`Value`] and [`ValueDyn`] items.
-pub trait ValueDynAuto {
-    /// Returns the dynamic [`ValueType`] corresponding to the concrete [`Value`] implementation
+/// implementation using the provided [`Term`] and [`TermDyn`] items.
+pub trait TermDynAuto {
+    /// Returns the dynamic [`TermType`] corresponding to the concrete [`Term`] implementation
     /// for trait object.
-    fn value_type(&self) -> ValueType;
+    fn term_type(&self) -> TermType;
 
     #[doc(hidden)]
     fn zzz_hidden_default_representative_input_var(&self) -> Var;
@@ -354,19 +354,19 @@ pub trait ValueDynAuto {
     #[doc(hidden)]
     fn zzz_hidden_default_def_hash(&self) -> u64;
 
-    /// Object safe wrapper of [`Value::def_eq`].
-    fn dyn_def_eq(&self, other: &DynValue) -> bool;
+    /// Object safe wrapper of [`Term::def_eq`].
+    fn dyn_def_eq(&self, other: &DynTerm) -> bool;
 
-    /// Object safe wrapper of [`Value::apply_var_map`].
+    /// Object safe wrapper of [`Term::apply_var_map`].
     fn dyn_apply_var_map(&mut self, var_repr: &mut dyn FnMut(Var) -> Lit) -> Pol;
 
-    /// Object safe wrapper of [`Value::reduce`].
+    /// Object safe wrapper of [`Term::reduce`].
     fn dyn_reduce_into_buf(&mut self, buf: &mut NodeBuf) -> Option<Lit>;
 }
 
-impl<T: Value> ValueDynAuto for T {
-    fn value_type(&self) -> ValueType {
-        ValueType::of::<T>()
+impl<T: Term> TermDynAuto for T {
+    fn term_type(&self) -> TermType {
+        TermType::of::<T>()
     }
 
     #[inline(always)]
@@ -384,7 +384,7 @@ impl<T: Value> ValueDynAuto for T {
         <BuildHasherDefault<ZwoHasher>>::default().hash_one(self)
     }
 
-    fn dyn_def_eq(&self, other: &DynValue) -> bool {
+    fn dyn_def_eq(&self, other: &DynTerm) -> bool {
         let Some(other) = other.dyn_cast::<Self>() else {
             return false;
         };
@@ -403,98 +403,98 @@ impl<T: Value> ValueDynAuto for T {
     }
 }
 
-/// A trait object for a [`Value`].
+/// A trait object for a [`Term`].
 ///
-/// Since [`Value`] is not object safe, we cannot use `dyn Value`. Instead have to use a separate
-/// [`ValueDyn`] trait and provide this type alias to avoid the need for `dyn ValueDyn`.
-pub type DynValue = dyn ValueDyn;
+/// Since [`Term`] is not object safe, we cannot use `dyn Term`. Instead have to use a separate
+/// [`TermDyn`] trait and provide this type alias to avoid the need for `dyn TermDyn`.
+pub type DynTerm = dyn TermDyn;
 
-impl DynValue {
-    /// Performs a checked dyamic cast of a [`DynNode`] to a given [`Node`] type.
-    pub fn dyn_cast<T: Value>(&self) -> Option<&T> {
-        if self.value_type() != ValueType::of::<T>() {
+impl DynTerm {
+    /// Performs a checked dyamic cast of a [`DynTerm`] to a given [`Term`] type.
+    pub fn dyn_cast<T: Term>(&self) -> Option<&T> {
+        if self.term_type() != TermType::of::<T>() {
             None
         } else {
-            // SAFETY: we checked the `node_type` which works like `TypeId`.
-            Some(unsafe { &*(self as *const DynValue as *const T) })
+            // SAFETY: we checked the `term_type` which works like `TypeId`.
+            Some(unsafe { &*(self as *const DynTerm as *const T) })
         }
     }
 }
 
-pub(crate) fn dyn_value_into_dyn_value_node<T>(
+pub(crate) fn dyn_term_into_dyn_term_node<T>(
     output: Lit,
-    value: Take<DynValue>,
+    term: Take<DynTerm>,
     f: impl for<'a> FnOnce(Take<'a, DynNode>) -> T,
 ) -> T {
-    let dyn_type = DynValueType(value.value_type());
-    // SAFETY: `Take` means we obtain and pass along ownership. `dyn_type.value_node()` is the
-    // correct vtable for the node constructed by `build_value_node` (as apposed to
-    // `dyn_type.value_wrapper()`)
+    let dyn_type = DynTermType(term.term_type());
+    // SAFETY: `Take` means we obtain and pass along ownership. `dyn_type.term_node()` is the
+    // correct vtable for the node constructed by `build_term_node` (as apposed to
+    // `dyn_type.term_wrapper()`)
     unsafe {
-        dyn_type.build_value_node(output, value.into_raw_ptr() as *mut u8, |ptr| {
-            f(Take::from_raw_ptr(dyn_type.value_node().cast_mut_ptr(ptr)))
+        dyn_type.build_term_node(output, term.into_raw_ptr() as *mut u8, |ptr| {
+            f(Take::from_raw_ptr(dyn_type.term_node().cast_mut_ptr(ptr)))
         })
     }
 }
 
-pub(crate) fn dyn_value_into_dyn_value_wrapper(value: Take<DynValue>) -> Take<DynNode> {
-    let dyn_type = DynValueType(value.value_type());
-    let raw_ptr = value.into_raw_ptr() as *mut u8;
-    // SAFETY: `Take` means we obtain and pass along ownership. `ValueWrapper` is a transparent
-    // wrapper, so we can cast the pointer and `dyn_type.value_wrapper()` is the correct vtable for
-    // a `ValueWrapper`.
-    unsafe { Take::from_raw_ptr(dyn_type.value_wrapper().cast_mut_ptr(raw_ptr)) }
+pub(crate) fn dyn_term_into_dyn_term_wrapper(term: Take<DynTerm>) -> Take<DynNode> {
+    let dyn_type = DynTermType(term.term_type());
+    let raw_ptr = term.into_raw_ptr() as *mut u8;
+    // SAFETY: `Take` means we obtain and pass along ownership. `TermWrapper` is a transparent
+    // wrapper, so we can cast the pointer and `dyn_type.term_wrapper()` is the correct vtable for
+    // a `TermWrapper`.
+    unsafe { Take::from_raw_ptr(dyn_type.term_wrapper().cast_mut_ptr(raw_ptr)) }
 }
 
-/// Internal only transparent wrapper that turns a [`Value`] into a [`Node`].
+/// Internal only transparent wrapper that turns a [`Term`] into a [`Node`].
 ///
-/// This is used to store `Value` types in internal [`Nodes`] collections. A generic or dynamic
-/// `ValueWrapper` reference, nor any collection type holding these should ever be exposed as part
-/// of the public API.
+/// This is used to store `Term` types in internal [`Nodes`] collections. A generic or dynamic
+/// `TermWrapper` reference, nor any collection type holding these should ever be exposed as part of
+/// the public API.
 ///
-/// Without an associated output value (as in [`ValueNode`]) it is, in geenral, not well-defined how
-/// a [`Value`] should behave as a node. Thus some of the [`Node`] methods of a `ValueWrapper` will
-/// simply panic.
+/// Without an associated output variable (as in [`TermNode`]) it is, in geenral, not well-defined
+/// how a [`Term`] should behave as a node. Thus some of the [`Node`] methods of a `TermWrapper`
+/// will simply panic.
 #[derive(SubtypeCast, NewtypeCast, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 #[repr(transparent)]
-pub(crate) struct ValueWrapper<T: Value> {
-    pub(crate) value: T,
+pub(crate) struct TermWrapper<T: Term> {
+    pub(crate) term: T,
 }
 
-impl<T: Value> Node for ValueWrapper<T> {
+impl<T: Term> Node for TermWrapper<T> {
     const NAME: &'static str = T::NAME;
 
-    const VALUE_TYPE_FOR_VALUE_WRAPPER: Option<SealedWrapper<fn() -> ValueType>> =
-        Some(SealedWrapper(ValueType::of::<T>));
+    const TERM_TYPE_FOR_TERM_WRAPPER: Option<SealedWrapper<fn() -> TermType>> =
+        Some(SealedWrapper(TermType::of::<T>));
 
     fn input_var_iter(&self) -> impl Iterator<Item = Var> + '_ {
-        self.value.input_var_iter()
+        self.term.input_var_iter()
     }
 
     fn unguarded_input_var_iter(&self) -> impl Iterator<Item = Var> + '_ {
-        self.value.unguarded_input_var_iter()
+        self.term.unguarded_input_var_iter()
     }
 
     fn def_eq(&self, other: &Self) -> bool {
-        self.value.def_eq(&other.value)
+        self.term.def_eq(&other.term)
     }
 
     fn apply_var_map(&mut self, _var_map: impl FnMut(Var) -> Lit) {
-        panic!("ValueWrapper used as Node");
+        panic!("TermWrapper used as Node");
     }
 
     fn reduce(&mut self, _builder: &mut impl NodeBuilder) -> bool {
-        panic!("ValueWrapper used as Node");
+        panic!("TermWrapper used as Node");
     }
 }
 
-impl<T: Value> NodeDyn for ValueWrapper<T> {
+impl<T: Term> NodeDyn for TermWrapper<T> {
     fn def_hash(&self) -> u64 {
-        self.value.def_hash()
+        self.term.def_hash()
     }
 
     fn representative_input_var(&self) -> Var {
-        self.value.representative_input_var()
+        self.term.representative_input_var()
     }
 
     fn output_var(&self) -> Option<Var> {
@@ -502,32 +502,32 @@ impl<T: Value> NodeDyn for ValueWrapper<T> {
     }
 
     fn max_var(&self) -> Var {
-        self.value.max_var()
+        self.term.max_var()
     }
 }
 
-/// Node type to assign a value to an output variable.
+/// Node type to assign a variable for the value defined by a [`Term`].
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
-pub struct ValueNode<T: Value> {
-    /// The variable or literal holding the defined value.
+pub struct TermNode<T: Term> {
+    /// The variable or literal holding the value defined by the term.
     pub output: T::Output,
-    /// The defined value of the output variable or literal.
-    pub value: T,
+    /// The term defining the value of the output variable.
+    pub term: T,
 }
 
-impl<T: Value> Node for ValueNode<T> {
+impl<T: Term> Node for TermNode<T> {
     const NAME: &'static str = T::NAME;
 
     fn input_var_iter(&self) -> impl Iterator<Item = Var> + '_ {
-        self.value.input_var_iter()
+        self.term.input_var_iter()
     }
 
     fn unguarded_input_var_iter(&self) -> impl Iterator<Item = Var> + '_ {
-        self.value.unguarded_input_var_iter()
+        self.term.unguarded_input_var_iter()
     }
 
     fn def_eq(&self, other: &Self) -> bool {
-        self.value.def_eq(&other.value)
+        self.term.def_eq(&other.term)
     }
 
     fn apply_var_map(&mut self, mut var_map: impl FnMut(Var) -> Lit) {
@@ -536,16 +536,16 @@ impl<T: Value> Node for ValueNode<T> {
             .process_var_or_lit(|var| var.as_pos(), |lit| lit)
             .map_var_to_lit(&mut var_map);
 
-        let value_pol = self.value.apply_var_map(var_map);
+        let term_pol = self.term.apply_var_map(var_map);
 
-        new_output_lit ^= value_pol.into();
+        new_output_lit ^= term_pol.into();
 
         let new_output = <T::Output>::build_var_or_lit(
             new_output_lit,
             |lit| {
                 assert!(
                     lit.is_pos(),
-                    "Value output of non-Boolean type mapped to negative literal"
+                    "Term output of non-Boolean type mapped to negative literal"
                 );
                 lit.var()
             },
@@ -556,17 +556,17 @@ impl<T: Value> Node for ValueNode<T> {
     }
 
     fn reduce(&mut self, builder: &mut impl NodeBuilder) -> bool {
-        self.value.reduce_node(self.output, builder)
+        self.term.reduce_node(self.output, builder)
     }
 }
 
-impl<T: Value> NodeDyn for ValueNode<T> {
+impl<T: Term> NodeDyn for TermNode<T> {
     fn def_hash(&self) -> u64 {
-        self.value.def_hash()
+        self.term.def_hash()
     }
 
     fn representative_input_var(&self) -> Var {
-        self.value.representative_input_var()
+        self.term.representative_input_var()
     }
 
     fn output_var(&self) -> Option<Var> {
@@ -576,10 +576,10 @@ impl<T: Value> NodeDyn for ValueNode<T> {
     fn max_var(&self) -> Var {
         self.output
             .process_var_or_lit(|var| var, |lit| lit.var())
-            .max(self.value.max_var())
+            .max(self.term.max_var())
     }
 
-    fn dyn_value(&self) -> Option<&DynValue> {
-        Some(&self.value)
+    fn dyn_term(&self) -> Option<&DynTerm> {
+        Some(&self.term)
     }
 }
