@@ -573,6 +573,10 @@ impl<T: Term> NodeDyn for TermNode<T> {
         Some(self.output.process_var_or_lit(|var| var, |lit| lit.var()))
     }
 
+    fn output_lit(&self) -> Option<Lit> {
+        Some(self.output.process_var_or_lit(|var| var.as_pos(), |lit| lit))
+    }
+
     fn max_var(&self) -> Var {
         self.output
             .process_var_or_lit(|var| var, |lit| lit.var())
