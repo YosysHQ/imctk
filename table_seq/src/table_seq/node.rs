@@ -126,7 +126,7 @@ impl<T> SizeClass<T> {
     };
 
     pub fn at_least_3() -> Self {
-        Self::class_for_index(Self::AT_LEAST_3_INDEX)
+        unsafe { Self::class_for_index(Self::AT_LEAST_3_INDEX) }
     }
 
     pub fn len(self) -> usize {
@@ -142,7 +142,7 @@ impl<T> SizeClass<T> {
     }
 }
 
-impl<T> AllocatorClass for SizeClass<T> {
+unsafe impl<T> AllocatorClass for SizeClass<T> {
     type ClassHolder = [ClassAllocator; SIZE_CLASS_COUNT];
 
     fn index(self) -> usize {
@@ -153,7 +153,7 @@ impl<T> AllocatorClass for SizeClass<T> {
         Self::CLASS_SIZE[self.index()]
     }
 
-    fn class_for_index(index: usize) -> Self {
+    unsafe fn class_for_index(index: usize) -> Self {
         debug_assert!(index < SIZE_CLASS_COUNT);
         Self {
             _phantom: PhantomData,
@@ -240,12 +240,12 @@ impl<T> Default for NodeAllocator<T> {
 }
 
 impl<T> NodeAllocator<T> {
-    pub unsafe fn alloc(&mut self, class: SizeClass<T>) -> NodeRef<T> {
+    pub fn alloc(&mut self, class: SizeClass<T>) -> NodeRef<T> {
         NodeRef::new(class, self.inner.alloc(class, &mut self.stats))
     }
 
     pub unsafe fn ptr(&self, node: NodeRef<T>) -> *mut T {
-        self.inner.ptr(node.size_class(), node.index()).cast()
+        unsafe { self.inner.ptr(node.size_class(), node.index()).cast() }
     }
 
     pub unsafe fn node(&self, node: NodeRef<T>, entry_count: usize, table_count: usize) -> Node<T> {
@@ -254,13 +254,15 @@ impl<T> NodeAllocator<T> {
             size_class,
             entry_count,
             table_count,
-            ptr: self.inner.ptr(size_class, node.index()).cast(),
+            ptr: unsafe { self.inner.ptr(size_class, node.index()).cast() },
         }
     }
 
     pub unsafe fn dealloc(&mut self, node: NodeRef<T>) {
-        self.inner
-            .dealloc(node.size_class(), node.index(), &mut self.stats)
+        unsafe {
+            self.inner
+                .dealloc(node.size_class(), node.index(), &mut self.stats)
+        }
     }
 }
 
@@ -354,7 +356,8 @@ impl<T> Node<T> {
             return None;
         }
 
-        let target_class = <SizeClass<T>>::class_for_index(self.size_class().index() - 2);
+        let target_class =
+            unsafe { <SizeClass<T>>::class_for_index(self.size_class().index() - 2) };
 
         if target_size <= target_class.size() {
             Some(target_class)
@@ -386,7 +389,7 @@ impl<T> Node<T> {
 
     #[inline(always)]
     pub unsafe fn entry_ptr(&self, offset: usize) -> *mut T {
-        self.ptr.add(offset)
+        unsafe { self.ptr.add(offset) }
     }
 
     #[inline(always)]
@@ -396,33 +399,35 @@ impl<T> Node<T> {
 
     #[inline(always)]
     pub unsafe fn tables_slice_end(&self) -> *mut Subtable<T> {
-        self.ptr
-            .cast::<u8>()
-            .add(self.size_class.size())
-            .cast::<Subtable<T>>()
+        unsafe {
+            self.ptr
+                .cast::<u8>()
+                .add(self.size_class.size())
+                .cast::<Subtable<T>>()
+        }
     }
 
     #[inline(always)]
     pub unsafe fn tables_slice_start(&self) -> *mut Subtable<T> {
-        self.tables_slice_end().sub(self.table_count)
+        unsafe { self.tables_slice_end().sub(self.table_count) }
     }
 
     #[inline(always)]
     pub unsafe fn tables_raw(&self) -> *mut [Subtable<T>] {
-        std::ptr::slice_from_raw_parts_mut(self.tables_slice_start(), self.table_count)
+        std::ptr::slice_from_raw_parts_mut(unsafe { self.tables_slice_start() }, self.table_count)
     }
 
     #[inline(always)]
     pub unsafe fn table_ptr(&self, offset: usize) -> *mut Subtable<T> {
-        self.tables_slice_end().sub(offset + 1)
+        unsafe { self.tables_slice_end().sub(offset + 1) }
     }
 
     #[inline(always)]
     pub unsafe fn close_table_gap(&mut self, gap_offset: usize) {
-        let source = self.tables_slice_start();
-        let dest = source.add(1);
+        let source = unsafe { self.tables_slice_start() };
+        let dest = unsafe { source.add(1) };
         self.table_count -= 1;
-        source.copy_to(dest, self.table_count - gap_offset);
+        unsafe { source.copy_to(dest, self.table_count - gap_offset) };
     }
 
     #[allow(dead_code)]
@@ -435,18 +440,18 @@ impl<T> Node<T> {
         // move entries
         let source = self.ptr();
         let dest = dest_node.ptr();
-        source.copy_to_nonoverlapping(dest, self.entry_count);
+        unsafe { source.copy_to_nonoverlapping(dest, self.entry_count) };
 
         if self.table_count > 0 {
             // move table suffix
-            let source = self.tables_slice_start();
-            let dest = dest_node.tables_slice_end().sub(self.table_count - 1);
-            source.copy_to_nonoverlapping(dest, self.table_count - 1 - gap_offset);
+            let source = unsafe { self.tables_slice_start() };
+            let dest = unsafe { dest_node.tables_slice_end().sub(self.table_count - 1) };
+            unsafe { source.copy_to_nonoverlapping(dest, self.table_count - 1 - gap_offset) };
 
             // move table prefix
-            let source = self.tables_slice_end().sub(gap_offset);
-            let dest = dest_node.tables_slice_end().sub(gap_offset);
-            source.copy_to_nonoverlapping(dest, gap_offset);
+            let source = unsafe { self.tables_slice_end().sub(gap_offset) };
+            let dest = unsafe { dest_node.tables_slice_end().sub(gap_offset) };
+            unsafe { source.copy_to_nonoverlapping(dest, gap_offset) };
         }
 
         dest_node.entry_count = self.entry_count;
@@ -465,23 +470,23 @@ impl<T> Node<T> {
     ) {
         if let Some(new_size_class) = self.shrink_for_removed_table() {
             let new_node_ref = chunk_alloc.alloc(new_size_class);
-            let mut new_node = chunk_alloc.node(new_node_ref, 0, 0);
-            self.refresh_ptr(chunk_alloc.ptr(chunk.node));
+            let mut new_node = unsafe { chunk_alloc.node(new_node_ref, 0, 0) };
+            self.refresh_ptr(unsafe { chunk_alloc.ptr(chunk.node) });
 
-            self.close_table_gap_move_into(&mut new_node, table_offset);
-            chunk_alloc.dealloc(chunk.node);
+            unsafe { self.close_table_gap_move_into(&mut new_node, table_offset) };
+            unsafe { chunk_alloc.dealloc(chunk.node) };
             chunk.node = new_node_ref;
             *self = new_node;
         } else {
-            self.close_table_gap(table_offset);
+            unsafe { self.close_table_gap(table_offset) };
         }
     }
 
     #[inline(always)]
     pub unsafe fn make_table_gap(&mut self, gap_offset: usize) {
-        let source = self.tables_slice_start();
-        let dest = source.sub(1);
-        source.copy_to(dest, self.table_count - gap_offset);
+        let source = unsafe { self.tables_slice_start() };
+        let dest = unsafe { source.sub(1) };
+        unsafe { source.copy_to(dest, self.table_count - gap_offset) };
         self.table_count += 1;
     }
 
@@ -495,18 +500,18 @@ impl<T> Node<T> {
         // move entries
         let source = self.ptr();
         let dest = dest_node.ptr();
-        source.copy_to_nonoverlapping(dest, self.entry_count);
+        unsafe { source.copy_to_nonoverlapping(dest, self.entry_count) };
 
         if self.table_count > 0 {
             // move table suffix
-            let source = self.tables_slice_start();
-            let dest = dest_node.tables_slice_end().sub(self.table_count + 1);
-            source.copy_to_nonoverlapping(dest, self.table_count - gap_offset);
+            let source = unsafe { self.tables_slice_start() };
+            let dest = unsafe { dest_node.tables_slice_end().sub(self.table_count + 1) };
+            unsafe { source.copy_to_nonoverlapping(dest, self.table_count - gap_offset) };
 
             // move table prefix
-            let source = self.tables_slice_end().sub(gap_offset);
-            let dest = dest_node.tables_slice_end().sub(gap_offset);
-            source.copy_to_nonoverlapping(dest, gap_offset);
+            let source = unsafe { self.tables_slice_end().sub(gap_offset) };
+            let dest = unsafe { dest_node.tables_slice_end().sub(gap_offset) };
+            unsafe { source.copy_to_nonoverlapping(dest, gap_offset) };
         }
 
         dest_node.entry_count = self.entry_count;
@@ -522,8 +527,8 @@ impl<T> Node<T> {
         entry_gap_offset: usize,
         table_gap_offset: usize,
     ) {
-        self.close_entry_pair_gap(entry_gap_offset);
-        self.make_table_gap(table_gap_offset);
+        unsafe { self.close_entry_pair_gap(entry_gap_offset) };
+        unsafe { self.make_table_gap(table_gap_offset) };
     }
 
     #[inline(always)]
@@ -542,23 +547,23 @@ impl<T> Node<T> {
         // move entry prefix
         let source = self.ptr();
         let dest = dest_node.ptr();
-        source.copy_to_nonoverlapping(dest, entry_gap_offset);
+        unsafe { source.copy_to_nonoverlapping(dest, entry_gap_offset) };
 
         // move entry suffix
-        let source = self.entry_ptr(entry_gap_offset + 2);
-        let dest = dest_node.entry_ptr(entry_gap_offset);
-        source.copy_to_nonoverlapping(dest, dest_node.entry_count - entry_gap_offset);
+        let source = unsafe { self.entry_ptr(entry_gap_offset + 2) };
+        let dest = unsafe { dest_node.entry_ptr(entry_gap_offset) };
+        unsafe { source.copy_to_nonoverlapping(dest, dest_node.entry_count - entry_gap_offset) };
 
         if self.table_count > 0 {
             // move table suffix
-            let source = self.tables_slice_start();
-            let dest = dest_node.tables_slice_end().sub(self.table_count + 1);
-            source.copy_to_nonoverlapping(dest, self.table_count - table_gap_offset);
+            let source = unsafe { self.tables_slice_start() };
+            let dest = unsafe { dest_node.tables_slice_end().sub(self.table_count + 1) };
+            unsafe { source.copy_to_nonoverlapping(dest, self.table_count - table_gap_offset) };
 
             // move table prefix
-            let source = self.tables_slice_end().sub(table_gap_offset);
-            let dest = dest_node.tables_slice_end().sub(table_gap_offset);
-            source.copy_to_nonoverlapping(dest, table_gap_offset);
+            let source = unsafe { self.tables_slice_end().sub(table_gap_offset) };
+            let dest = unsafe { dest_node.tables_slice_end().sub(table_gap_offset) };
+            unsafe { source.copy_to_nonoverlapping(dest, table_gap_offset) };
         }
 
         dest_node.table_count = self.table_count + 1;
@@ -577,28 +582,30 @@ impl<T> Node<T> {
     ) {
         if let Some(new_size_class) = self.resize_for_new_table_replacing_entry_pair() {
             let new_node_ref = chunk_alloc.alloc(new_size_class);
-            let mut new_node = chunk_alloc.node(new_node_ref, 0, 0);
-            self.refresh_ptr(chunk_alloc.ptr(chunk.node));
+            let mut new_node = unsafe { chunk_alloc.node(new_node_ref, 0, 0) };
+            self.refresh_ptr(unsafe { chunk_alloc.ptr(chunk.node) });
 
-            self.close_entry_pair_gap_and_make_table_gap_move_into(
-                &mut new_node,
-                entry_offset,
-                table_offset,
-            );
-            chunk_alloc.dealloc(chunk.node);
+            unsafe {
+                self.close_entry_pair_gap_and_make_table_gap_move_into(
+                    &mut new_node,
+                    entry_offset,
+                    table_offset,
+                )
+            };
+            unsafe { chunk_alloc.dealloc(chunk.node) };
             chunk.node = new_node_ref;
             *self = new_node;
         } else {
-            self.close_entry_pair_gap_and_make_table_gap(entry_offset, table_offset);
+            unsafe { self.close_entry_pair_gap_and_make_table_gap(entry_offset, table_offset) };
         }
     }
 
     #[inline(always)]
     pub unsafe fn close_entry_gap(&mut self, gap_offset: usize) {
-        let source = self.entry_ptr(gap_offset + 1);
-        let dest = source.sub(1);
+        let source = unsafe { self.entry_ptr(gap_offset + 1) };
+        let dest = unsafe { source.sub(1) };
         self.entry_count -= 1;
-        source.copy_to(dest, self.entry_count - gap_offset);
+        unsafe { source.copy_to(dest, self.entry_count - gap_offset) };
     }
 
     #[inline(always)]
@@ -613,18 +620,18 @@ impl<T> Node<T> {
         // move entry prefix
         let source = self.ptr();
         let dest = dest_node.ptr();
-        source.copy_to_nonoverlapping(dest, gap_offset);
+        unsafe { source.copy_to_nonoverlapping(dest, gap_offset) };
 
         // move entry suffix
-        let source = self.entry_ptr(gap_offset + 1);
-        let dest = dest_node.entry_ptr(gap_offset);
-        source.copy_to_nonoverlapping(dest, dest_node.entry_count - gap_offset);
+        let source = unsafe { self.entry_ptr(gap_offset + 1) };
+        let dest = unsafe { dest_node.entry_ptr(gap_offset) };
+        unsafe { source.copy_to_nonoverlapping(dest, dest_node.entry_count - gap_offset) };
 
         // move tables
         if self.table_count > 0 {
-            let source = self.tables_slice_start();
-            let dest = dest_node.tables_slice_start();
-            source.copy_to_nonoverlapping(dest, self.table_count);
+            let source = unsafe { self.tables_slice_start() };
+            let dest = unsafe { dest_node.tables_slice_start() };
+            unsafe { source.copy_to_nonoverlapping(dest, self.table_count) };
         }
 
         self.entry_count = 0;
@@ -640,24 +647,24 @@ impl<T> Node<T> {
     ) {
         if let Some(new_size_class) = self.shrink_for_removed_entry() {
             let new_node_ref = chunk_alloc.alloc(new_size_class);
-            let mut new_node = chunk_alloc.node(new_node_ref, 0, 0);
-            self.refresh_ptr(chunk_alloc.ptr(chunk.node));
+            let mut new_node = unsafe { chunk_alloc.node(new_node_ref, 0, 0) };
+            self.refresh_ptr(unsafe { chunk_alloc.ptr(chunk.node) });
 
-            self.close_entry_gap_move_into(&mut new_node, entry_offset);
-            chunk_alloc.dealloc(chunk.node);
+            unsafe { self.close_entry_gap_move_into(&mut new_node, entry_offset) };
+            unsafe { chunk_alloc.dealloc(chunk.node) };
             chunk.node = new_node_ref;
             *self = new_node;
         } else {
-            self.close_entry_gap(entry_offset);
+            unsafe { self.close_entry_gap(entry_offset) };
         }
     }
 
     #[inline(always)]
     pub unsafe fn close_entry_pair_gap(&mut self, gap_offset: usize) {
-        let source = self.entry_ptr(gap_offset + 2);
-        let dest = source.sub(2);
+        let source = unsafe { self.entry_ptr(gap_offset + 2) };
+        let dest = unsafe { source.sub(2) };
         self.entry_count -= 2;
-        source.copy_to(dest, self.entry_count - gap_offset);
+        unsafe { source.copy_to(dest, self.entry_count - gap_offset) };
     }
 
     #[inline(always)]
@@ -676,18 +683,18 @@ impl<T> Node<T> {
         // move entry prefix
         let source = self.ptr();
         let dest = dest_node.ptr();
-        source.copy_to_nonoverlapping(dest, gap_offset);
+        unsafe { source.copy_to_nonoverlapping(dest, gap_offset) };
 
         // move entry suffix
-        let source = self.entry_ptr(gap_offset + 2);
-        let dest = dest_node.entry_ptr(gap_offset);
-        source.copy_to_nonoverlapping(dest, dest_node.entry_count - gap_offset);
+        let source = unsafe { self.entry_ptr(gap_offset + 2) };
+        let dest = unsafe { dest_node.entry_ptr(gap_offset) };
+        unsafe { source.copy_to_nonoverlapping(dest, dest_node.entry_count - gap_offset) };
 
         // move tables
         if self.table_count > 0 {
-            let source = self.tables_slice_start();
-            let dest = dest_node.tables_slice_start();
-            source.copy_to_nonoverlapping(dest, self.table_count);
+            let source = unsafe { self.tables_slice_start() };
+            let dest = unsafe { dest_node.tables_slice_start() };
+            unsafe { source.copy_to_nonoverlapping(dest, self.table_count) };
         }
 
         self.entry_count = 0;
@@ -703,15 +710,15 @@ impl<T> Node<T> {
     ) {
         if let Some(new_size_class) = self.shrink_for_removed_entry_pair() {
             let new_node_ref = chunk_alloc.alloc(new_size_class);
-            let mut new_node = chunk_alloc.node(new_node_ref, 0, 0);
-            self.refresh_ptr(chunk_alloc.ptr(chunk.node));
+            let mut new_node = unsafe { chunk_alloc.node(new_node_ref, 0, 0) };
+            self.refresh_ptr(unsafe { chunk_alloc.ptr(chunk.node) });
 
-            self.close_entry_pair_gap_move_into(&mut new_node, entry_offset);
-            chunk_alloc.dealloc(chunk.node);
+            unsafe { self.close_entry_pair_gap_move_into(&mut new_node, entry_offset) };
+            unsafe { chunk_alloc.dealloc(chunk.node) };
             chunk.node = new_node_ref;
             *self = new_node;
         } else {
-            self.close_entry_pair_gap(entry_offset);
+            unsafe { self.close_entry_pair_gap(entry_offset) };
         }
     }
 
@@ -724,23 +731,23 @@ impl<T> Node<T> {
     ) {
         if let Some(new_size_class) = self.grow_for_new_entry() {
             let new_node_ref = chunk_alloc.alloc(new_size_class);
-            let mut new_node = chunk_alloc.node(new_node_ref, 0, 0);
-            self.refresh_ptr(chunk_alloc.ptr(chunk.node));
+            let mut new_node = unsafe { chunk_alloc.node(new_node_ref, 0, 0) };
+            self.refresh_ptr(unsafe { chunk_alloc.ptr(chunk.node) });
 
-            self.make_entry_gap_move_into(&mut new_node, entry_offset);
-            chunk_alloc.dealloc(chunk.node);
+            unsafe { self.make_entry_gap_move_into(&mut new_node, entry_offset) };
+            unsafe { chunk_alloc.dealloc(chunk.node) };
             chunk.node = new_node_ref;
             *self = new_node;
         } else {
-            self.make_entry_gap(entry_offset);
+            unsafe { self.make_entry_gap(entry_offset) };
         }
     }
 
     #[inline(always)]
     pub unsafe fn make_entry_gap(&mut self, gap_offset: usize) {
-        let source = self.entry_ptr(gap_offset);
-        let dest = source.add(1);
-        source.copy_to(dest, self.entry_count - gap_offset);
+        let source = unsafe { self.entry_ptr(gap_offset) };
+        let dest = unsafe { source.add(1) };
+        unsafe { source.copy_to(dest, self.entry_count - gap_offset) };
         self.entry_count += 1;
     }
 
@@ -753,21 +760,21 @@ impl<T> Node<T> {
         // move entry prefix
         let source = self.ptr();
         let dest = dest_node.ptr();
-        source.copy_to_nonoverlapping(dest, gap_offset);
+        unsafe { source.copy_to_nonoverlapping(dest, gap_offset) };
 
         // move entry suffix
-        let source = self.entry_ptr(gap_offset);
-        let dest = dest_node.entry_ptr(gap_offset + 1);
-        source.copy_to_nonoverlapping(dest, self.entry_count - gap_offset);
+        let source = unsafe { self.entry_ptr(gap_offset) };
+        let dest = unsafe { dest_node.entry_ptr(gap_offset + 1) };
+        unsafe { source.copy_to_nonoverlapping(dest, self.entry_count - gap_offset) };
 
         dest_node.entry_count = self.entry_count + 1;
         dest_node.table_count = self.table_count;
 
         // move tables
         if self.table_count > 0 {
-            let source = self.tables_slice_start();
-            let dest = dest_node.tables_slice_start();
-            source.copy_to_nonoverlapping(dest, self.table_count);
+            let source = unsafe { self.tables_slice_start() };
+            let dest = unsafe { dest_node.tables_slice_start() };
+            unsafe { source.copy_to_nonoverlapping(dest, self.table_count) };
         }
 
         self.entry_count = 0;

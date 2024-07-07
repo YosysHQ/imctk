@@ -58,7 +58,7 @@ impl<T> SmallSubtable<T> {
     ) -> (*mut T, Self) {
         let node = allocator.alloc(SizeClass::at_least_3());
 
-        let node_ptr = allocator.ptr(node);
+        let node_ptr = unsafe { allocator.ptr(node) };
 
         let mut hashes = [0; SMALL_SUBTABLE_CAPACITY];
         for i in 0..2 {
@@ -66,10 +66,10 @@ impl<T> SmallSubtable<T> {
         }
         hashes[2] = byte_hash_from_hash(third_hash);
 
-        node_ptr.cast::<[T; 2]>().write(pair);
+        unsafe { node_ptr.cast::<[T; 2]>().write(pair) };
 
-        let entry_ptr = node_ptr.add(2);
-        entry_ptr.write(third);
+        let entry_ptr = unsafe { node_ptr.add(2) };
+        unsafe { entry_ptr.write(third) };
 
         (
             entry_ptr,
@@ -91,7 +91,7 @@ impl<T> SmallSubtable<T> {
         let byte_hash = byte_hash_from_hash(hash);
         let mut matches = find_byte_among_16(byte_hash, &self.hashes);
 
-        let node_ptr = allocator.ptr(self.node);
+        let node_ptr = unsafe { allocator.ptr(self.node) };
 
         while let Some(found_match) = NonZeroU16::new(matches) {
             matches &= matches - 1;
@@ -100,8 +100,8 @@ impl<T> SmallSubtable<T> {
                 break;
             }
 
-            let entry_ptr = node_ptr.add(match_index);
-            if eq(&*entry_ptr, &value) {
+            let entry_ptr = unsafe { node_ptr.add(match_index) };
+            if eq(unsafe { &*entry_ptr }, &value) {
                 return Ok((entry_ptr, Some(value)));
             }
         }
@@ -118,8 +118,8 @@ impl<T> SmallSubtable<T> {
         let size_class = self.node.size_class();
 
         if target_offset < size_class.len() {
-            let entry_ptr = node_ptr.add(target_offset);
-            entry_ptr.write(value);
+            let entry_ptr = unsafe { node_ptr.add(target_offset) };
+            unsafe { entry_ptr.write(value) };
             Ok((entry_ptr, None))
         } else {
             // we only grow by one at a time so no need to loop
@@ -127,16 +127,16 @@ impl<T> SmallSubtable<T> {
 
             let new_node = allocator.alloc(required_size_class);
 
-            let new_node_ptr = allocator.ptr(new_node);
-            let node_ptr = allocator.ptr(self.node);
+            let new_node_ptr = unsafe { allocator.ptr(new_node) };
+            let node_ptr = unsafe { allocator.ptr(self.node) };
 
-            new_node_ptr.copy_from_nonoverlapping(node_ptr, target_offset);
+            unsafe { new_node_ptr.copy_from_nonoverlapping(node_ptr, target_offset) };
 
-            allocator.dealloc(self.node);
+            unsafe { allocator.dealloc(self.node) };
             self.node = new_node;
 
-            let entry_ptr = new_node_ptr.add(target_offset);
-            entry_ptr.write(value);
+            let entry_ptr = unsafe { new_node_ptr.add(target_offset) };
+            unsafe { entry_ptr.write(value) };
             Ok((entry_ptr, None))
         }
     }
@@ -149,7 +149,7 @@ impl<T> SmallSubtable<T> {
     ) -> Result<*mut T, T> {
         let byte_hash = byte_hash_from_hash(hash);
 
-        let node_ptr = allocator.ptr(self.node);
+        let node_ptr = unsafe { allocator.ptr(self.node) };
 
         let target_offset = self.len as usize;
         if target_offset == SMALL_SUBTABLE_CAPACITY {
@@ -163,8 +163,8 @@ impl<T> SmallSubtable<T> {
         let size_class = self.node.size_class();
 
         if target_offset < size_class.len() {
-            let entry_ptr = node_ptr.add(target_offset);
-            entry_ptr.write(value);
+            let entry_ptr = unsafe { node_ptr.add(target_offset) };
+            unsafe { entry_ptr.write(value) };
             Ok(entry_ptr)
         } else {
             // we only grow by one at a time so no need to loop
@@ -172,16 +172,16 @@ impl<T> SmallSubtable<T> {
 
             let new_node = allocator.alloc(required_size_class);
 
-            let new_node_ptr = allocator.ptr(new_node);
-            let node_ptr = allocator.ptr(self.node);
+            let new_node_ptr = unsafe { allocator.ptr(new_node) };
+            let node_ptr = unsafe { allocator.ptr(self.node) };
 
-            new_node_ptr.copy_from_nonoverlapping(node_ptr, target_offset);
+            unsafe { new_node_ptr.copy_from_nonoverlapping(node_ptr, target_offset) };
 
-            allocator.dealloc(self.node);
+            unsafe { allocator.dealloc(self.node) };
             self.node = new_node;
 
-            let entry_ptr = new_node_ptr.add(target_offset);
-            entry_ptr.write(value);
+            let entry_ptr = unsafe { new_node_ptr.add(target_offset) };
+            unsafe { entry_ptr.write(value) };
             Ok(entry_ptr)
         }
     }
@@ -195,7 +195,7 @@ impl<T> SmallSubtable<T> {
         let byte_hash = byte_hash_from_hash(hash);
         let mut matches = find_byte_among_16(byte_hash, &self.hashes);
 
-        let node_ptr = allocator.ptr(self.node);
+        let node_ptr = unsafe { allocator.ptr(self.node) };
 
         let len = self.len as usize;
 
@@ -206,12 +206,12 @@ impl<T> SmallSubtable<T> {
                 break;
             }
 
-            let entry_ptr = node_ptr.add(match_index);
-            if eq(&*entry_ptr) {
-                let value = entry_ptr.read();
+            let entry_ptr = unsafe { node_ptr.add(match_index) };
+            if eq(unsafe { &*entry_ptr }) {
+                let value = unsafe { entry_ptr.read() };
 
-                let last_ptr = node_ptr.add(len - 1);
-                last_ptr.copy_to(entry_ptr, 1);
+                let last_ptr = unsafe { node_ptr.add(len - 1) };
+                unsafe { last_ptr.copy_to(entry_ptr, 1) };
 
                 self.hashes[match_index] = self.hashes[len - 1];
 
@@ -233,7 +233,7 @@ impl<T> SmallSubtable<T> {
         let byte_hash = byte_hash_from_hash(hash);
         let mut matches = find_byte_among_16(byte_hash, &self.hashes);
 
-        let node_ptr = allocator.ptr(self.node);
+        let node_ptr = unsafe { allocator.ptr(self.node) };
 
         let len = self.len as usize;
 
@@ -244,9 +244,9 @@ impl<T> SmallSubtable<T> {
                 break;
             }
 
-            let entry_ptr = node_ptr.add(match_index);
-            if eq(&*entry_ptr) {
-                return Some(&*entry_ptr);
+            let entry_ptr = unsafe { node_ptr.add(match_index) };
+            if eq(unsafe { &*entry_ptr }) {
+                return Some(unsafe { &*entry_ptr });
             }
         }
 
@@ -262,7 +262,7 @@ impl<T> SmallSubtable<T> {
         let byte_hash = byte_hash_from_hash(hash);
         let mut matches = find_byte_among_16(byte_hash, &self.hashes);
 
-        let node_ptr = allocator.ptr(self.node);
+        let node_ptr = unsafe { allocator.ptr(self.node) };
 
         let len = self.len as usize;
 
@@ -273,9 +273,9 @@ impl<T> SmallSubtable<T> {
                 break;
             }
 
-            let entry_ptr = node_ptr.add(match_index);
-            if eq(&*entry_ptr) {
-                return Some(&mut *entry_ptr);
+            let entry_ptr = unsafe { node_ptr.add(match_index) };
+            if eq(unsafe { &*entry_ptr }) {
+                return Some(unsafe { &mut *entry_ptr });
             }
         }
 
@@ -292,16 +292,16 @@ impl<T> SmallSubtable<T> {
 
     pub unsafe fn entries<'a>(&self, alloc: &'a NodeAllocator<T>) -> &'a [T] {
         let len = self.len as usize;
-        let node_ptr = alloc.ptr(self.node);
+        let node_ptr = unsafe { alloc.ptr(self.node) };
 
-        std::slice::from_raw_parts(node_ptr, len)
+        unsafe { std::slice::from_raw_parts(node_ptr, len) }
     }
 
     pub unsafe fn entries_mut<'a>(&self, alloc: &'a mut NodeAllocator<T>) -> &'a mut [T] {
         let len = self.len as usize;
-        let node_ptr = alloc.ptr(self.node);
+        let node_ptr = unsafe { alloc.ptr(self.node) };
 
-        std::slice::from_raw_parts_mut(node_ptr, len)
+        unsafe { std::slice::from_raw_parts_mut(node_ptr, len) }
     }
 
     pub unsafe fn drain_and_dealloc_with(
@@ -310,19 +310,21 @@ impl<T> SmallSubtable<T> {
         alloc: &mut NodeAllocator<T>,
     ) {
         let len = replace(&mut self.len, 0) as usize;
-        let node_ptr = alloc.ptr(self.node);
+        let node_ptr = unsafe { alloc.ptr(self.node) };
         for i in 0..len {
-            f(node_ptr.add(i).read(), self.hashes[i]);
+            f(unsafe { node_ptr.add(i).read() }, self.hashes[i]);
         }
 
-        alloc.dealloc(self.node);
+        unsafe {
+            alloc.dealloc(self.node);
+        }
     }
 
     pub unsafe fn drop_and_dealloc(&mut self, alloc: &mut NodeAllocator<T>) {
         let len = replace(&mut self.len, 0) as usize;
-        let node_ptr = alloc.ptr(self.node);
-        std::ptr::slice_from_raw_parts_mut(node_ptr, len).drop_in_place();
-        alloc.dealloc(self.node);
+        let node_ptr = unsafe { alloc.ptr(self.node) };
+        unsafe { std::ptr::slice_from_raw_parts_mut(node_ptr, len).drop_in_place() };
+        unsafe { alloc.dealloc(self.node) };
     }
 
     pub unsafe fn move_node(
@@ -331,14 +333,16 @@ impl<T> SmallSubtable<T> {
         new_alloc: &mut NodeAllocator<T>,
     ) {
         let size_class = self.node.size_class();
-        let old_node_ptr = old_alloc.ptr(self.node);
+        let old_node_ptr = unsafe { old_alloc.ptr(self.node) };
 
         let new_node_ref = new_alloc.alloc(size_class);
-        let new_node_ptr = new_alloc.ptr(new_node_ref);
+        let new_node_ptr = unsafe { new_alloc.ptr(new_node_ref) };
 
-        old_node_ptr
-            .cast::<u8>()
-            .copy_to(new_node_ptr.cast::<u8>(), size_class.size());
+        unsafe {
+            old_node_ptr
+                .cast::<u8>()
+                .copy_to(new_node_ptr.cast::<u8>(), size_class.size())
+        };
 
         self.node = new_node_ref;
     }

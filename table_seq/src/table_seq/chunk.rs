@@ -31,7 +31,7 @@ impl<T> Default for Chunk<T> {
 impl<T> Chunk<T> {
     #[inline(always)]
     pub unsafe fn node(&self, allocator: &NodeAllocator<T>) -> Node<T> {
-        allocator.node(self.node, self.meta.entry_count(), self.meta.table_count())
+        unsafe { allocator.node(self.node, self.meta.entry_count(), self.meta.table_count()) }
     }
 }
 

@@ -37,18 +37,22 @@ impl<T> Drop for OwnedSubtableSmall<T> {
 impl<T> OwnedSubtableSmall<T> {
     pub unsafe fn push_with_hash_unchecked(&mut self, value: T, hash: u8) {
         debug_assert!((self.len as usize) < SMALL_SUBTABLE_CAPACITY);
-        self.values
-            .get_unchecked_mut(self.len as usize)
-            .write(value);
-        *self.hashes.get_unchecked_mut(self.len as usize) = hash;
+        unsafe {
+            self.values
+                .get_unchecked_mut(self.len as usize)
+                .write(value)
+        };
+        unsafe { *self.hashes.get_unchecked_mut(self.len as usize) = hash };
         self.len += 1;
     }
 
     pub unsafe fn push_unchecked(&mut self, value: T) {
         debug_assert!((self.len as usize) < SMALL_SUBTABLE_CAPACITY);
-        self.values
-            .get_unchecked_mut(self.len as usize)
-            .write(value);
+        unsafe {
+            self.values
+                .get_unchecked_mut(self.len as usize)
+                .write(value)
+        };
         self.have_hashes = false;
         self.len += 1;
     }

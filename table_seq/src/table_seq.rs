@@ -1210,29 +1210,29 @@ impl<T> TableSeq<T> {
 
 impl<T> TableSeq<T> {
     unsafe fn drop_chunk(&mut self, chunk_index: usize) {
-        let chunk = self.chunks.get_unchecked_mut(chunk_index);
+        let chunk = unsafe { self.chunks.get_unchecked_mut(chunk_index) };
         if !chunk.meta.is_empty() {
             let allocator_index = chunk_index >> (ALLOCATOR_SHIFT - CHUNK_SHIFT);
-            let chunk_alloc = self.allocators.get_unchecked_mut(allocator_index);
-            let node = chunk.node(chunk_alloc);
+            let chunk_alloc = unsafe { self.allocators.get_unchecked_mut(allocator_index) };
+            let node = unsafe { chunk.node(chunk_alloc) };
             self.entries -= node.entry_count();
             if node.table_count() > 0 {
-                let table_alloc = self.allocators.get_unchecked_mut(allocator_index ^ 1);
-                let table_slice = node.tables_raw();
-                for table in (*table_slice).iter_mut() {
+                let table_alloc = unsafe { self.allocators.get_unchecked_mut(allocator_index ^ 1) };
+                let table_slice = unsafe { node.tables_raw() };
+                for table in unsafe { (*table_slice).iter_mut() } {
                     match table {
                         Subtable::Small(table) => {
                             self.entries -= table.len();
-                            table.drop_and_dealloc(table_alloc);
+                            unsafe { table.drop_and_dealloc(table_alloc) };
                         }
                         Subtable::Large(table) => {
                             self.entries -= table.len();
                         }
                     }
                 }
-                table_slice.drop_in_place();
+                unsafe { table_slice.drop_in_place() };
             }
-            node.entries_raw().drop_in_place();
+            unsafe { node.entries_raw().drop_in_place() };
         }
     }
 }
