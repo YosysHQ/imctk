@@ -8,8 +8,11 @@ mod wide_ptr;
 #[macro_use]
 pub mod give_take;
 
-pub mod ir;
-
-pub mod import;
-
 pub mod unordered_pair;
+pub mod vec_sink;
+
+pub mod topo_sorted_sccs;
+
+pub mod extract;
+pub mod import;
+pub mod ir;

@@ -1,11 +1,11 @@
-//! Fine grained terms for representing combinational and sequential circuits.
+//! Fine grained terms for representing bit-level combinational and sequential circuits.
 use imctk_ids::{Id, Id32};
 
 use crate::{
     ir::{
         node::{
             builder::NodeBuilder,
-            generic::{Term, TermDyn, TermNode},
+            generic::{default_reduce_node, Term, TermDyn, TermNode},
         },
         var::{Lit, Pol, Var},
     },
@@ -14,6 +14,8 @@ use crate::{
 
 #[allow(unused_imports)] // rustdoc
 use crate::ir::node::generic::Node;
+
+use super::constraints::BinClause;
 
 /// [`Term`] representing the Boolean 'and' of two values.
 ///
@@ -61,7 +63,40 @@ impl Term for And {
         }
     }
 
-    // TODO node reductions
+    fn reduce_node(&mut self, output: Lit, builder: &mut impl NodeBuilder) -> bool {
+        if output.is_const() {
+            if output == Lit::FALSE {
+                builder.node(BinClause {
+                    inputs: self.inputs.map(|input| !input).into(),
+                });
+                true
+            } else {
+                for input in *self.inputs {
+                    builder.equiv([input, Lit::TRUE]);
+                }
+                true
+            }
+        } else {
+            for i in 0..2 {
+                let input = self.inputs[i];
+                let other_input = self.inputs[i ^ 1];
+                if input.var() == output.var() {
+                    if input == output {
+                        builder.node(BinClause {
+                            inputs: [!output, other_input].into(),
+                        });
+                        return true;
+                    } else {
+                        builder.equiv([output, Lit::FALSE]);
+                        builder.equiv([other_input, Lit::FALSE]);
+                        return true;
+                    }
+                }
+            }
+
+            default_reduce_node(self, output, builder)
+        }
+    }
 }
 
 impl TermDyn for And {

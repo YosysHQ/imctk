@@ -1,6 +1,8 @@
 // TODO this is currently implemented on top of Nodes, but the specific use case would be better
 // served with a different representation
 
+use std::fmt::Debug;
+
 use imctk_ids::Id;
 
 use crate::{
@@ -8,7 +10,10 @@ use crate::{
     ir::{
         node::{
             builder::{NodeBuilder, NodeBuilderDyn},
-            generic::{dyn_term_into_dyn_term_wrapper, DynNode, DynTerm, Node, Term, TermWrapper},
+            generic::{
+                dyn_term_into_dyn_term_wrapper, dyn_term_wrapper_as_dyn_term, DynNode, DynTerm,
+                Node, Term, TermWrapper,
+            },
             vtables::{DynNodeType, DynTermType, GenericNodeType, GenericTermType},
             NodeId,
         },
@@ -16,10 +21,18 @@ use crate::{
     },
 };
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 enum NodeBufEntry {
     Term(NodeId),
     Node(NodeId),
+    Equiv([Lit; 2]),
+}
+
+#[derive(Debug)]
+#[allow(dead_code)] // Currently only used for the Debug impl
+enum NodeBufEntryView<'a> {
+    Term(&'a DynTerm),
+    Node(&'a DynNode),
     Equiv([Lit; 2]),
 }
 
@@ -29,6 +42,22 @@ pub struct NodeBuf {
     entries: Vec<NodeBufEntry>,
     terms: usize,
     recycle: usize,
+}
+
+impl Debug for NodeBuf {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_list()
+            .entries(self.entries.iter().map(|entry| match *entry {
+                NodeBufEntry::Term(wrapper_id) => NodeBufEntryView::Term(
+                    dyn_term_wrapper_as_dyn_term(self.nodes.get_dyn(wrapper_id).unwrap()).unwrap(),
+                ),
+                NodeBufEntry::Node(node_id) => {
+                    NodeBufEntryView::Node(self.nodes.get_dyn(node_id).unwrap())
+                }
+                NodeBufEntry::Equiv(equiv) => NodeBufEntryView::Equiv(equiv),
+            }))
+            .finish()
+    }
 }
 
 #[derive(Default)]
@@ -138,6 +167,7 @@ impl NodeBuf {
                         .unwrap();
                 }
                 NodeBufEntry::Equiv(lits) => {
+                    log::trace!("draining equiv {lits:?}");
                     builder.equiv(lits.map(|lit| lit.map_var_to_lit(|var| var_map.map_var(var))));
                 }
             }

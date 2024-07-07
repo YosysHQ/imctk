@@ -33,7 +33,7 @@ pub(crate) struct NodeTypeVTable {
 
 impl PartialEq for NodeTypeVTable {
     fn eq(&self, other: &Self) -> bool {
-        self.type_info == other.type_info
+        (self.type_info)().0 == (other.type_info)().0
     }
 }
 
@@ -41,13 +41,19 @@ impl Eq for NodeTypeVTable {}
 
 impl Hash for NodeTypeVTable {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        (self.type_info as usize).hash(state);
+        (self.type_info)().0.hash(state);
     }
 }
 
 impl Debug for NodeTypeVTable {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} ({})", self.name, (self.type_info)().1)
+        write!(
+            f,
+            "{} ({}) {:p}",
+            self.name,
+            (self.type_info)().1,
+            self.type_info
+        )
     }
 }
 
@@ -100,7 +106,7 @@ pub(crate) struct TermTypeVTable {
 
 impl PartialEq for TermTypeVTable {
     fn eq(&self, other: &Self) -> bool {
-        self.type_info == other.type_info
+        (self.type_info)().0 == (other.type_info)().0
     }
 }
 
@@ -108,7 +114,7 @@ impl Eq for TermTypeVTable {}
 
 impl Hash for TermTypeVTable {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        (self.type_info as usize).hash(state);
+        (self.type_info)().0.hash(state);
     }
 }
 

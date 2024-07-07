@@ -22,7 +22,7 @@ pub type AigerLit = Lit;
 pub type AigerVar = Var;
 
 use crate::ir::{
-    env::{config::EnvConfig, Env},
+    env::{Env, EnvWrapper},
     node::{
         builder::NodeBuilder,
         fine::circuit::{And, Input, Reg, SteadyInput},
@@ -47,7 +47,7 @@ impl ExistingAigerVarMap {
     // TODO document how the existing mapping is used and the return values
     pub fn import_binary_aiger(
         self,
-        env: &mut Env<impl EnvConfig>,
+        env: &mut (impl NodeBuilder + EnvWrapper),
         binary_aiger: impl io::Read,
     ) -> Result<(IdVec<AigerVar, Lit>, OrderedAig<AigerLit>), flussab_aiger::ParseError> {
         let parser =
@@ -62,7 +62,7 @@ impl ExistingAigerVarMap {
     // TODO document how the existing mapping is used and the return values
     pub fn import_ordered_aig(
         mut self,
-        env: &mut Env<impl EnvConfig>,
+        env: &mut (impl NodeBuilder + EnvWrapper),
         aig: &OrderedAig<AigerLit>,
     ) -> IdVec<AigerVar, Lit> {
         self.var_map
@@ -92,8 +92,8 @@ impl ExistingAigerVarMap {
                 });
 
             self.var_map[Var::from_index(var_pos)].get_or_insert_with(|| {
-                let level_bound = env.var_defs().level_bound(init_lit.var()) + 1;
-                let latch_output = env.fresh_var_with_level_bound(level_bound);
+                let level_bound = env.env().var_defs().level_bound(init_lit.var()) + 1;
+                let latch_output = env.env_mut().fresh_var_with_level_bound(level_bound);
                 latch_output.as_pos()
             });
             var_pos += 1;
@@ -110,10 +110,7 @@ impl ExistingAigerVarMap {
             };
 
             if let Some(lit) = self.var_map[output_aiger_var] {
-                env.node(TermNode {
-                    output: lit,
-                    term,
-                });
+                env.node(TermNode { output: lit, term });
             } else {
                 self.var_map[output_aiger_var] = Some(env.term(term));
             }
@@ -158,7 +155,7 @@ impl ExistingAigerVarMap {
 /// environment.
 // TODO document the absence of an existing mapping and the return values
 pub fn import_binary_aiger(
-    env: &mut Env<impl EnvConfig>,
+    env: &mut Env,
     binary_aiger: impl io::Read,
 ) -> Result<(IdVec<AigerVar, Lit>, OrderedAig<AigerLit>), flussab_aiger::ParseError> {
     ExistingAigerVarMap::default().import_binary_aiger(env, binary_aiger)
@@ -167,9 +164,6 @@ pub fn import_binary_aiger(
 /// Import an [`OrderedAig`] (representing a parsed binary AIGER file) to the given target
 /// environment.
 // TODO document the absence of an existing mapping and the return values
-pub fn import_ordered_aig(
-    env: &mut Env<impl EnvConfig>,
-    aig: &OrderedAig<AigerLit>,
-) -> IdVec<AigerVar, Lit> {
+pub fn import_ordered_aig(env: &mut Env, aig: &OrderedAig<AigerLit>) -> IdVec<AigerVar, Lit> {
     ExistingAigerVarMap::default().import_ordered_aig(env, aig)
 }

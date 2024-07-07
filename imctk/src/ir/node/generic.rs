@@ -10,12 +10,13 @@ use zwohash::ZwoHasher;
 use crate::{
     give_take::Take,
     ir::var::{Lit, Pol, Var, VarOrLit},
+    vec_sink::VecSink,
 };
 
 use super::{
     builder::NodeBuilder,
     collections::buf::NodeBuf,
-    vtables::{DynTermType, GenericNodeType, GenericTermType},
+    vtables::{DynNodeType, DynTermType, GenericNodeType, GenericTermType},
 };
 
 pub(crate) mod sealed {
@@ -141,10 +142,28 @@ pub trait NodeDynAuto: Debug {
     fn node_type(&self) -> NodeType;
 
     /// Object safe wrapper of [`Node::input_var_iter`].
+    ///
+    /// See [`Self::dyn_foreach_input_var`] for a version that uses a
+    /// [`VecSink`] instead of a dynamic callback.
     fn dyn_foreach_input_var(&self, f: &mut dyn FnMut(Var) -> bool);
 
+    /// Alternative object safe wrapper of [`Node::input_var_iter`].
+    ///
+    /// See [`Self::dyn_foreach_input_var`] for a version that uses a dynamic callback instead of a
+    /// [`VecSink`].
+    fn dyn_append_input_vars(&self, sink: VecSink<Var>);
+
     /// Object safe wrapper of [`Node::unguarded_input_var_iter`].
+    ///
+    /// See [`Self::dyn_append_unguarded_input_vars`] for a version that uses a [`VecSink`] instead
+    /// of a dynamic callback.
     fn dyn_foreach_unguarded_input_var(&self, f: &mut dyn FnMut(Var) -> bool);
+
+    /// Alternative object safe wrapper of [`Node::unguarded_input_var_iter`].
+    ///
+    /// See [`Self::dyn_foreach_unguarded_input_var`] for a version that uses a dynamic callback
+    /// instead of a [`VecSink`].
+    fn dyn_append_unguarded_input_vars(&self, sink: VecSink<Var>);
 
     /// Object safe wrapper of [`Node::def_eq`].
     fn dyn_def_eq(&self, other: &DynNode) -> bool;
@@ -178,12 +197,20 @@ impl<T: Node> NodeDynAuto for T {
         }
     }
 
+    fn dyn_append_input_vars(&self, mut sink: VecSink<Var>) {
+        sink.extend(self.input_var_iter())
+    }
+
     fn dyn_foreach_unguarded_input_var(&self, f: &mut dyn FnMut(Var) -> bool) {
         for var in self.unguarded_input_var_iter() {
             if !f(var) {
                 break;
             }
         }
+    }
+
+    fn dyn_append_unguarded_input_vars(&self, mut sink: VecSink<Var>) {
+        sink.extend(self.unguarded_input_var_iter())
     }
 
     fn dyn_def_eq(&self, other: &DynNode) -> bool {
@@ -295,19 +322,37 @@ pub trait Term: Debug + Clone + Eq + Hash + TermDyn + 'static {
     ///
     /// The default implementation performs reduction using [`Self::reduce`], adding an equivalence
     /// of the returned new output and the output previously present in the [`TermNode`].
+    ///
+    /// The default implementation is accessible as [`default_reduce_node`], which allows
+    /// implementations to partially override the default behavior.
     fn reduce_node(&mut self, output: Self::Output, builder: &mut impl NodeBuilder) -> bool {
-        let Some(new_output) = self.reduce(builder) else {
-            return false;
-        };
-
-        if new_output != output {
-            builder.equiv(
-                [output, new_output].map(|x| x.process_var_or_lit(|var| var.as_pos(), |lit| lit)),
-            );
-        }
-
-        true
+        default_reduce_node(self, output, builder)
     }
+}
+
+/// Default implementation of [`Term::reduce_node`].
+///
+/// This default implementation performs reduction using [`Term::reduce`], adding an equivalence of
+/// the returned new output and the output previously present in the [`TermNode`].
+///
+/// This should only be called when implementing [`Term::reduce_node`] to partially override the
+/// default behavior.
+pub fn default_reduce_node<T: Term>(
+    term: &mut T,
+    output: T::Output,
+    builder: &mut impl NodeBuilder,
+) -> bool {
+    let Some(new_output) = term.reduce(builder) else {
+        return false;
+    };
+
+    if new_output != output {
+        builder.equiv(
+            [output, new_output].map(|x| x.process_var_or_lit(|var| var.as_pos(), |lit| lit)),
+        );
+    }
+
+    true
 }
 
 /// Object-safe supertrait for [`Term`].
@@ -345,6 +390,30 @@ pub trait TermDynAuto {
     /// for trait object.
     fn term_type(&self) -> TermType;
 
+    /// Object safe wrapper of [`Term::input_var_iter`].
+    ///
+    /// See [`Self::dyn_foreach_input_var`] for a version that uses a [`VecSink`] instead of a
+    /// dynamic callback.
+    fn dyn_foreach_input_var(&self, f: &mut dyn FnMut(Var) -> bool);
+
+    /// Alternative object safe wrapper of [`Term::input_var_iter`].
+    ///
+    /// See [`Self::dyn_foreach_input_var`] for a version that uses a dynamic callback instead of a
+    /// [`VecSink`].
+    fn dyn_append_input_vars(&self, sink: VecSink<Var>);
+
+    /// Object safe wrapper of [`Term::unguarded_input_var_iter`].
+    ///
+    /// See [`Self::dyn_append_unguarded_input_vars`] for a version that uses a [`VecSink`] instead
+    /// of a dynamic callback.
+    fn dyn_foreach_unguarded_input_var(&self, f: &mut dyn FnMut(Var) -> bool);
+
+    /// Alternative object safe wrapper of [`Term::unguarded_input_var_iter`].
+    ///
+    /// See [`Self::dyn_foreach_unguarded_input_var`] for a version that uses a dynamic callback
+    /// instead of a [`VecSink`].
+    fn dyn_append_unguarded_input_vars(&self, sink: VecSink<Var>);
+
     #[doc(hidden)]
     fn zzz_hidden_default_representative_input_var(&self) -> Var;
 
@@ -367,6 +436,30 @@ pub trait TermDynAuto {
 impl<T: Term> TermDynAuto for T {
     fn term_type(&self) -> TermType {
         TermType::of::<T>()
+    }
+
+    fn dyn_foreach_input_var(&self, f: &mut dyn FnMut(Var) -> bool) {
+        for var in self.input_var_iter() {
+            if !f(var) {
+                break;
+            }
+        }
+    }
+
+    fn dyn_append_input_vars(&self, mut sink: VecSink<Var>) {
+        sink.extend(self.input_var_iter())
+    }
+
+    fn dyn_foreach_unguarded_input_var(&self, f: &mut dyn FnMut(Var) -> bool) {
+        for var in self.unguarded_input_var_iter() {
+            if !f(var) {
+                break;
+            }
+        }
+    }
+
+    fn dyn_append_unguarded_input_vars(&self, mut sink: VecSink<Var>) {
+        sink.extend(self.unguarded_input_var_iter())
     }
 
     #[inline(always)]
@@ -444,6 +537,21 @@ pub(crate) fn dyn_term_into_dyn_term_wrapper(term: Take<DynTerm>) -> Take<DynNod
     // wrapper, so we can cast the pointer and `dyn_type.term_wrapper()` is the correct vtable for
     // a `TermWrapper`.
     unsafe { Take::from_raw_ptr(dyn_type.term_wrapper().cast_mut_ptr(raw_ptr)) }
+}
+
+pub(crate) fn dyn_term_wrapper_as_dyn_term(wrapper: &DynNode) -> Option<&DynTerm> {
+    let node_type = DynNodeType(wrapper.node_type());
+    let term_type = DynTermType(node_type.wrapped_term_type()?);
+    // SAFETY: `TermWrapper` is a transparent wrapper, so we can cast the pointer and
+    // `node_type.wrapped_term_type()` is the correct vtable for a the contained term (or None if we
+    // don't have a `TermWrapper`).
+    unsafe {
+        Some(
+            &*term_type
+                .cast_mut_ptr(wrapper as *const DynNode as *const u8 as *mut u8)
+                .cast_const(),
+        )
+    }
 }
 
 /// Internal only transparent wrapper that turns a [`Term`] into a [`Node`].
@@ -574,7 +682,10 @@ impl<T: Term> NodeDyn for TermNode<T> {
     }
 
     fn output_lit(&self) -> Option<Lit> {
-        Some(self.output.process_var_or_lit(|var| var.as_pos(), |lit| lit))
+        Some(
+            self.output
+                .process_var_or_lit(|var| var.as_pos(), |lit| lit),
+        )
     }
 
     fn max_var(&self) -> Var {

@@ -100,7 +100,6 @@ impl DynamicIndex for StructuralHashIndex {
         let hash = node.def_hash();
 
         let var = node.representative_input_var();
-        // println!("adding {node_id:?} @ {var}");
 
         if self.tables.len() <= var.index() {
             self.tables.resize(var.index() + 1);
@@ -155,7 +154,7 @@ impl DynamicIndex for StructuralHashIndex {
 /// A node found by the [`StructuralHashIndex`].
 pub struct FoundNode {
     /// The id of the found node.
-    pub node: NodeId,
+    pub node_id: NodeId,
     /// The output equivalence implied by the target and found node.
     pub equiv: Option<[Lit; 2]>, // TODO dedicated type for an equivalence?
 }
@@ -232,7 +231,10 @@ impl StructuralHashIndex {
             }
         }
 
-        Some(FoundNode { node: found, equiv })
+        Some(FoundNode {
+            node_id: found,
+            equiv,
+        })
     }
 
     /// Find an existing [`Node`] that may differ from the given node in the used output
@@ -261,7 +263,10 @@ impl StructuralHashIndex {
             }
         }
 
-        Some(FoundNode { node: found, equiv })
+        Some(FoundNode {
+            node_id: found,
+            equiv,
+        })
     }
 }
 
@@ -384,7 +389,7 @@ impl UsesIndex {
     }
 }
 
-/// Index to look up non-primary-definition nodes that have a given variable as output.
+/// Index to look up non-primary definition nodes that have a given variable as output.
 #[derive(Default)]
 pub struct DefsIndex {
     tables: TableSeq<NodeId>,
@@ -440,13 +445,15 @@ impl DynamicIndex for DefsIndex {
         }
 
         if let Some(new_primary_def) = new_primary_def {
-            let new_hash = Self::node_id_hash(new_primary_def);
-            self.tables.remove(
-                var.index(),
-                new_hash,
-                |&candidate| candidate == new_primary_def,
-                |&node_id| Self::node_id_hash(node_id),
-            );
+            if var.index() < self.tables.len() {
+                let new_hash = Self::node_id_hash(new_primary_def);
+                self.tables.remove(
+                    var.index(),
+                    new_hash,
+                    |&candidate| candidate == new_primary_def,
+                    |&node_id| Self::node_id_hash(node_id),
+                );
+            }
         }
         if let Some(old_primary_def) = old_primary_def {
             if self.tables.len() <= var.index() {

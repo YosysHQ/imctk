@@ -687,6 +687,7 @@ impl Nodes {
     /// This drops the node in-place, see [`remove`][Self::remove] for a method that returns the
     /// removed node, but requires a statically known node type.
     pub fn discard(&mut self, node_id: NodeId) -> bool {
+        log::trace!("discard {node_id:?}");
         let (chunk_index, chunk_slot) = split_id(node_id);
         let Some(chunk) = self.chunks.get_mut(chunk_index) else { return false };
 

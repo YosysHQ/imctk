@@ -213,6 +213,7 @@ dependencies = [
  "anstyle",
  "clap",
  "env_logger",
+ "flussab",
  "flussab-aiger",
  "hashbrown",
  "imctk-derive",

@@ -221,7 +221,7 @@ impl Lit {
         self.pol() == Pol::Neg
     }
 
-    /// Applies a variable-to-litereal map to this literal's variable.
+    /// Applies a variable-to-literal map to this literal's variable.
     ///
     /// This is equivalent to `f(self.var()) ^ self.pol()`.
     #[inline(always)]
