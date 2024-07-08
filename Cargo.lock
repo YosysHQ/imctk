@@ -210,18 +210,16 @@ checksum = "9a3a5bfb195931eeb336b2a7b4d761daec841b97f947d34394601737a7bba5e4"
 name = "imctk"
 version = "0.1.0"
 dependencies = [
- "anstyle",
  "clap",
- "env_logger",
  "flussab",
  "flussab-aiger",
  "hashbrown",
  "imctk-derive",
  "imctk-ids",
+ "imctk-logger",
  "imctk-transparent",
  "indexmap",
  "indicatif",
- "libc",
  "log",
  "table_seq",
  "zwohash",
@@ -243,6 +241,16 @@ version = "0.1.0"
 dependencies = [
  "imctk-derive",
  "imctk-transparent",
+]
+
+[[package]]
+name = "imctk-logger"
+version = "0.1.0"
+dependencies = [
+ "anstyle",
+ "env_logger",
+ "libc",
+ "log",
 ]
 
 [[package]]
@@ -310,9 +318,9 @@ checksum = "97b3888a4aecf77e811145cadf6eef5901f4782c53886191b2f693f24761847c"
 
 [[package]]
 name = "log"
-version = "0.4.21"
+version = "0.4.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "90ed8c1e510134f979dbc4f070f87d4313098b704861a105fe34231c70a3901c"
+checksum = "a7a70ba024b9dc04c27ea2f0c0548feb474ec5c54bba33a7f72f873a39d07b24"
 
 [[package]]
 name = "memchr"
