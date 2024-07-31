@@ -39,6 +39,22 @@ impl<'a, T> VecSink<'a, T> {
     pub fn append(&mut self, values: &mut Vec<T>) {
         self.target.append(values)
     }
+
+    /// Re-borrows the existing [`VecSink`].
+    pub fn borrow_mut(&mut self) -> VecSink<'_, T> {
+        VecSink {
+            fixed: self.fixed,
+            target: self.target,
+        }
+    }
+
+    /// Re-borrows as a new [`VecSink`] hiding and protecting any elements already added.
+    pub fn borrow_sink(&mut self) -> VecSink<'_, T> {
+        VecSink {
+            fixed: self.target.len(),
+            target: self.target,
+        }
+    }
 }
 
 impl<'a, T> Deref for VecSink<'a, T> {
