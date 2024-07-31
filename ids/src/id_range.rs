@@ -60,6 +60,18 @@ impl<I: Id> IdRange<I> {
     pub fn indices(&self) -> Range<usize> {
         self.start..self.end
     }
+
+    /// Returns the number of ids in the id range.
+    #[inline(always)]
+    pub fn len(&self) -> usize {
+        self.indices().len()
+    }
+
+    /// Returns `true` if the id range contains no ids.
+    #[inline(always)]
+    pub fn is_empty(&self) -> bool {
+        self.indices().is_empty()
+    }
 }
 
 impl<I: Id> IntoIterator for IdRange<I> {

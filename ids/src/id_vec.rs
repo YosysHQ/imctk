@@ -167,6 +167,12 @@ impl<K: Id, V> IdSlice<K, V> {
     pub fn get_mut(&mut self, key: K) -> Option<&mut V> {
         self.values.get_mut(key.id_index())
     }
+
+    /// Swaps the values associated with the two given keys.
+    #[inline(always)]
+    pub fn swap(&mut self, key_a: K, key_b: K) {
+        self.values.swap(key_a.id_index(), key_b.id_index())
+    }
 }
 
 impl<'a, K: Id, V> IntoIterator for &'a IdSlice<K, V> {
@@ -213,6 +219,22 @@ impl<K: Id, V> IndexMut<K> for IdSlice<K, V> {
     #[inline(always)]
     fn index_mut(&mut self, index: K) -> &mut Self::Output {
         &mut self.values[index.id_index()]
+    }
+}
+
+impl<K: Id, V> Index<IdRange<K>> for IdSlice<K, V> {
+    type Output = [V];
+
+    #[inline(always)]
+    fn index(&self, index: IdRange<K>) -> &Self::Output {
+        &self.values[index.indices()]
+    }
+}
+
+impl<K: Id, V> IndexMut<IdRange<K>> for IdSlice<K, V> {
+    #[inline(always)]
+    fn index_mut(&mut self, index: IdRange<K>) -> &mut Self::Output {
+        &mut self.values[index.indices()]
     }
 }
 
@@ -451,7 +473,7 @@ impl<K: Id, V> IdVec<K, V> {
 
     /// Appends default values until there is an entry with the given key.
     #[inline(always)]
-    pub fn grow_for_key(&mut self, key: K)
+    pub fn grow_for_key(&mut self, key: K) -> &mut V
     where
         V: Default,
     {
@@ -460,10 +482,11 @@ impl<K: Id, V> IdVec<K, V> {
 
     /// Appends values using the given closure until there is an entry with the given key.
     #[inline(always)]
-    pub fn grow_for_key_with(&mut self, key: K, f: impl Fn() -> V) {
+    pub fn grow_for_key_with(&mut self, key: K, f: impl Fn() -> V) -> &mut V {
         if self.len() <= key.id_index() {
             self.values.resize_with(key.id_index() + 1, f)
         }
+        &mut self[key]
     }
 
     /// Resizes the collection, creating new entries by cloning the given value.
@@ -481,6 +504,72 @@ impl<K: Id, V> IdVec<K, V> {
     pub fn resize_with(&mut self, len: usize, value: impl FnMut() -> V) {
         assert!(len <= K::MAX_ID_INDEX.saturating_add(1));
         self.values.resize_with(len, value)
+    }
+
+    /// Shrinks the collection, dropping all but the first `len` entries.
+    #[inline]
+    pub fn truncate(&mut self, len: usize) {
+        self.values.truncate(len)
+    }
+
+    /// Inserts a vector of values using the smallest available ids as keys.
+    #[inline]
+    pub fn append(&mut self, entries: &mut Vec<V>) {
+        let mut taken = std::mem::take(self).into_values();
+        taken.append(entries);
+        *self = Self::from_vec(taken)
+    }
+
+    /// Inserts values from an iterator using the smallset available ids as keys.
+    #[inline]
+    pub fn extend(&mut self, iter: impl IntoIterator<Item = V>) {
+        // TODO document why we're not implementing the Extend trait
+        self.modify_values(|values| values.extend(iter))
+    }
+
+    /// Removes all entries of the collection.
+    #[inline(always)]
+    pub fn clear(&mut self) {
+        self.values.clear();
+    }
+
+    /// Removes the entry with the given key, returning its value. If there is an entry with a
+    /// larger key id, its key is changed to the key of the removed entry.
+    #[inline(always)]
+    pub fn swap_remove(&mut self, key: K) -> V {
+        self.values.swap_remove(key.id_index())
+    }
+
+    /// Modifies the underlying [`Vec`] of values.
+    #[inline(always)]
+    pub fn modify_values<R>(&mut self, f: impl FnOnce(&mut Vec<V>) -> R) -> R {
+        let guard = <LengthGuard<K, V>>::new(&mut self.values);
+        f(guard.values)
+    }
+}
+
+struct LengthGuard<'a, K: Id, V> {
+    _phantom: PhantomData<K>,
+    values: &'a mut Vec<V>,
+}
+
+impl<'a, K: Id, V> LengthGuard<'a, K, V> {
+    #[inline(always)]
+    fn new(values: &'a mut Vec<V>) -> Self {
+        Self {
+            _phantom: PhantomData,
+            values,
+        }
+    }
+}
+
+impl<'a, K: Id, V> Drop for LengthGuard<'a, K, V> {
+    #[inline]
+    fn drop(&mut self) {
+        if self.values.len() > K::MAX_ID_INDEX.saturating_add(1) {
+            self.values.clear();
+            panic!("modified values vector length exceeds number of available ids");
+        }
     }
 }
 

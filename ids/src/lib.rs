@@ -13,6 +13,7 @@
 use core::hash::Hash;
 
 mod id;
+pub mod id_index_set;
 mod id_range;
 pub mod id_vec;
 
