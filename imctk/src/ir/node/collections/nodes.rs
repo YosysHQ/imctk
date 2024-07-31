@@ -9,14 +9,14 @@ use std::{
 
 use hashbrown::HashTable;
 use imctk_ids::Id;
+use imctk_util::give_take::Take;
 use indexmap::IndexSet;
 use zwohash::ZwoHasher;
-
-use crate::{give_take::Take, ir::node::NodeId};
 
 use crate::ir::node::{
     generic::{DynNode, Node, NodeType},
     vtables::{DynNodeType, GenericNodeType, KnownNodeType},
+    NodeId,
 };
 
 pub(crate) union ChunkSlot<T> {

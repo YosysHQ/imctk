@@ -4,21 +4,19 @@
 use std::fmt::Debug;
 
 use imctk_ids::Id;
+use imctk_util::give_take::Take;
 
-use crate::{
-    give_take::Take,
-    ir::{
-        node::{
-            builder::{NodeBuilder, NodeBuilderDyn},
-            generic::{
-                dyn_term_into_dyn_term_wrapper, dyn_term_wrapper_as_dyn_term, DynNode, DynTerm,
-                Node, Term, TermWrapper,
-            },
-            vtables::{DynNodeType, DynTermType, GenericNodeType, GenericTermType},
-            NodeId,
+use crate::ir::{
+    node::{
+        builder::{NodeBuilder, NodeBuilderDyn},
+        generic::{
+            dyn_term_into_dyn_term_wrapper, dyn_term_wrapper_as_dyn_term, DynNode, DynTerm, Node,
+            Term, TermWrapper,
         },
-        var::{Lit, Var, VarOrLit},
+        vtables::{DynNodeType, DynTermType, GenericNodeType, GenericTermType},
+        NodeId,
     },
+    var::{Lit, Var, VarOrLit},
 };
 
 #[derive(Clone, Copy, Debug)]

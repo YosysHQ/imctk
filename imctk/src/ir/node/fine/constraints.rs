@@ -1,14 +1,13 @@
 //! Fine grained constraints for representing invariants of combinational and sequential
 //! bit-level circuits.
-use crate::{
-    ir::{
-        node::{
-            builder::NodeBuilder,
-            generic::{Node, NodeDyn, SealedWrapper},
-        },
-        var::{Lit, Var},
+use imctk_util::unordered_pair::UnorderedPair;
+
+use crate::ir::{
+    node::{
+        builder::NodeBuilder,
+        generic::{Node, NodeDyn, SealedWrapper},
     },
-    unordered_pair::UnorderedPair,
+    var::{Lit, Var},
 };
 
 /// A binary clause, requiring at least one of two inputs to be true at any time.
@@ -27,8 +26,8 @@ impl Node for BinClause {
         self.inputs.map(|lit| lit.var()).into_iter()
     }
 
-    fn apply_var_map(&mut self, var_map: impl FnMut(Var) -> Lit) {
-        self.inputs.apply_var_map(var_map);
+    fn apply_var_map(&mut self, mut var_map: impl FnMut(Var) -> Lit) {
+        self.inputs = self.inputs.map(|lit| lit.lookup(&mut var_map));
     }
 
     fn reduce(&mut self, builder: &mut impl NodeBuilder) -> bool {

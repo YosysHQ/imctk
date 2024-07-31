@@ -1,8 +1,7 @@
 //! Generic interface for adding equivalences, nodes and terms.
-use crate::{
-    give_take::Take,
-    ir::var::{Lit, VarOrLit},
-};
+
+use crate::ir::var::{Lit, VarOrLit};
+use imctk_util::give_take::{give, Take};
 
 use super::generic::{DynNode, DynTerm, Node, Term};
 

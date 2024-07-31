@@ -5,15 +5,12 @@ use std::{
 };
 
 use imctk_transparent::{NewtypeCast, SubtypeCast};
+use imctk_util::{give_take::Take, vec_sink::VecSink};
 use zwohash::ZwoHasher;
 
-use crate::{
-    give_take::Take,
-    ir::{
-        env::Env,
-        var::{Lit, Pol, Var, VarOrLit},
-    },
-    vec_sink::VecSink,
+use crate::ir::{
+    env::Env,
+    var::{Lit, Pol, Var, VarOrLit},
 };
 
 use super::{

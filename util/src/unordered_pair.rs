@@ -1,8 +1,6 @@
 //! Unordered pairs of [`Ord`] elements.
 use std::ops;
 
-use crate::ir::var::{Lit, Pol, Var};
-
 /// An unordered pair represented as a sorted `[T; 2]`.
 ///
 /// Note that this does allow a pair containing the same value twice.
@@ -68,28 +66,5 @@ impl<T: Ord> UnorderedPair<T> {
     /// Returns the two elements as a sorted array.
     pub fn into_values(self) -> [T; 2] {
         self.values
-    }
-}
-
-impl UnorderedPair<Lit> {
-    /// Applies a variable-to-literal map to an unordered pair of literals.
-    // TODO make this fully public?
-    pub(crate) fn apply_var_map(&mut self, mut var_map: impl FnMut(Var) -> Lit) {
-        *self = Self::new(self.values.map(|lit| lit.lookup(&mut var_map)))
-    }
-}
-
-impl UnorderedPair<Var> {
-    /// Applies a variable-to-literal map to an unordered pair of variables, returning the
-    /// composition of the two polarities discarded in the process.
-    // TODO make this fully public?
-    pub(crate) fn apply_var_map_compose_pol(&mut self, mut var_map: impl FnMut(Var) -> Lit) -> Pol {
-        let mut pol = Pol::Pos;
-        *self = Self::new(self.values.map(|var| {
-            let lit = var_map(var);
-            pol ^= lit.pol();
-            lit.var()
-        }));
-        pol
     }
 }

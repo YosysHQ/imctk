@@ -3,14 +3,11 @@ use std::mem::{swap, take};
 
 use imctk_ids::{id_vec::IdVec, Id, Id32};
 use imctk_transparent::{NewtypeCast, SubtypeCast};
+use imctk_util::{give_take::Take, vec_sink::VecSink};
 
-use crate::{
-    give_take::Take,
-    ir::{
-        index::{DefsIndex, UsesIndex},
-        var::VarOrLit,
-    },
-    vec_sink::VecSink,
+use crate::ir::{
+    index::{DefsIndex, UsesIndex},
+    var::VarOrLit,
 };
 
 use super::{

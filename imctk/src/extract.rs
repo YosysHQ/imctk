@@ -2,6 +2,7 @@
 use std::collections::BTreeSet;
 
 use imctk_ids::{id_vec::IdVec, Id32};
+use imctk_util::vec_sink::VecSink;
 
 use crate::{
     ir::{
@@ -10,7 +11,6 @@ use crate::{
         var::Var,
     },
     topo_sorted_sccs::TopoSortedSccs,
-    vec_sink::VecSink,
 };
 
 // TODO I'm not so sure about the module organization for extraction related utilities
@@ -271,15 +271,13 @@ pub mod aiger {
 
     use flussab_aiger::aig::{OrderedAig, OrderedAndGate, OrderedLatch};
     use imctk_ids::{id_vec::IdVec, Id};
+    use imctk_util::vec_sink::VecSink;
     use zwohash::HashMap;
 
-    use crate::{
-        ir::{
-            env::Env,
-            node::fine::circuit::{AndNode, InitNode, InputNode, RegNode, SteadyInputNode},
-            var::{Lit, Var},
-        },
-        vec_sink::VecSink,
+    use crate::ir::{
+        env::Env,
+        node::fine::circuit::{AndNode, InitNode, InputNode, RegNode, SteadyInputNode},
+        var::{Lit, Var},
     };
 
     /// Extracts a sequential AIG for the given sequence of output literals.

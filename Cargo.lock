@@ -218,6 +218,7 @@ dependencies = [
  "imctk-ids",
  "imctk-logger",
  "imctk-transparent",
+ "imctk-util",
  "indexmap",
  "indicatif",
  "log",
@@ -261,6 +262,10 @@ version = "0.1.0"
 dependencies = [
  "imctk-derive",
 ]
+
+[[package]]
+name = "imctk-util"
+version = "0.1.0"
 
 [[package]]
 name = "indexmap"

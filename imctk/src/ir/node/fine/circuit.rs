@@ -1,15 +1,13 @@
 //! Fine grained terms for representing bit-level combinational and sequential circuits.
 use imctk_ids::{Id, Id32};
+use imctk_util::unordered_pair::UnorderedPair;
 
-use crate::{
-    ir::{
-        node::{
-            builder::NodeBuilder,
-            generic::{default_reduce_node, SealedWrapper, Term, TermDyn, TermNode},
-        },
-        var::{Lit, Pol, Var},
+use crate::ir::{
+    node::{
+        builder::NodeBuilder,
+        generic::{default_reduce_node, SealedWrapper, Term, TermDyn, TermNode},
     },
-    unordered_pair::UnorderedPair,
+    var::{Lit, Pol, Var},
 };
 
 #[allow(unused_imports)] // rustdoc
@@ -40,8 +38,8 @@ impl Term for And {
         self.inputs.map(|lit| lit.var()).into_iter()
     }
 
-    fn apply_var_map(&mut self, var_map: impl FnMut(Var) -> Lit) -> Pol {
-        self.inputs.apply_var_map(var_map);
+    fn apply_var_map(&mut self, mut var_map: impl FnMut(Var) -> Lit) -> Pol {
+        self.inputs = self.inputs.map(|lit| lit.lookup(&mut var_map));
         Pol::Pos
     }
 
@@ -133,9 +131,15 @@ impl Term for Xor {
 
     fn apply_var_map(
         &mut self,
-        var_map: impl FnMut(Var) -> Lit,
+        mut var_map: impl FnMut(Var) -> Lit,
     ) -> <Self::Output as crate::ir::var::VarOrLit>::Pol {
-        self.inputs.apply_var_map_compose_pol(var_map)
+        let mut composed_pol = Pol::Pos;
+        self.inputs = self.inputs.map(|var| {
+            let mapped = var_map(var);
+            composed_pol ^= mapped.pol();
+            mapped.var()
+        });
+        composed_pol
     }
 
     fn reduce(&mut self, _builder: &mut impl NodeBuilder) -> Option<Self::Output> {

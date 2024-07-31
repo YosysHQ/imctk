@@ -7,6 +7,7 @@ members = [
     "table_seq",
     "imctk",
     "logger",
+    "util",
 
     # comment to force multi-line layout
 ]
