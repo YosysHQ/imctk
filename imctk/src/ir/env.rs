@@ -10,6 +10,7 @@ use crate::{
         index::{DefsIndex, UsesIndex},
         var::VarOrLit,
     },
+    vec_sink::VecSink,
 };
 
 use super::{
@@ -25,6 +26,8 @@ use super::{
     },
     var::{Lit, Var},
 };
+
+pub use updates::EnvUpdates;
 
 /// Indicates whether a node is the primary definition or an equivalent definition of a variable or
 /// alternatively whether it is a constraint on the node inputs.
@@ -50,7 +53,7 @@ pub enum VarDef {
 /// Compact encoding of a (u31, Option<VarDef>)
 #[derive(Default)]
 struct EncodedVarDef {
-    level_bound_and_flag: u32,
+    level_bound_and_flags: u32,
     id: Option<Id32>,
 }
 
@@ -64,10 +67,13 @@ impl std::fmt::Debug for EncodedVarDef {
 }
 
 impl EncodedVarDef {
-    const FLAG_MASK: u32 = 1 << 31;
+    const EQUIV_MASK: u32 = 1 << 31;
+    const STEADY_MASK: u32 = 1 << 30;
+
+    const FLAGS_MASK: u32 = !((!0) >> 2);
 
     pub fn def(&self) -> Option<VarDef> {
-        match (self.level_bound_and_flag & Self::FLAG_MASK != 0, self.id) {
+        match (self.level_bound_and_flags & Self::EQUIV_MASK != 0, self.id) {
             (true, Some(id)) => Some(VarDef::Equiv(Lit::from_base_id(id))),
             (true, None) => unreachable!(),
             (false, Some(id)) => Some(VarDef::Node(NodeId::from_base_id(id))),
@@ -76,7 +82,7 @@ impl EncodedVarDef {
     }
 
     pub fn def_node(&self) -> Option<NodeId> {
-        if self.level_bound_and_flag & Self::FLAG_MASK != 0 {
+        if self.level_bound_and_flags & Self::EQUIV_MASK != 0 {
             None
         } else {
             self.id.map(NodeId::from_base_id)
@@ -87,15 +93,15 @@ impl EncodedVarDef {
         match var_def {
             Some(VarDef::Node(node_id)) => {
                 self.id = Some(node_id.into_base_id());
-                self.level_bound_and_flag &= !Self::FLAG_MASK;
+                self.level_bound_and_flags &= !Self::EQUIV_MASK;
             }
             Some(VarDef::Equiv(lit)) => {
                 self.id = Some(lit.into_base_id());
-                self.level_bound_and_flag |= Self::FLAG_MASK;
+                self.level_bound_and_flags |= Self::EQUIV_MASK;
             }
             None => {
                 self.id = None;
-                self.level_bound_and_flag &= !Self::FLAG_MASK;
+                self.level_bound_and_flags &= !Self::EQUIV_MASK;
             }
         }
     }
@@ -113,16 +119,28 @@ impl EncodedVarDef {
     }
 
     pub fn def_is_none(&self) -> bool {
-        self.id.is_none() && (self.level_bound_and_flag & Self::FLAG_MASK == 0)
+        self.id.is_none() && (self.level_bound_and_flags & Self::EQUIV_MASK == 0)
     }
 
     pub fn level_bound(&self) -> u32 {
-        self.level_bound_and_flag & !Self::FLAG_MASK
+        self.level_bound_and_flags & !Self::FLAGS_MASK
     }
 
     pub fn set_level_bound(&mut self, level_bound: u32) {
-        debug_assert!(level_bound < Self::FLAG_MASK);
-        self.level_bound_and_flag = (self.level_bound_and_flag & Self::FLAG_MASK) | level_bound;
+        debug_assert!(level_bound <= !Self::FLAGS_MASK);
+        self.level_bound_and_flags = (self.level_bound_and_flags & Self::FLAGS_MASK) | level_bound;
+    }
+
+    pub fn is_steady(&self) -> bool {
+        self.level_bound_and_flags & Self::STEADY_MASK != 0
+    }
+
+    pub fn set_steady(&mut self, steady: bool) {
+        if steady {
+            self.level_bound_and_flags |= Self::STEADY_MASK;
+        } else {
+            self.level_bound_and_flags &= !Self::STEADY_MASK;
+        }
     }
 }
 
@@ -142,8 +160,10 @@ pub struct VarDefs {
 
 impl Default for VarDefs {
     fn default() -> Self {
+        let mut false_def: EncodedVarDef = Default::default();
+        false_def.set_steady(true);
         Self {
-            var_defs: IdVec::from_vec(vec![Default::default()]),
+            var_defs: IdVec::from_vec(vec![false_def]),
         }
     }
 }
@@ -199,6 +219,17 @@ impl VarDefs {
         }
     }
 
+    /// Returns whether the variable is known to have a steady value.
+    ///
+    /// A steady value remains constant at the value it has in the initial state.
+    pub fn is_steady(&self, var: Var) -> bool {
+        if let Some(def) = self.var_defs.get(self.var_repr(var)) {
+            def.is_steady()
+        } else {
+            false
+        }
+    }
+
     /// Returns the number of assigned variables.
     pub fn len(&self) -> usize {
         self.var_defs.len()
@@ -207,6 +238,17 @@ impl VarDefs {
     /// Returns whether no variables have been assigned.
     pub fn is_empty(&self) -> bool {
         self.var_defs.is_empty()
+    }
+
+    /// Returns an iterator over all representative variables.
+    ///
+    /// Representative variables are variables not known to be equivalent to other variables or
+    /// their negation.
+    pub fn repr_vars(&self) -> impl Iterator<Item = Var> + '_ {
+        self.var_defs.iter().flat_map(|(var, def)| match def.def() {
+            Some(VarDef::Equiv(_)) => None,
+            _ => Some(var),
+        })
     }
 }
 
@@ -217,6 +259,7 @@ struct EnvIndex {
     uses_index: UsesIndex,
     pending_equivs: Vec<Var>,
     reduction_queue: Vec<NodeId>,
+    pending_nodes: Vec<NodeId>,
 }
 
 impl EnvIndex {
@@ -231,6 +274,7 @@ impl EnvIndex {
             .add_node(nodes, node_id, node, node_role);
         self.defs_index.add_node((), node_id, node, node_role);
         self.uses_index.add_node((), node_id, node, node_role);
+        self.pending_nodes.push(node_id);
     }
 
     pub fn add_dyn_node(
@@ -244,6 +288,7 @@ impl EnvIndex {
             .add_dyn_node(nodes, node_id, node, node_role);
         self.defs_index.add_dyn_node((), node_id, node, node_role);
         self.uses_index.add_dyn_node((), node_id, node, node_role);
+        self.pending_nodes.push(node_id);
     }
 
     pub fn remove_node<T: Node>(
@@ -315,6 +360,8 @@ pub struct Env {
 
     node_buf: NodeBuf,
     node_buf_var_map: NodeBufVarMap,
+
+    updates: Option<EnvUpdates>,
 }
 
 /// Types that wrap and expose different aspects of an [environment][`Env`].
@@ -326,5 +373,180 @@ pub trait EnvWrapper {
     fn env_mut(&mut self) -> &mut Env;
 }
 
+impl Env {
+    /// Returns the node that is the primary definition of a variable.
+    pub fn def_node(&self, var: Var) -> Option<&DynNode> {
+        let Some(VarDef::Node(node_id)) = self.var_defs().var_def(var) else { return None };
+        Some(self.nodes().get_dyn(node_id).unwrap())
+    }
+
+    /// Returns the node id and node for the primary definition of a variable.
+    pub fn def_node_with_id(&self, var: Var) -> Option<(NodeId, &DynNode)> {
+        let Some(VarDef::Node(node_id)) = self.var_defs().var_def(var) else { return None };
+        Some((node_id, self.nodes().get_dyn(node_id).unwrap()))
+    }
+}
+
 mod node_builders;
 mod rebuild_egraph;
+mod updates {
+    #![allow(missing_docs)] // TODO document module
+    use crate::ir::{node::NodeId, var::Var};
+
+    use super::Env;
+
+    #[derive(Default, Debug)]
+    pub struct EnvUpdates {
+        pub equivs: Vec<Var>,
+        pub steady: Vec<Var>,
+        pub nodes: Vec<NodeId>,
+    }
+
+    impl Env {
+        pub fn peek_updates(&self) -> Option<&EnvUpdates> {
+            self.updates.as_ref()
+        }
+
+        pub fn track_updates(&mut self) -> Option<EnvUpdates> {
+            self.updates.replace(EnvUpdates::default())
+        }
+
+        pub fn stop_tracking_updates(&mut self) -> Option<EnvUpdates> {
+            self.updates.take()
+        }
+    }
+}
+
+impl Env {
+    /// Returns a copy of the environment with topologically sorted variable ids.
+    pub fn duplicate(&mut self) -> (Env, IdVec<Var, Lit>, IdVec<Var, Option<Lit>>) {
+        let mut env_from_duplicate: IdVec<Var, Lit> = Default::default();
+        let mut duplicate_from_env: IdVec<Var, Option<Lit>> = Default::default();
+
+        env_from_duplicate.push(Lit::FALSE);
+        duplicate_from_env.push(Some(Lit::FALSE));
+
+        let mut duplicate = Env::default();
+
+        let order =
+            crate::extract::extract_topo_sorted_primary_defs(self, self.var_defs().repr_vars());
+
+        for var in order {
+            if let Some(node) = self.def_node(var) {
+                node.dyn_foreach_input_var(&mut |input_var| {
+                    let reduced_var = duplicate_from_env.grow_for_key(input_var);
+                    if reduced_var.is_none() {
+                        let new_var = duplicate
+                            .fresh_var_with_level_bound(self.var_defs().level_bound(input_var));
+                        assert_eq!(new_var, env_from_duplicate.next_unused_key());
+                        env_from_duplicate.push(input_var.as_lit());
+                        *reduced_var = Some(new_var.as_lit());
+                    }
+                    true
+                });
+
+                let reduced_var = duplicate_from_env.grow_for_key(var);
+                if reduced_var.is_none() {
+                    let new_var =
+                        duplicate.fresh_var_with_level_bound(self.var_defs().level_bound(var));
+                    assert_eq!(new_var, env_from_duplicate.next_unused_key());
+                    env_from_duplicate.push(var.as_lit());
+                    *reduced_var = Some(new_var.as_lit());
+                }
+
+                node.dyn_add_to_env_with_var_map(&mut duplicate, &mut |var| {
+                    duplicate_from_env[var].unwrap()
+                });
+            }
+        }
+
+        for (_node_id, node) in self.nodes().iter() {
+            node.dyn_add_to_env_with_var_map(&mut duplicate, &mut |var| {
+                duplicate_from_env[var].unwrap()
+            });
+        }
+        (duplicate, env_from_duplicate, duplicate_from_env)
+    }
+
+    /// Returns a copy of the environment limited to the input cones of the given targets, using
+    /// topologically sorted variable ids.
+    pub fn duplicate_partial(
+        &mut self,
+        targets: impl IntoIterator<Item = Var>,
+    ) -> (Env, IdVec<Var, Lit>, IdVec<Var, Option<Lit>>) {
+        let mut env_from_duplicate: IdVec<Var, Lit> = Default::default();
+        let mut duplicate_from_env: IdVec<Var, Option<Lit>> = Default::default();
+
+        duplicate_from_env.resize(self.var_defs().len(), None);
+
+        env_from_duplicate.push(Lit::FALSE);
+        duplicate_from_env[Var::FALSE] = Some(Lit::FALSE);
+
+        let mut duplicate = Env::default();
+
+        let targets: Vec<_> = targets
+            .into_iter()
+            .map(|var| self.var_defs().var_repr(var))
+            .collect();
+
+        let order = crate::extract::extract_topo_sorted_primary_defs(self, targets.iter().copied());
+
+        for var in order {
+            if let Some(node) = self.def_node(var) {
+                node.dyn_foreach_input_var(&mut |input_var| {
+                    let reduced_var = duplicate_from_env.grow_for_key(input_var);
+                    if reduced_var.is_none() {
+                        let new_var = duplicate
+                            .fresh_var_with_level_bound(self.var_defs().level_bound(input_var));
+                        assert_eq!(new_var, env_from_duplicate.next_unused_key());
+                        env_from_duplicate.push(input_var.as_lit());
+                        *reduced_var = Some(new_var.as_lit());
+                    }
+                    true
+                });
+
+                let reduced_var = duplicate_from_env.grow_for_key(var);
+                if reduced_var.is_none() {
+                    let new_var =
+                        duplicate.fresh_var_with_level_bound(self.var_defs().level_bound(var));
+                    assert_eq!(new_var, env_from_duplicate.next_unused_key());
+                    env_from_duplicate.push(var.as_lit());
+                    *reduced_var = Some(new_var.as_lit());
+                }
+
+                node.dyn_add_to_env_with_var_map(&mut duplicate, &mut |var| {
+                    duplicate_from_env[var].unwrap()
+                });
+            }
+        }
+
+        let mut tmp_vars = vec![];
+
+        'outer: for (_node_id, node) in self.nodes().iter() {
+            if let Some(output_var) = node.output_var() {
+                if duplicate_from_env[output_var].is_none() {
+                    continue;
+                }
+            }
+            node.dyn_append_input_vars(VecSink::new(&mut tmp_vars));
+            for input_var in tmp_vars.drain(..) {
+                if duplicate_from_env[input_var].is_none() {
+                    continue 'outer;
+                }
+            }
+
+            node.dyn_add_to_env_with_var_map(&mut duplicate, &mut |var| {
+                duplicate_from_env[var].unwrap()
+            });
+        }
+
+        (duplicate, env_from_duplicate, duplicate_from_env)
+    }
+
+    /// Finds an existing node that assigns the given term to a variable.
+    pub fn lookup_term<T: Term>(&self, term: &T) -> Option<(NodeId, T::Output)> {
+        self.index
+            .structural_hash_index
+            .find_term(self.nodes(), term)
+    }
+}

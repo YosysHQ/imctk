@@ -4,7 +4,7 @@ use crate::{
     ir::{
         node::{
             builder::NodeBuilder,
-            generic::{Node, NodeDyn},
+            generic::{Node, NodeDyn, SealedWrapper},
         },
         var::{Lit, Var},
     },
@@ -20,6 +20,8 @@ pub struct BinClause {
 
 impl Node for BinClause {
     const NAME: &'static str = "BinClause";
+
+    const STATIC_TYPE_INFO: SealedWrapper<usize> = SealedWrapper(2);
 
     fn input_var_iter(&self) -> impl Iterator<Item = Var> + '_ {
         self.inputs.map(|lit| lit.var()).into_iter()

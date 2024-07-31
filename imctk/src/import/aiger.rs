@@ -103,7 +103,7 @@ impl ExistingAigerVarMap {
             let output_aiger_var = Var::from_index(var_pos);
             let inputs = aiger_and
                 .inputs
-                .map(|lit| lit.map_var_to_lit(|var| self.var_map[var].unwrap()));
+                .map(|lit| lit.lookup(|var| self.var_map[var].unwrap()));
 
             let term = And {
                 inputs: inputs.into(),
@@ -123,7 +123,7 @@ impl ExistingAigerVarMap {
             let mut init_lit = self.latch_init[init].unwrap();
             let next_lit = aiger_latch
                 .next_state
-                .map_var_to_lit(|var| self.var_map[var].unwrap());
+                .lookup(|var| self.var_map[var].unwrap());
 
             let mut output_lit = self.var_map
                 [AigerVar::from_index(first_aiger_latch_output_index + latch_index)]

@@ -5,7 +5,7 @@ use crate::{
     ir::{
         node::{
             builder::NodeBuilder,
-            generic::{default_reduce_node, Term, TermDyn, TermNode},
+            generic::{default_reduce_node, SealedWrapper, Term, TermDyn, TermNode},
         },
         var::{Lit, Pol, Var},
     },
@@ -33,6 +33,8 @@ impl Term for And {
     type Output = Lit;
 
     const NAME: &'static str = "And";
+
+    const STATIC_TYPE_INFO: SealedWrapper<usize> = SealedWrapper(1);
 
     fn input_var_iter(&self) -> impl Iterator<Item = Var> + '_ {
         self.inputs.map(|lit| lit.var()).into_iter()
@@ -67,7 +69,7 @@ impl Term for And {
         if output.is_const() {
             if output == Lit::FALSE {
                 builder.node(BinClause {
-                    inputs: self.inputs.map(|input| !input).into(),
+                    inputs: self.inputs.map(|input| !input),
                 });
                 true
             } else {
@@ -148,7 +150,24 @@ impl Term for Xor {
         }
     }
 
-    // TODO node reductions
+    fn reduce_node(&mut self, output: Lit, builder: &mut impl NodeBuilder) -> bool {
+        if output.is_const() {
+            let [a, b] = self.inputs.into_values();
+            builder.equiv([a.as_lit(), b ^ output.pol()]);
+            true
+        } else {
+            for i in 0..2 {
+                let input = self.inputs[i];
+                let other_input = self.inputs[i ^ 1];
+                if input == output.var() {
+                    builder.equiv([other_input.as_lit(), Var::FALSE ^ output.pol()]);
+                    return true;
+                }
+            }
+
+            default_reduce_node(self, output, builder)
+        }
+    }
 }
 
 impl TermDyn for Xor {
@@ -170,7 +189,7 @@ pub type SteadyInputNode = TermNode<SteadyInput>;
 
 impl Term for SteadyInput {
     type Output = Lit;
-    const NAME: &'static str = "Init";
+    const NAME: &'static str = "SteadyInput";
 
     fn input_var_iter(&self) -> impl Iterator<Item = Var> + '_ {
         [].into_iter()
@@ -178,6 +197,10 @@ impl Term for SteadyInput {
 
     fn apply_var_map(&mut self, _var_map: impl FnMut(Var) -> Lit) -> Pol {
         Pol::Pos
+    }
+
+    fn is_steady(&self, _input_steady: impl Fn(Var) -> bool) -> bool {
+        true
     }
 }
 
@@ -201,6 +224,10 @@ impl Term for Input {
 
     fn apply_var_map(&mut self, _var_map: impl FnMut(Var) -> Lit) -> Pol {
         Pol::Pos
+    }
+
+    fn is_steady(&self, _input_steady: impl Fn(Var) -> bool) -> bool {
+        false
     }
 }
 
@@ -240,7 +267,7 @@ impl Term for Reg {
 
     fn apply_var_map(&mut self, mut var_map: impl FnMut(Var) -> Lit) -> Pol {
         let mapped_next = var_map(self.next);
-        let mapped_init = self.init.map_var_to_lit(var_map);
+        let mapped_init = self.init.lookup(var_map);
 
         *self = Reg {
             init: mapped_init ^ mapped_next.pol(),
@@ -257,6 +284,24 @@ impl Term for Reg {
             None
         }
     }
+
+    fn reduce_node(&mut self, output: Self::Output, builder: &mut impl NodeBuilder) -> bool {
+        if self.next.as_pos() == output {
+            builder.node(TermNode {
+                output: output ^ self.init.pol(),
+                term: Init {
+                    input: self.init.var(),
+                },
+            });
+            true
+        } else {
+            default_reduce_node(self, output, builder)
+        }
+    }
+
+    fn is_steady(&self, _input_steady: impl Fn(Var) -> bool) -> bool {
+        false
+    }
 }
 
 impl TermDyn for Reg {
@@ -264,3 +309,43 @@ impl TermDyn for Reg {
         self.next
     }
 }
+
+/// [`Term`] representing the initial value of any given variable.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+#[repr(transparent)]
+pub struct Init {
+    /// The variable this term represents the initial value of.
+    pub input: Var,
+}
+
+/// [`Node`] representing the initial value of any given variable.
+pub type InitNode = TermNode<Init>;
+
+impl Term for Init {
+    type Output = Lit;
+    const NAME: &'static str = "Init";
+
+    fn input_var_iter(&self) -> impl Iterator<Item = Var> + '_ {
+        [self.input].into_iter()
+    }
+
+    fn apply_var_map(&mut self, mut var_map: impl FnMut(Var) -> Lit) -> Pol {
+        let input_lit = var_map(self.input);
+        self.input = input_lit.var();
+        input_lit.pol()
+    }
+
+    fn is_steady(&self, _input_steady: impl Fn(Var) -> bool) -> bool {
+        true
+    }
+
+    fn reduce(&mut self, _buf: &mut impl NodeBuilder) -> Option<Self::Output> {
+        if self.input == Var::FALSE {
+            Some(Lit::FALSE)
+        } else {
+            None
+        }
+    }
+}
+
+impl TermDyn for Init {}

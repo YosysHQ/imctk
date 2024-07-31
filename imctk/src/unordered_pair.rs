@@ -59,13 +59,23 @@ impl<T: Ord> UnorderedPair<T> {
     pub fn max_element(&self) -> &T {
         &self.values[1]
     }
+
+    /// Applies a function to the two elements, returning the results as a new [`UnorderedPair`].
+    pub fn map<U: Ord>(self, f: impl FnMut(T) -> U) -> UnorderedPair<U> {
+        UnorderedPair::new(self.values.map(f))
+    }
+
+    /// Returns the two elements as a sorted array.
+    pub fn into_values(self) -> [T; 2] {
+        self.values
+    }
 }
 
 impl UnorderedPair<Lit> {
     /// Applies a variable-to-literal map to an unordered pair of literals.
     // TODO make this fully public?
     pub(crate) fn apply_var_map(&mut self, mut var_map: impl FnMut(Var) -> Lit) {
-        *self = Self::new(self.values.map(|lit| lit.map_var_to_lit(&mut var_map)))
+        *self = Self::new(self.values.map(|lit| lit.lookup(&mut var_map)))
     }
 }
 

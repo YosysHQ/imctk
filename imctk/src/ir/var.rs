@@ -134,6 +134,34 @@ impl Pol {
     pub fn lit(self, var: Var) -> Lit {
         var.lit(self)
     }
+
+    /// Returns the negative polarity if the given condition is `true` and a positive polarity
+    /// otherwise.
+    #[inline(always)]
+    pub fn neg_if(neg: bool) -> Self {
+        // SAFETY: We explicitly chose the repr for `Pol` to make this work
+        unsafe { std::mem::transmute::<bool, Pol>(neg) }
+    }
+
+    /// Returns the positive polarity if the given condition is `true` and a positive polarity
+    /// otherwise.
+    #[inline(always)]
+    pub fn pos_if(pos: bool) -> Self {
+        Self::neg_if(!pos)
+    }
+
+    /// Returns `true` when this is the negative polarity.
+    #[inline(always)]
+    pub fn is_neg(self) -> bool {
+        // SAFETY: We explicitly chose the repr for `Pol` to make this work
+        unsafe { std::mem::transmute::<Pol, bool>(self) }
+    }
+
+    /// Returns `true` when this is the positive polarity.
+    #[inline(always)]
+    pub fn is_pos(self) -> bool {
+        !self.is_neg()
+    }
 }
 
 impl ops::BitXor for Pol {
@@ -221,11 +249,14 @@ impl Lit {
         self.pol() == Pol::Neg
     }
 
-    /// Applies a variable-to-literal map to this literal's variable.
+    /// FIXME description for the generic version
     ///
     /// This is equivalent to `f(self.var()) ^ self.pol()`.
     #[inline(always)]
-    pub fn map_var_to_lit(self, f: impl FnOnce(Var) -> Lit) -> Lit {
+    pub fn lookup<T, U>(self, f: impl FnOnce(Var) -> T) -> U
+    where
+        T: ops::BitXor<Pol, Output = U>,
+    {
         f(self.var()) ^ self.pol()
     }
 
@@ -248,11 +279,74 @@ impl Lit {
     }
 }
 
+impl ops::BitXor<Pol> for bool {
+    type Output = bool;
+
+    fn bitxor(self, rhs: Pol) -> Self::Output {
+        self ^ (rhs == Pol::Neg)
+    }
+}
+
+impl ops::BitXor<Pol> for &'_ bool {
+    type Output = bool;
+
+    fn bitxor(self, rhs: Pol) -> Self::Output {
+        *self ^ rhs
+    }
+}
+
+impl ops::BitXorAssign<Pol> for bool {
+    fn bitxor_assign(&mut self, rhs: Pol) {
+        *self ^= rhs == Pol::Neg
+    }
+}
+
+impl ops::BitXor<Pol> for u64 {
+    type Output = u64;
+
+    fn bitxor(self, rhs: Pol) -> Self::Output {
+        self ^ match rhs {
+            Pol::Pos => 0,
+            Pol::Neg => !0,
+        }
+    }
+}
+
+impl ops::BitXorAssign<Pol> for u64 {
+    fn bitxor_assign(&mut self, rhs: Pol) {
+        *self = *self ^ rhs
+    }
+}
+
 impl ops::BitXor<Pol> for Var {
     type Output = Lit;
 
     fn bitxor(self, rhs: Pol) -> Self::Output {
         self.lit(rhs)
+    }
+}
+
+impl ops::BitXor<Pol> for &'_ Var {
+    type Output = Lit;
+
+    fn bitxor(self, rhs: Pol) -> Self::Output {
+        *self ^ rhs
+    }
+}
+
+impl ops::BitXor<bool> for Var {
+    type Output = Lit;
+
+    fn bitxor(self, rhs: bool) -> Self::Output {
+        self.as_lit() ^ rhs
+    }
+}
+
+impl ops::BitXor<bool> for &'_ Var {
+    type Output = Lit;
+
+    fn bitxor(self, rhs: bool) -> Self::Output {
+        *self ^ rhs
     }
 }
 
@@ -280,6 +374,14 @@ impl ops::BitXor<bool> for Lit {
     }
 }
 
+impl ops::BitXor<Pol> for &'_ Lit {
+    type Output = Lit;
+
+    fn bitxor(self, rhs: Pol) -> Self::Output {
+        *self ^ rhs
+    }
+}
+
 impl ops::BitXorAssign<bool> for Lit {
     fn bitxor_assign(&mut self, rhs: bool) {
         *self = *self ^ rhs;
@@ -292,6 +394,14 @@ impl ops::Not for Lit {
     fn not(self) -> Self::Output {
         // SAFETY: Changing the LSB of the code makes it stay in bounds
         unsafe { Lit::from_code_unchecked(self.code() ^ 1) }
+    }
+}
+
+impl ops::Not for Pol {
+    type Output = Self;
+
+    fn not(self) -> Self::Output {
+        self ^ Pol::Neg
     }
 }
 
@@ -331,6 +441,12 @@ impl Var {
         // SAFETY: The valid index ranges of Lit and Var are chosen specifically to make this
         // work.
         unsafe { Lit::from_code_unchecked(self.index() << 1) }
+    }
+
+    /// Returns a positive polarity literal for the variable.
+    #[inline(always)]
+    pub fn as_lit(self) -> Lit {
+        self.as_pos()
     }
 
     /// Returns a negative polarity literal for the variable.

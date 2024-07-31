@@ -152,6 +152,7 @@ impl DynamicIndex for StructuralHashIndex {
 }
 
 /// A node found by the [`StructuralHashIndex`].
+#[derive(Debug)]
 pub struct FoundNode {
     /// The id of the found node.
     pub node_id: NodeId,

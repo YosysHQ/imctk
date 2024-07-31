@@ -9,7 +9,10 @@ use zwohash::ZwoHasher;
 
 use crate::{
     give_take::Take,
-    ir::var::{Lit, Pol, Var, VarOrLit},
+    ir::{
+        env::Env,
+        var::{Lit, Pol, Var, VarOrLit},
+    },
     vec_sink::VecSink,
 };
 
@@ -37,6 +40,9 @@ pub trait Node: NodeDyn + Debug + Eq + Hash + Clone + 'static {
 
     #[doc(hidden)]
     const TERM_TYPE_FOR_TERM_WRAPPER: Option<SealedWrapper<fn() -> TermType>> = None;
+
+    #[doc(hidden)]
+    const STATIC_TYPE_INFO: SealedWrapper<usize> = SealedWrapper(0);
 
     /// Returns an iterator over all input variables of the node.
     fn input_var_iter(&self) -> impl Iterator<Item = Var> + '_ {
@@ -174,6 +180,9 @@ pub trait NodeDynAuto: Debug {
     /// Object safe wrapper of [`Node::reduce`].
     fn dyn_reduce_into_buf(&mut self, buf: &mut NodeBuf) -> bool;
 
+    /// Adds a copy of this node to the given environment using a given variable mapping.
+    fn dyn_add_to_env_with_var_map(&self, env: &mut Env, var_map: &mut dyn FnMut(Var) -> Lit);
+
     #[doc(hidden)]
     fn zzz_hidden_default_representative_input_var(&self) -> Var;
 
@@ -229,6 +238,12 @@ impl<T: Node> NodeDynAuto for T {
         self.reduce(buf)
     }
 
+    fn dyn_add_to_env_with_var_map(&self, env: &mut Env, var_map: &mut dyn FnMut(Var) -> Lit) {
+        let mut clone = self.clone();
+        clone.apply_var_map(var_map);
+        env.node(clone);
+    }
+
     #[inline(always)]
     fn zzz_hidden_default_representative_input_var(&self) -> Var {
         self.input_var_iter().next().unwrap_or(Var::FALSE)
@@ -282,6 +297,9 @@ pub trait Term: Debug + Clone + Eq + Hash + TermDyn + 'static {
     /// A short name identifying the operation.
     const NAME: &'static str;
 
+    #[doc(hidden)]
+    const STATIC_TYPE_INFO: SealedWrapper<usize> = SealedWrapper(0);
+
     /// Returns an iterator over all input variables of the term.
     fn input_var_iter(&self) -> impl Iterator<Item = Var> + '_;
 
@@ -327,6 +345,17 @@ pub trait Term: Debug + Clone + Eq + Hash + TermDyn + 'static {
     /// implementations to partially override the default behavior.
     fn reduce_node(&mut self, output: Self::Output, builder: &mut impl NodeBuilder) -> bool {
         default_reduce_node(self, output, builder)
+    }
+
+    /// Returns whether this term represents a steady value given a callback to determine whether
+    /// the inputs represent steady values.
+    fn is_steady(&self, input_steady: impl Fn(Var) -> bool) -> bool {
+        for var in self.unguarded_input_var_iter() {
+            if !input_steady(var) {
+                return false;
+            }
+        }
+        true
     }
 }
 
@@ -414,6 +443,9 @@ pub trait TermDynAuto {
     /// instead of a [`VecSink`].
     fn dyn_append_unguarded_input_vars(&self, sink: VecSink<Var>);
 
+    /// Object safe wrapper of [`Term::is_steady`] using an environment to look up input steadiness.
+    fn dyn_is_steady_in_env(&self, env: &Env) -> bool;
+
     #[doc(hidden)]
     fn zzz_hidden_default_representative_input_var(&self) -> Var;
 
@@ -431,6 +463,13 @@ pub trait TermDynAuto {
 
     /// Object safe wrapper of [`Term::reduce`].
     fn dyn_reduce_into_buf(&mut self, buf: &mut NodeBuf) -> Option<Lit>;
+
+    /// Adds a copy of this term to the given environment using a given variable mapping.
+    fn dyn_add_to_env_with_var_map(
+        &self,
+        env: &mut Env,
+        var_map: &mut dyn FnMut(Var) -> Lit,
+    ) -> Lit;
 }
 
 impl<T: Term> TermDynAuto for T {
@@ -460,6 +499,10 @@ impl<T: Term> TermDynAuto for T {
 
     fn dyn_append_unguarded_input_vars(&self, mut sink: VecSink<Var>) {
         sink.extend(self.unguarded_input_var_iter())
+    }
+
+    fn dyn_is_steady_in_env(&self, env: &Env) -> bool {
+        self.is_steady(|var| env.var_defs().is_steady(var))
     }
 
     #[inline(always)]
@@ -493,6 +536,17 @@ impl<T: Term> TermDynAuto for T {
         self.reduce(buf).map(|output| {
             <T::Output as VarOrLit>::process_var_or_lit(output, |var| var.as_pos(), |lit| lit)
         })
+    }
+
+    fn dyn_add_to_env_with_var_map(
+        &self,
+        env: &mut Env,
+        var_map: &mut dyn FnMut(Var) -> Lit,
+    ) -> Lit {
+        let mut clone = self.clone();
+        clone.apply_var_map(var_map);
+        env.term(clone)
+            .process_var_or_lit(|var| var.as_lit(), |lit| lit)
     }
 }
 
@@ -575,6 +629,8 @@ impl<T: Term> Node for TermWrapper<T> {
     const TERM_TYPE_FOR_TERM_WRAPPER: Option<SealedWrapper<fn() -> TermType>> =
         Some(SealedWrapper(TermType::of::<T>));
 
+    const STATIC_TYPE_INFO: SealedWrapper<usize> = T::STATIC_TYPE_INFO;
+
     fn input_var_iter(&self) -> impl Iterator<Item = Var> + '_ {
         self.term.input_var_iter()
     }
@@ -642,7 +698,7 @@ impl<T: Term> Node for TermNode<T> {
         let mut new_output_lit = self
             .output
             .process_var_or_lit(|var| var.as_pos(), |lit| lit)
-            .map_var_to_lit(&mut var_map);
+            .lookup(&mut var_map);
 
         let term_pol = self.term.apply_var_map(var_map);
 

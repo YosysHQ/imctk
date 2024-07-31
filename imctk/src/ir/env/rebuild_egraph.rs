@@ -70,6 +70,10 @@ impl Env {
                         .unwrap()
                         .dyn_apply_var_map(&mut |var| self.var_defs.update_lit_repr(var.as_pos()));
 
+                    if let Some(updates) = &mut self.updates {
+                        updates.nodes.push(node_id);
+                    }
+
                     rewritten_nodes += 1;
 
                     let node = self.nodes.get_dyn(node_id).unwrap();
@@ -123,7 +127,6 @@ impl Env {
                                     other_node,
                                     other_role,
                                 );
-
                                 self.nodes.discard(found_node.node_id);
                                 redundant_nodes += 1;
 
@@ -190,37 +193,52 @@ impl Env {
 
             swap(&mut node_ids, &mut self.index.reduction_queue);
 
+            let mut def_node_buf = NodeBuf::default();
+
             for node_id in node_ids.drain(..) {
                 log::trace!(
                     "egraph reduce node before: {node_id:?} {:?}",
                     self.nodes.get_dyn(node_id)
                 );
 
-                let Some((_node, node_role_before)) =
+                let Some((node, node_role_before)) =
                     Self::get_node_with_role(&self.nodes, &self.var_defs, node_id)
                 else {
                     continue;
                 };
                 log::trace!("egraph reduce node_role before: {node_role_before:?}");
 
+                self.index
+                    .remove_dyn_node(&self.nodes, node_id, node, node_role_before);
+
                 let node = self.nodes.get_dyn_mut(node_id).unwrap();
 
-                if node.dyn_reduce_into_buf(&mut node_buf) {
+                let target_buf = if let NodeRole::PrimaryDef(_) = node_role_before {
+                    &mut def_node_buf
+                } else {
+                    &mut node_buf
+                };
+
+                if node.dyn_reduce_into_buf(target_buf) {
                     log::trace!("egraph reduction {node:?} {node_buf:?}");
                     reduced_nodes += 1;
 
-                    let node = self.nodes.get_dyn(node_id).unwrap();
-                    self.index
-                        .remove_dyn_node(&self.nodes, node_id, node, node_role_before);
                     self.nodes.discard(node_id);
 
-                    if matches!(node_role_before, NodeRole::PrimaryDef(_)) {
-                        node_buf.drain_into_node_builder(self.build_defs(), &mut node_buf_var_map);
-                    } else {
-                        node_buf.drain_into_node_builder(self, &mut node_buf_var_map);
+                    if let NodeRole::PrimaryDef(var) = node_role_before {
+                        self.var_defs.var_defs[var].clear_def();
                     }
+                } else {
+                    let node = self.nodes.get_dyn(node_id).unwrap();
+                    self.index
+                        .add_dyn_node(&self.nodes, node_id, node, node_role_before);
+
+                    self.index.pending_nodes.push(node_id);
                 }
             }
+
+            def_node_buf.drain_into_node_builder(self.build_defs(), &mut node_buf_var_map);
+            node_buf.drain_into_node_builder(self, &mut node_buf_var_map);
         }
 
         self.node_buf = node_buf;
@@ -228,11 +246,46 @@ impl Env {
 
         redundant_nodes -= found_congruences;
 
+        let mut pending_nodes = vec![];
+
+        let mut marked_steady = 0;
+
+        while !self.index.pending_nodes.is_empty() {
+            swap(&mut pending_nodes, &mut self.index.pending_nodes);
+            log::trace!("steady iteration {}", pending_nodes.len());
+            pending_nodes.sort_unstable();
+            pending_nodes.dedup();
+            log::trace!("steady iteration dedup {}", pending_nodes.len());
+
+            for node_id in pending_nodes.drain(..) {
+                let Some(node) = self.nodes.get_dyn(node_id) else { continue };
+                let Some(output_var) = node.output_var() else { continue };
+                if self.var_defs.var_defs[output_var].is_steady() {
+                    continue;
+                }
+                let Some(term) = node.dyn_term() else { continue };
+
+                if term.dyn_is_steady_in_env(self) {
+                    self.var_defs.var_defs[output_var].set_steady(true);
+                    marked_steady += 1;
+
+                    if let Some(updates) = &mut self.updates {
+                        updates.steady.push(output_var);
+                    }
+
+                    self.index
+                        .pending_nodes
+                        .extend(self.index.uses_index.find_uses_unordered(output_var))
+                }
+            }
+        }
+
         log::debug!("egraph passes={passes}");
         log::debug!("egraph reduced_nodes={reduced_nodes}");
         log::debug!("egraph renamed_vars={renamed_vars}");
         log::debug!("egraph rewritten_nodes={rewritten_nodes}");
         log::debug!("egraph found_congruences={found_congruences}");
         log::debug!("egraph redundant_nodes={redundant_nodes}");
+        log::debug!("egraph marked_steady={marked_steady}");
     }
 }

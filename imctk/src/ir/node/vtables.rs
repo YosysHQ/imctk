@@ -20,6 +20,7 @@ use super::{
 };
 
 pub(crate) struct NodeTypeVTable {
+    static_type_info: usize,
     type_info: fn() -> (std::any::TypeId, &'static str),
     name: &'static str,
     slot_size: usize,
@@ -32,16 +33,30 @@ pub(crate) struct NodeTypeVTable {
 }
 
 impl PartialEq for NodeTypeVTable {
+    #[inline(always)]
     fn eq(&self, other: &Self) -> bool {
-        (self.type_info)().0 == (other.type_info)().0
+        if self.static_type_info == other.static_type_info {
+            if self.static_type_info == 0 {
+                (self.type_info)().0 == (other.type_info)().0
+            } else {
+                true
+            }
+        } else {
+            false
+        }
     }
 }
 
 impl Eq for NodeTypeVTable {}
 
 impl Hash for NodeTypeVTable {
+    #[inline(always)]
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        (self.type_info)().0.hash(state);
+        if self.static_type_info != 0 {
+            self.static_type_info.hash(state)
+        } else {
+            (self.type_info)().0.hash(state)
+        }
     }
 }
 
@@ -65,6 +80,9 @@ impl NodeTypeVTable {
 
     pub const fn of<T: Node>() -> Self {
         Self {
+            static_type_info: match T::STATIC_TYPE_INFO {
+                SealedWrapper(inner) => inner,
+            },
             type_info: Self::type_info::<T>,
             name: T::NAME,
             slot_size: std::mem::size_of::<super::collections::nodes::ChunkSlot<T>>(),
@@ -96,6 +114,7 @@ impl NodeTypeVTable {
 }
 
 pub(crate) struct TermTypeVTable {
+    static_type_info: usize,
     type_info: fn() -> (std::any::TypeId, &'static str),
     name: &'static str,
     build_term_node: for<'a> unsafe fn(Lit, *mut u8, &'a mut dyn FnMut(*mut u8)),
@@ -105,16 +124,30 @@ pub(crate) struct TermTypeVTable {
 }
 
 impl PartialEq for TermTypeVTable {
+    #[inline(always)]
     fn eq(&self, other: &Self) -> bool {
-        (self.type_info)().0 == (other.type_info)().0
+        if self.static_type_info == other.static_type_info {
+            if self.static_type_info == 0 {
+                (self.type_info)().0 == (other.type_info)().0
+            } else {
+                true
+            }
+        } else {
+            false
+        }
     }
 }
 
 impl Eq for TermTypeVTable {}
 
 impl Hash for TermTypeVTable {
+    #[inline(always)]
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        (self.type_info)().0.hash(state);
+        if self.static_type_info != 0 {
+            self.static_type_info.hash(state)
+        } else {
+            (self.type_info)().0.hash(state)
+        }
     }
 }
 
@@ -132,6 +165,9 @@ impl TermTypeVTable {
 
     pub const fn of<T: Term>() -> Self {
         TermTypeVTable {
+            static_type_info: match T::STATIC_TYPE_INFO {
+                SealedWrapper(value) => value,
+            },
             type_info: Self::type_info::<T>,
             name: T::NAME,
             // SAFETY: field is an `unsafe fn`, this obtains ownership of term_ptr's target and

@@ -168,7 +168,7 @@ impl NodeBuf {
                 }
                 NodeBufEntry::Equiv(lits) => {
                     log::trace!("draining equiv {lits:?}");
-                    builder.equiv(lits.map(|lit| lit.map_var_to_lit(|var| var_map.map_var(var))));
+                    builder.equiv(lits.map(|lit| lit.lookup(|var| var_map.map_var(var))));
                 }
             }
         }

@@ -55,9 +55,15 @@ impl RawEnvNodes {
 
         let (node_id, node_ref, nodes) = self.0.nodes.insert_and_get(node);
 
+        if let Some(updates) = &mut self.0.updates {
+            updates.nodes.push(node_id);
+        }
+
         let node_role = if let Some(output_var) = output_var {
             let mut encoded_var_repr = &mut self.0.var_defs.var_defs[output_var];
-            if encoded_var_repr.def_is_none() {
+            if output_var == Var::FALSE {
+                NodeRole::Equivalence(output_var)
+            } else if encoded_var_repr.def_is_none() {
                 encoded_var_repr.set_def_node(node_id);
 
                 let mut level_bound = 0;
@@ -124,9 +130,15 @@ impl RawEnvNodes {
 
         let (node_id, node_ref, nodes) = self.0.nodes.insert_and_get_dyn(node);
 
+        if let Some(updates) = &mut self.0.updates {
+            updates.nodes.push(node_id);
+        }
+
         let node_role = if let Some(output_var) = output_var {
             let mut encoded_var_repr = &mut self.0.var_defs.var_defs[output_var];
-            if encoded_var_repr.def_is_none() {
+            if output_var == Var::FALSE {
+                NodeRole::Equivalence(output_var)
+            } else if encoded_var_repr.def_is_none() {
                 encoded_var_repr.set_def_node(node_id);
 
                 let mut level_bound = 0;
@@ -434,7 +446,7 @@ impl NodeBuilderDyn for Env {
             self.node_buf = node_buf;
             self.node_buf_var_map = node_buf_var_map;
 
-            return output.map_var_to_lit(|var| self.node_buf_var_map.map_var(var)) ^ pol;
+            return output.lookup(|var| self.node_buf_var_map.map_var(var)) ^ pol;
         }
 
         self.raw_nodes()
@@ -524,7 +536,7 @@ impl NodeBuilderDyn for DefBuilder {
             self.0.node_buf = node_buf;
             self.0.node_buf_var_map = node_buf_var_map;
 
-            return output.map_var_to_lit(|var| self.0.node_buf_var_map.map_var(var)) ^ pol;
+            return output.lookup(|var| self.0.node_buf_var_map.map_var(var)) ^ pol;
         }
 
         self.0
@@ -700,6 +712,10 @@ impl Env {
         );
 
         self.index.add_equiv(&self.nodes, repr, equiv);
+        if let Some(updates) = &mut self.updates {
+            updates.equivs.push(equiv);
+        }
+
         if repr.is_const()
             || (repr_level == min_level && (equiv_level != min_level || repr_def.is_some()))
         {
@@ -735,18 +751,27 @@ impl Env {
     }
 
     // TODO should this be public?
-    fn make_primary_def(&mut self, node_id: NodeId, level_bound: Option<u32>) {
+    pub(crate) fn make_primary_def(&mut self, node_id: NodeId, level_bound: Option<u32>) {
         let (mut node, mut node_role) =
             Self::get_node_with_role(&self.nodes, &self.var_defs, node_id).unwrap();
         log::trace!("make_primary_def {node_id:?} {node_role:?} {node:?}");
 
+        let level_bound = level_bound.unwrap_or_else(|| {
+            let mut level_bound = 0;
+            node.dyn_foreach_unguarded_input_var(&mut |var| {
+                level_bound = level_bound.max(self.var_defs.var_defs[var].level_bound() + 1);
+                true
+            });
+            level_bound
+        });
+
         match node_role {
             NodeRole::PrimaryDef(output_var) => {
-                if let Some(level_bound) = level_bound {
-                    self.var_defs.var_defs[output_var].set_level_bound(level_bound);
-                }
+                assert_ne!(output_var, Var::FALSE);
+                self.var_defs.var_defs[output_var].set_level_bound(level_bound);
             }
             NodeRole::Equivalence(mut output_var) => loop {
+                assert_ne!(output_var, Var::FALSE);
                 let def_node =
                     match self.var_defs.var_defs[output_var].def() {
                         Some(VarDef::Equiv(_)) => {
@@ -779,9 +804,8 @@ impl Env {
 
                 var_def.set_def_node(node_id);
 
-                if let Some(level_bound) = level_bound {
-                    var_def.set_level_bound(level_bound);
-                }
+                var_def.set_level_bound(level_bound);
+
                 break;
             },
             NodeRole::Constraint => {
@@ -790,7 +814,7 @@ impl Env {
         }
     }
 
-    fn clear_primary_def(&mut self, var: Var) {
+    pub(crate) fn clear_primary_def(&mut self, var: Var) {
         match self.var_defs.var_defs[var].def() {
             Some(VarDef::Node(node)) => {
                 self.index
