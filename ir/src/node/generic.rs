@@ -8,7 +8,7 @@ use imctk_transparent::{NewtypeCast, SubtypeCast};
 use imctk_util::{give_take::Take, vec_sink::VecSink};
 use zwohash::ZwoHasher;
 
-use crate::ir::{
+use crate::{
     env::Env,
     var::{Lit, Pol, Var, VarOrLit},
 };
@@ -280,8 +280,8 @@ impl DynNode {
 
 /// Types that define a value within an environment.
 ///
-/// A [`Term`] type defines a value in an [environment][crate::ir::env]. That value can be given as
-/// a function of values assigned to [variables][crate::ir::var] in the environment.
+/// A [`Term`] type defines a value in an [environment][crate::env]. That value can be given as
+/// a function of values assigned to [variables][crate::var] in the environment.
 ///
 /// A term itself is not automatically assigned to a variable. This is done by combining a term and
 /// output variable (or literal) in a [`TermNode`].

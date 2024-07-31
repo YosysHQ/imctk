@@ -1,4 +1,7 @@
-//! Internal representation
+//! Incremental Model Checking Toolkit - Internal representation
+#![deny(unsafe_op_in_unsafe_fn)]
+#![warn(clippy::undocumented_unsafe_blocks)]
+#![warn(missing_docs)]
 pub mod node;
 pub mod var;
 
@@ -21,3 +24,5 @@ pub mod prelude {
         var::{Lit, Var},
     };
 }
+
+mod wide_ptr;

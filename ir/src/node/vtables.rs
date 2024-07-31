@@ -9,7 +9,7 @@ use std::{
 use imctk_util::give_take::give;
 
 use crate::{
-    ir::var::{Lit, VarOrLit},
+    var::{Lit, VarOrLit},
     wide_ptr::WidePtr,
 };
 

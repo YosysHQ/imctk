@@ -13,7 +13,7 @@ use imctk_util::give_take::Take;
 use indexmap::IndexSet;
 use zwohash::ZwoHasher;
 
-use crate::ir::node::{
+use crate::node::{
     generic::{DynNode, Node, NodeType},
     vtables::{DynNodeType, GenericNodeType, KnownNodeType},
     NodeId,

@@ -216,6 +216,7 @@ dependencies = [
  "hashbrown",
  "imctk-derive",
  "imctk-ids",
+ "imctk-ir",
  "imctk-logger",
  "imctk-transparent",
  "imctk-util",
@@ -243,6 +244,22 @@ dependencies = [
  "hashbrown",
  "imctk-derive",
  "imctk-transparent",
+ "zwohash",
+]
+
+[[package]]
+name = "imctk-ir"
+version = "0.1.0"
+dependencies = [
+ "flussab-aiger",
+ "hashbrown",
+ "imctk-derive",
+ "imctk-ids",
+ "imctk-transparent",
+ "imctk-util",
+ "indexmap",
+ "log",
+ "table_seq",
  "zwohash",
 ]
 

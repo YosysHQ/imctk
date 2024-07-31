@@ -4,6 +4,15 @@ use std::io;
 
 use flussab_aiger::aig::OrderedAig;
 use imctk_ids::{id_vec::IdVec, Id};
+use imctk_ir::{
+    env::{Env, EnvWrapper},
+    node::{
+        builder::NodeBuilder,
+        fine::circuit::{And, Input, Reg, SteadyInput},
+        generic::TermNode,
+    },
+    var::{Lit, Var},
+};
 
 // TODO there might be a sufficiently ergonomic way to make this type safe when there is a stable
 // way to name opaque impl Trait types
@@ -20,16 +29,6 @@ pub type AigerLit = Lit;
 /// Note that this is a type alias and thus does not provide any type checking.
 
 pub type AigerVar = Var;
-
-use crate::ir::{
-    env::{Env, EnvWrapper},
-    node::{
-        builder::NodeBuilder,
-        fine::circuit::{And, Input, Reg, SteadyInput},
-        generic::TermNode,
-    },
-    var::{Lit, Var},
-};
 
 /// Partial mapping of AIGER variables to existing literals.
 #[derive(Default, Debug)]

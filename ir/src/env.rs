@@ -3,9 +3,9 @@ use std::mem::{swap, take};
 
 use imctk_ids::{id_vec::IdVec, Id, Id32};
 use imctk_transparent::{NewtypeCast, SubtypeCast};
-use imctk_util::{give_take::Take, vec_sink::VecSink};
+use imctk_util::give_take::Take;
 
-use crate::ir::{
+use crate::{
     index::{DefsIndex, UsesIndex},
     var::VarOrLit,
 };
@@ -388,7 +388,7 @@ mod node_builders;
 mod rebuild_egraph;
 mod updates {
     #![allow(missing_docs)] // TODO document module
-    use crate::ir::{node::NodeId, var::Var};
+    use crate::{node::NodeId, var::Var};
 
     use super::Env;
 
@@ -415,130 +415,7 @@ mod updates {
 }
 
 impl Env {
-    /// Returns a copy of the environment with topologically sorted variable ids.
-    pub fn duplicate(&mut self) -> (Env, IdVec<Var, Lit>, IdVec<Var, Option<Lit>>) {
-        let mut env_from_duplicate: IdVec<Var, Lit> = Default::default();
-        let mut duplicate_from_env: IdVec<Var, Option<Lit>> = Default::default();
-
-        env_from_duplicate.push(Lit::FALSE);
-        duplicate_from_env.push(Some(Lit::FALSE));
-
-        let mut duplicate = Env::default();
-
-        let order =
-            crate::extract::extract_topo_sorted_primary_defs(self, self.var_defs().repr_vars());
-
-        for var in order {
-            if let Some(node) = self.def_node(var) {
-                node.dyn_foreach_input_var(&mut |input_var| {
-                    let reduced_var = duplicate_from_env.grow_for_key(input_var);
-                    if reduced_var.is_none() {
-                        let new_var = duplicate
-                            .fresh_var_with_level_bound(self.var_defs().level_bound(input_var));
-                        assert_eq!(new_var, env_from_duplicate.next_unused_key());
-                        env_from_duplicate.push(input_var.as_lit());
-                        *reduced_var = Some(new_var.as_lit());
-                    }
-                    true
-                });
-
-                let reduced_var = duplicate_from_env.grow_for_key(var);
-                if reduced_var.is_none() {
-                    let new_var =
-                        duplicate.fresh_var_with_level_bound(self.var_defs().level_bound(var));
-                    assert_eq!(new_var, env_from_duplicate.next_unused_key());
-                    env_from_duplicate.push(var.as_lit());
-                    *reduced_var = Some(new_var.as_lit());
-                }
-
-                node.dyn_add_to_env_with_var_map(&mut duplicate, &mut |var| {
-                    duplicate_from_env[var].unwrap()
-                });
-            }
-        }
-
-        for (_node_id, node) in self.nodes().iter() {
-            node.dyn_add_to_env_with_var_map(&mut duplicate, &mut |var| {
-                duplicate_from_env[var].unwrap()
-            });
-        }
-        (duplicate, env_from_duplicate, duplicate_from_env)
-    }
-
-    /// Returns a copy of the environment limited to the input cones of the given targets, using
-    /// topologically sorted variable ids.
-    pub fn duplicate_partial(
-        &mut self,
-        targets: impl IntoIterator<Item = Var>,
-    ) -> (Env, IdVec<Var, Lit>, IdVec<Var, Option<Lit>>) {
-        let mut env_from_duplicate: IdVec<Var, Lit> = Default::default();
-        let mut duplicate_from_env: IdVec<Var, Option<Lit>> = Default::default();
-
-        duplicate_from_env.resize(self.var_defs().len(), None);
-
-        env_from_duplicate.push(Lit::FALSE);
-        duplicate_from_env[Var::FALSE] = Some(Lit::FALSE);
-
-        let mut duplicate = Env::default();
-
-        let targets: Vec<_> = targets
-            .into_iter()
-            .map(|var| self.var_defs().var_repr(var))
-            .collect();
-
-        let order = crate::extract::extract_topo_sorted_primary_defs(self, targets.iter().copied());
-
-        for var in order {
-            if let Some(node) = self.def_node(var) {
-                node.dyn_foreach_input_var(&mut |input_var| {
-                    let reduced_var = duplicate_from_env.grow_for_key(input_var);
-                    if reduced_var.is_none() {
-                        let new_var = duplicate
-                            .fresh_var_with_level_bound(self.var_defs().level_bound(input_var));
-                        assert_eq!(new_var, env_from_duplicate.next_unused_key());
-                        env_from_duplicate.push(input_var.as_lit());
-                        *reduced_var = Some(new_var.as_lit());
-                    }
-                    true
-                });
-
-                let reduced_var = duplicate_from_env.grow_for_key(var);
-                if reduced_var.is_none() {
-                    let new_var =
-                        duplicate.fresh_var_with_level_bound(self.var_defs().level_bound(var));
-                    assert_eq!(new_var, env_from_duplicate.next_unused_key());
-                    env_from_duplicate.push(var.as_lit());
-                    *reduced_var = Some(new_var.as_lit());
-                }
-
-                node.dyn_add_to_env_with_var_map(&mut duplicate, &mut |var| {
-                    duplicate_from_env[var].unwrap()
-                });
-            }
-        }
-
-        let mut tmp_vars = vec![];
-
-        'outer: for (_node_id, node) in self.nodes().iter() {
-            if let Some(output_var) = node.output_var() {
-                if duplicate_from_env[output_var].is_none() {
-                    continue;
-                }
-            }
-            node.dyn_append_input_vars(VecSink::new(&mut tmp_vars));
-            for input_var in tmp_vars.drain(..) {
-                if duplicate_from_env[input_var].is_none() {
-                    continue 'outer;
-                }
-            }
-
-            node.dyn_add_to_env_with_var_map(&mut duplicate, &mut |var| {
-                duplicate_from_env[var].unwrap()
-            });
-        }
-
-        (duplicate, env_from_duplicate, duplicate_from_env)
-    }
+    // TODO move this elsewhere?
 
     /// Finds an existing node that assigns the given term to a variable.
     pub fn lookup_term<T: Term>(&self, term: &T) -> Option<(NodeId, T::Output)> {

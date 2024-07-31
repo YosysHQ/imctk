@@ -6,7 +6,7 @@ use std::fmt::Debug;
 use imctk_ids::Id;
 use imctk_util::give_take::Take;
 
-use crate::ir::{
+use crate::{
     node::{
         builder::{NodeBuilder, NodeBuilderDyn},
         generic::{

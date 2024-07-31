@@ -8,6 +8,7 @@ members = [
     "imctk",
     "logger",
     "util",
+    "ir",
 
     # comment to force multi-line layout
 ]

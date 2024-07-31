@@ -2,7 +2,7 @@
 //! bit-level circuits.
 use imctk_util::unordered_pair::UnorderedPair;
 
-use crate::ir::{
+use crate::{
     node::{
         builder::NodeBuilder,
         generic::{Node, NodeDyn, SealedWrapper},

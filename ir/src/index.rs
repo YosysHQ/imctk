@@ -3,9 +3,9 @@ use std::hash::{BuildHasher, BuildHasherDefault};
 use table_seq::TableSeq;
 use zwohash::ZwoHasher;
 
-use crate::ir::var::Var;
+use crate::var::Var;
 
-use crate::ir::node::{
+use crate::node::{
     collections::nodes::Nodes,
     generic::{DynNode, Node},
     NodeId,

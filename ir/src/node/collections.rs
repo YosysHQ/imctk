@@ -2,6 +2,6 @@
 pub mod nodes;
 
 #[allow(unused_imports)] // rustdoc only
-use crate::ir::node::generic::Node;
+use crate::node::generic::Node;
 
 pub(crate) mod buf;

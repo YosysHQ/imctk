@@ -249,7 +249,8 @@ impl RawEnvNodes {
 
                 if level_bound < old_level_bound {
                     log::trace!("def update term");
-                    self.0.make_primary_def(node_id, Some(level_bound));
+                    self.0
+                        .make_primary_def_with_level_bound(node_id, level_bound);
                 }
             }
             return (node_id, output, false);
@@ -294,7 +295,8 @@ impl RawEnvNodes {
                 });
 
                 if level_bound < old_level_bound {
-                    self.0.make_primary_def(node_id, Some(level_bound));
+                    self.0
+                        .make_primary_def_with_level_bound(node_id, level_bound);
                 }
             }
             return (node_id, output, false);
@@ -363,7 +365,7 @@ impl RawEnvNodes {
 
                     if level_bound < old_level_bound {
                         self.0
-                            .make_primary_def(found_node.node_id, Some(level_bound));
+                            .make_primary_def_with_level_bound(found_node.node_id, level_bound);
                     }
                 }
                 self.0.insert_equiv(equiv);
@@ -412,7 +414,7 @@ impl RawEnvNodes {
 
                     if level_bound < old_level_bound {
                         self.0
-                            .make_primary_def(found_node.node_id, Some(level_bound));
+                            .make_primary_def_with_level_bound(found_node.node_id, level_bound);
                     }
                 }
                 self.0.insert_equiv(equiv);
@@ -731,7 +733,7 @@ impl Env {
 
             match equiv_def {
                 Some(VarDef::Node(node_id)) => {
-                    self.make_primary_def(node_id, Some(min_level));
+                    self.make_primary_def_with_level_bound(node_id, min_level);
                 }
                 Some(VarDef::Equiv(_)) => unreachable!(),
                 None => (),
@@ -750,8 +752,21 @@ impl Env {
         &self.index.uses_index
     }
 
-    // TODO should this be public?
-    pub(crate) fn make_primary_def(&mut self, node_id: NodeId, level_bound: Option<u32>) {
+    /// Makes the specified node the primary definition for its output variable, updating its level
+    /// bound according to the node's input level bounds.
+    // TODO are there any issues with making this public?
+    pub fn make_primary_def(&mut self, node_id: NodeId) {
+        self.make_primary_def_inner(node_id, None)
+    }
+
+    /// Makes the specified node the primary definition for its output variable using a given level
+    /// bound.
+    // TODO are there any issues with making this public?
+    pub fn make_primary_def_with_level_bound(&mut self, node_id: NodeId, level_bound: u32) {
+        self.make_primary_def_inner(node_id, Some(level_bound))
+    }
+
+    fn make_primary_def_inner(&mut self, node_id: NodeId, level_bound: Option<u32>) {
         let (mut node, mut node_role) =
             Self::get_node_with_role(&self.nodes, &self.var_defs, node_id).unwrap();
         log::trace!("make_primary_def {node_id:?} {node_role:?} {node:?}");

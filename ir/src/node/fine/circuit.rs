@@ -2,7 +2,7 @@
 use imctk_ids::{Id, Id32};
 use imctk_util::unordered_pair::UnorderedPair;
 
-use crate::ir::{
+use crate::{
     node::{
         builder::NodeBuilder,
         generic::{default_reduce_node, SealedWrapper, Term, TermDyn, TermNode},
@@ -11,7 +11,7 @@ use crate::ir::{
 };
 
 #[allow(unused_imports)] // rustdoc
-use crate::ir::node::generic::Node;
+use crate::node::generic::Node;
 
 use super::constraints::BinClause;
 
@@ -132,7 +132,7 @@ impl Term for Xor {
     fn apply_var_map(
         &mut self,
         mut var_map: impl FnMut(Var) -> Lit,
-    ) -> <Self::Output as crate::ir::var::VarOrLit>::Pol {
+    ) -> <Self::Output as crate::var::VarOrLit>::Pol {
         let mut composed_pol = Pol::Pos;
         self.inputs = self.inputs.map(|var| {
             let mapped = var_map(var);
