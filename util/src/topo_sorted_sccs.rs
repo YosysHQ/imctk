@@ -1,6 +1,6 @@
 //! Utilities for topological sorting and detecting strongly connected components.
+use crate::vec_sink::VecSink;
 use imctk_ids::{id_vec::IdVec, Id};
-use imctk_util::vec_sink::VecSink;
 
 struct DfsEntry<D: DfsIndexMap> {
     node: D::Node,

@@ -7,9 +7,7 @@ use imctk_ir::{
     node::NodeId,
     var::{Lit, Var},
 };
-use imctk_util::vec_sink::VecSink;
-
-use crate::topo_sorted_sccs::TopoSortedSccs;
+use imctk_util::{topo_sorted_sccs::TopoSortedSccs, vec_sink::VecSink};
 
 pub mod aiger;
 
