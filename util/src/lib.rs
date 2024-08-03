@@ -6,5 +6,6 @@
 #[macro_use]
 pub mod give_take;
 
+pub mod partition_refinement;
 pub mod unordered_pair;
 pub mod vec_sink;

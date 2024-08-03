@@ -283,6 +283,9 @@ dependencies = [
 [[package]]
 name = "imctk-util"
 version = "0.1.0"
+dependencies = [
+ "imctk-ids",
+]
 
 [[package]]
 name = "indexmap"
