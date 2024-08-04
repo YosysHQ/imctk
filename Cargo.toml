@@ -9,6 +9,7 @@ members = [
     "logger",
     "util",
     "ir",
+    "abc-sys",
 
     # comment to force multi-line layout
 ]

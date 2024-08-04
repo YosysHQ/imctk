@@ -1,0 +1,3 @@
+[submodule "abc-sys/abc"]
+	path = abc-sys/abc
+	url = https://github.com/YosysHQ/abc.git
