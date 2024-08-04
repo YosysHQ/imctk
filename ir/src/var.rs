@@ -1,5 +1,6 @@
 //! Numeric identifiers for variables and Boolean literals
 
+use imctk_derive::{NewtypeCast, SubtypeCast};
 use imctk_ids::{GenericId, Id, Id32};
 use std::{fmt::Debug, hash::Hash, ops};
 
@@ -18,12 +19,12 @@ use std::{fmt::Debug, hash::Hash, ops};
 /// not the [`index`][`Self::index`]. The index of a literal is the same as the corresponding
 /// variable's [`index`][`Var::index`].
 #[repr(transparent)]
-#[derive(Id)]
+#[derive(Id, SubtypeCast, NewtypeCast)]
 pub struct Lit(Id32);
 
 /// Numeric identifier for a variable.
 #[repr(transparent)]
-#[derive(Id)]
+#[derive(Id, SubtypeCast, NewtypeCast)]
 pub struct Var(GenericId<{ Lit::MAX_ID_INDEX / 2 }, <Lit as Id>::BaseId>);
 
 /// Ensure that there is an even number of literals
