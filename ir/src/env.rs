@@ -382,6 +382,16 @@ impl Env {
         let Some(VarDef::Node(node_id)) = self.var_defs().var_def(var) else { return None };
         Some((node_id, self.nodes().get_dyn(node_id).unwrap()))
     }
+
+    /// Returns the canonical representative literal equivalent to the given literal.
+    ///
+    /// This will perform path compression on the internal union-find data structure used to keep
+    /// track of equivalent literals. To look up a canonical representative with a read-only
+    /// environment reference (and thus without performing path-compression) [`VarDefs::lit_repr`]
+    /// can be used via [`var_defs`][`Self::var_defs`].
+    pub fn lit_repr(&mut self, lit: Lit) -> Lit {
+        self.var_defs.update_lit_repr(lit)
+    }
 }
 
 mod node_builders;
