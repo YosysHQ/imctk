@@ -10,9 +10,13 @@ members = [
     "util",
     "ir",
     "abc-sys",
+    "abc",
 
     # comment to force multi-line layout
 ]
+
+[profile.release.package.imctk-abc-sys]
+debug = false # TODO check how the cc crate turns this into compiler flags
 
 [profile.release]
 debug = true

@@ -238,6 +238,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "imctk-abc"
+version = "0.1.0"
+dependencies = [
+ "imctk-abc-sys",
+ "imctk-ids",
+ "imctk-ir",
+ "imctk-util",
+]
+
+[[package]]
 name = "imctk-abc-sys"
 version = "0.1.0"
 dependencies = [

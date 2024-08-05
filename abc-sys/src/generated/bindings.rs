@@ -12662,6 +12662,134 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
+    pub fn imctk_abc_glucose2_init() -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    pub fn imctk_abc_glucose2_release(s: *mut ::std::os::raw::c_void);
+}
+extern "C" {
+    pub fn imctk_abc_glucose2_reset(s: *mut ::std::os::raw::c_void);
+}
+extern "C" {
+    pub fn imctk_abc_glucose2_set_incremental_mode(s: *mut ::std::os::raw::c_void);
+}
+extern "C" {
+    pub fn imctk_abc_glucose2_new_var(s: *mut ::std::os::raw::c_void) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn imctk_abc_glucose2_nvars(s: *mut ::std::os::raw::c_void) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn imctk_abc_glucose2_add_clause(
+        s: *mut ::std::os::raw::c_void,
+        lits: *const ::std::os::raw::c_int,
+        nlits: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn imctk_abc_glucose2_solve_limited(
+        s: *mut ::std::os::raw::c_void,
+        lits: *const ::std::os::raw::c_int,
+        nlits: ::std::os::raw::c_int,
+        do_simp: ::std::os::raw::c_int,
+        turn_off_simp: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn imctk_abc_glucose2_get_cex(s: *mut ::std::os::raw::c_void)
+        -> *mut ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn imctk_abc_glucose2_value(
+        s: *mut ::std::os::raw::c_void,
+        var: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn imctk_abc_glucose2_markapprox(
+        s: *mut ::std::os::raw::c_void,
+        v0: ::std::os::raw::c_int,
+        v1: ::std::os::raw::c_int,
+        nlim: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn imctk_abc_glucose2_jftr(s: *mut ::std::os::raw::c_void) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn imctk_abc_glucose2_set_jftr(s: *mut ::std::os::raw::c_void, jftr: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn imctk_abc_glucose2_set_var_fanin_lit(
+        s: *mut ::std::os::raw::c_void,
+        var: ::std::os::raw::c_int,
+        lit0: ::std::os::raw::c_int,
+        lit1: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn imctk_abc_glucose2_start_new_round(s: *mut ::std::os::raw::c_void);
+}
+extern "C" {
+    pub fn imctk_abc_glucose2_mark_cone(s: *mut ::std::os::raw::c_void, var: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn imctk_abc_glucose2_prelocate(
+        s: *mut ::std::os::raw::c_void,
+        var_num: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn imctk_abc_glucose2_set_conf_budget(s: *mut ::std::os::raw::c_void, budget: i64);
+}
+extern "C" {
+    pub fn imctk_abc_glucose2_budget_off(s: *mut ::std::os::raw::c_void);
+}
+extern "C" {
+    pub fn imctk_abc_glucose2_start_proof_trace(
+        s: *mut ::std::os::raw::c_void,
+        data: *mut ::std::os::raw::c_void,
+        learnt_clause: ::std::option::Option<
+            unsafe extern "C" fn(
+                data: *mut ::std::os::raw::c_void,
+                lits: *const ::std::os::raw::c_int,
+                nlits: ::std::os::raw::c_int,
+                tags: *const u32,
+                ntags: ::std::os::raw::c_int,
+                units: *const ::std::os::raw::c_int,
+                nunits: ::std::os::raw::c_int,
+            ) -> u32,
+        >,
+        learnt_unit: ::std::option::Option<
+            unsafe extern "C" fn(
+                data: *mut ::std::os::raw::c_void,
+                lit: ::std::os::raw::c_int,
+                tag: u32,
+                units: *const ::std::os::raw::c_int,
+                nunits: ::std::os::raw::c_int,
+            ),
+        >,
+        conflict: ::std::option::Option<
+            unsafe extern "C" fn(
+                data: *mut ::std::os::raw::c_void,
+                tags: *const u32,
+                ntags: ::std::os::raw::c_int,
+                units: *const ::std::os::raw::c_int,
+                nunits: ::std::os::raw::c_int,
+            ),
+        >,
+    );
+}
+extern "C" {
+    pub fn imctk_abc_glucose2_stop_proof_trace(s: *mut ::std::os::raw::c_void);
+}
+extern "C" {
+    pub fn imctk_abc_glucose2_proof_trace_set_default_tag(s: *mut ::std::os::raw::c_void, tag: u32);
+}
+extern "C" {
+    pub fn imctk_abc_glucose2_proof_trace_default_tag(s: *mut ::std::os::raw::c_void) -> u32;
+}
+extern "C" {
     pub fn Cec4_ManSetParams(pPars: *mut Cec_ParFra_t);
 }
 extern "C" {

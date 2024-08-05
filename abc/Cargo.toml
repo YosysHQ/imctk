@@ -1,0 +1,10 @@
+[package]
+name = "imctk-abc"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+imctk-abc-sys = { version = "0.1.0", path = "../abc-sys" }
+imctk-ids = { version = "0.1.0", path = "../ids" }
+imctk-ir = { version = "0.1.0", path = "../ir" }
+imctk-util = { version = "0.1.0", path = "../util" }

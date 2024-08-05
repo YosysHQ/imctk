@@ -5,15 +5,17 @@
 #include "misc/util/abc_global.h"
 #include "proof/cec/cec.h"
 
+#include "glucose2_bindings.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 void Cec4_ManSetParams(Cec_ParFra_t *pPars);
-Gia_Man_t *Cec5_ManSimulateTest(Gia_Man_t *p, Cec_ParFra_t *pPars,
-                                       int fCbs, int approxLim, int subBatchSz,
+Gia_Man_t *Cec5_ManSimulateTest(Gia_Man_t *p, Cec_ParFra_t *pPars, int fCbs,
+                                int approxLim, int subBatchSz,
 
-                                       int adaRecycle);
+                                int adaRecycle);
 
 #ifdef __cplusplus
 }

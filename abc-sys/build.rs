@@ -29,6 +29,7 @@ static SRC_FILES: &[&str] = &[
     "abc/src/sat/glucose2/SimpSolver2.cpp",
     "abc/src/sat/glucose2/System2.cpp",
     "src/bindings.cpp",
+    "src/glucose2_bindings.cpp",
 ];
 
 fn main() {

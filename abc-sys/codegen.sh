@@ -20,6 +20,7 @@ fi
 mkdir -p src/generated
 bindgen \
     --allowlist-file src/bindings.h \
+    --allowlist-file src/glucose2_bindings.h \
     $(find abc/src -name "*.h" | awk '{print "--allowlist-file", $1}') \
     --blocklist-item vnsprintf \
     --no-doc-comments \
