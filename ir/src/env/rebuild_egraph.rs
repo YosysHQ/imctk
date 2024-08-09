@@ -9,7 +9,6 @@ impl Env {
 
     pub fn rebuild_egraph(&mut self) {
         let mut node_ids = vec![];
-        let mut pending = vec![];
 
         let mut renamed_vars = 0;
         let mut rewritten_nodes = 0;
@@ -21,9 +20,11 @@ impl Env {
         let mut node_buf = take(&mut self.node_buf);
         let mut node_buf_var_map = take(&mut self.node_buf_var_map);
 
-        while !self.index.pending_equivs.is_empty() || !self.index.reduction_queue.is_empty() {
+        while self.index.pending_equivs < self.index.equiv_trail.len()
+            || !self.index.reduction_queue.is_empty()
+        {
             loop {
-                swap(&mut pending, &mut self.index.pending_equivs);
+                let pending = &self.index.equiv_trail[self.index.pending_equivs..];
                 if pending.is_empty() {
                     break;
                 }
@@ -36,7 +37,7 @@ impl Env {
 
                 node_ids.clear();
 
-                for var in pending.drain(..) {
+                for &var in pending {
                     log::trace!(
                         "egraph rebuild var {var} -> {:?}",
                         self.var_defs.var_def(var)
@@ -45,6 +46,7 @@ impl Env {
                     node_ids.extend(self.index.uses_index.find_uses_unordered(var));
                     node_ids.extend(self.var_defs.var_defs[var].def_node());
                 }
+                self.index.pending_equivs = self.index.equiv_trail.len();
 
                 node_ids.sort_unstable();
                 node_ids.dedup();

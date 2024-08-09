@@ -254,7 +254,8 @@ struct EnvIndex {
     structural_hash_index: StructuralHashIndex,
     defs_index: DefsIndex,
     uses_index: UsesIndex,
-    pending_equivs: Vec<Var>,
+    equiv_trail: Vec<Var>,
+    pending_equivs: usize,
     reduction_queue: Vec<NodeId>,
     pending_nodes: Vec<NodeId>,
 }
@@ -337,7 +338,7 @@ impl EnvIndex {
         self.defs_index.add_equiv((), repr, equiv);
         self.uses_index.add_equiv((), repr, equiv);
 
-        self.pending_equivs.push(equiv);
+        self.equiv_trail.push(equiv);
     }
 
     #[inline(always)]
@@ -420,6 +421,14 @@ mod updates {
 
         pub fn stop_tracking_updates(&mut self) -> Option<EnvUpdates> {
             self.updates.take()
+        }
+
+        pub fn equiv_vars(&self) -> &[Var] {
+            &self.index.equiv_trail
+        }
+
+        pub fn substituted_equiv_vars(&self) -> &[Var] {
+            &self.index.equiv_trail[..self.index.pending_equivs]
         }
     }
 }
