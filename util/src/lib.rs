@@ -8,7 +8,6 @@ pub mod give_take;
 
 pub mod fmt;
 pub mod hash;
-pub mod partition_refinement;
 pub mod topo_sorted_sccs;
 pub mod unordered_pair;
 pub mod vec_sink;
