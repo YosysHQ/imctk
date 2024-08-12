@@ -9,11 +9,13 @@ hashbrown = { version = "0.14.5", default-features = false, features = [
     "inline-more",
 ] }
 imctk = { version = "0.1.0", path = "../imctk" }
+imctk-abc = { version = "0.1.0", path = "../abc" }
 imctk-ids = { version = "0.1.0", path = "../ids" }
 imctk-ir = { version = "0.1.0", path = "../ir" }
 imctk-logger = { version = "0.1.0", path = "../logger" }
 imctk-util = { version = "0.1.0", path = "../util" }
 log = "0.4.22"
+quanta = "0.12.3"
 rand = { version = "0.8.5", features = ["small_rng"] }
 wide = "0.7.26"
 zwohash = "0.1.2"
