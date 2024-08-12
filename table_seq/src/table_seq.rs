@@ -170,6 +170,13 @@ impl<T> TableSeq<T> {
         self.subtables = subtables;
     }
 
+    /// Appends empty subtables up to and including the given subtable index.
+    pub fn grow_for_subtable(&mut self, subtable: usize) {
+        if self.subtables <= subtable {
+            self.resize(subtable + 1);
+        }
+    }
+
     /// Returns the number of contained subtables.
     ///
     /// This does count empty subtables.
