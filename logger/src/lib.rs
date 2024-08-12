@@ -147,6 +147,9 @@ const TARGET_STYLE: anstyle::Style =
 pub fn setup() {
     let start_time = std::time::Instant::now();
     let peak = AtomicUsize::new(RssStats::now().max.0);
+
+    let last_target = std::sync::Mutex::new(String::new());
+
     env_logger::Builder::from_env(
         env_logger::Env::new()
             .filter_or("IMCTK_LOG", "info")
@@ -159,13 +162,36 @@ pub fn setup() {
         let timestamp = start_time.elapsed();
         let level = record.level();
         let target = record.target();
+
         let RssStats { current, max } = RssStats::now();
 
         let new_peak = peak.fetch_max(max.0, std::sync::atomic::Ordering::Relaxed) < max.0;
 
+        let mut last_target = last_target.lock().unwrap();
+
+        if target != *last_target {
+            last_target.clear();
+            last_target.push_str(target);
+
+            writeln!(
+                buf,
+                "{} {} {} {}",
+                format_args!("{style}{timestamp:>9.2?}{style:#}", style = TIMESTAMP_STYLE),
+                format_args!("{style}{current}{style:#}", style = MEMORY_STYLE),
+                format_args!(
+                    "{style}{max}{style:#}",
+                    style = if new_peak {
+                        MEMORY_NEW_PEAK_STYLE
+                    } else {
+                        MEMORY_PEAK_STYLE
+                    }
+                ),
+                format_args!("{style}{target}{style:#}", style = TARGET_STYLE)
+            )?;
+        }
         writeln!(
             buf,
-            "{} {} {} {} {} {}",
+            "{} {} {} {} {}",
             format_args!("{style}{timestamp:>9.2?}{style:#}", style = TIMESTAMP_STYLE),
             format_args!("{style}{current}{style:#}", style = MEMORY_STYLE),
             format_args!(
@@ -180,7 +206,6 @@ pub fn setup() {
                 "{style}{level}{style:#}",
                 style = buf.default_level_style(level),
             ),
-            format_args!("{style}{target}{style:#}", style = TARGET_STYLE),
             record.args(),
         )
     })
