@@ -12,6 +12,7 @@ members = [
     "abc-sys",
     "abc",
     "eqy-engine",
+    "inc_refine",
 
     # comment to force multi-line layout
 ]
