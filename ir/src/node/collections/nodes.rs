@@ -334,11 +334,13 @@ impl<T: Node> KnownNodeChunk<T> {
         unsafe { std::mem::transmute(self) }
     }
 
+    #[allow(dead_code)] // TODO remove when this is used
     pub fn as_dynamic(&self) -> &DynNodeChunk {
         // SAFETY: Every KnownNodeChunk<T> is a valid DynNodeChunk
         unsafe { std::mem::transmute(self) }
     }
 
+    #[allow(dead_code)] // TODO remove when this is used
     pub fn as_dynamic_mut(&mut self) -> &mut DynNodeChunk {
         // SAFETY: Every KnownNodeChunk<T> is a valid DynNodeChunk
         unsafe { std::mem::transmute(self) }
@@ -346,6 +348,7 @@ impl<T: Node> KnownNodeChunk<T> {
 }
 
 impl DynNodeChunk {
+    #[allow(dead_code)] // TODO remove when this is used
     pub fn into_known<T: Node>(self) -> Result<KnownNodeChunk<T>, Self> {
         if self.vtable.has_type::<T>() {
             // SAFETY: Every DynNodeChunk with the correct vtable is a valid KnownNodeChunk<T>
@@ -355,6 +358,7 @@ impl DynNodeChunk {
         }
     }
 
+    #[allow(dead_code)] // TODO remove when this is used
     pub fn as_known<T: Node>(&self) -> Option<&KnownNodeChunk<T>> {
         if self.vtable.has_type::<T>() {
             // SAFETY: Every DynNodeChunk with the correct vtable is a valid KnownNodeChunk<T>
@@ -373,6 +377,7 @@ impl DynNodeChunk {
         }
     }
 
+    #[allow(dead_code)] // TODO remove when this is used
     /// # Safety
     /// The caller has to ensure that the node type `T` matches the dynamic node type of this chunk.
     pub unsafe fn into_known_unchecked<T: Node>(self) -> KnownNodeChunk<T> {
@@ -382,6 +387,7 @@ impl DynNodeChunk {
         unsafe { std::mem::transmute(self) }
     }
 
+    #[allow(dead_code)] // TODO remove when this is used
     /// # Safety
     /// The caller has to ensure that the node type `T` matches the dynamic node type of this chunk.
     pub unsafe fn as_known_unchecked<T: Node>(&self) -> &KnownNodeChunk<T> {

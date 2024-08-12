@@ -289,6 +289,7 @@ impl EnvIndex {
         self.pending_nodes.push(node_id);
     }
 
+    #[allow(dead_code)] // TODO remove when this is used
     pub fn remove_node<T: Node>(
         &mut self,
         nodes: &Nodes,

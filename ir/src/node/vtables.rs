@@ -371,16 +371,19 @@ pub(super) trait GenericTermType {
     unsafe fn cast_mut_ptr(&self, ptr: *mut u8) -> *mut Self::RefTarget;
 }
 
+#[allow(dead_code)] // TODO remove when this is used
 /// The [`GenericNodeType`] implementation for a statically known node type.
 #[repr(transparent)]
 pub(crate) struct KnownTermType<T>(TermType, PhantomData<T>);
 
+#[allow(dead_code)] // TODO remove when this is used
 impl<T: Term> KnownTermType<T> {
     pub const fn new() -> Self {
         KnownTermType(TermType::of::<T>(), PhantomData)
     }
 }
 
+#[allow(dead_code)] // TODO remove when this is used
 impl<T> Deref for KnownTermType<T> {
     type Target = TermTypeVTable;
 
@@ -443,6 +446,7 @@ impl GenericTermType for DynTermType {
     }
 }
 
+#[allow(dead_code)] // TODO remove when this is used
 impl<T: Term> GenericTermType for KnownTermType<T> {
     type RefTarget = T;
     type GenericTermNodeType = KnownNodeType<TermNode<T>>;
