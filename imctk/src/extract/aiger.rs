@@ -4,24 +4,32 @@ use flussab_aiger::aig::{OrderedAig, OrderedAndGate, OrderedLatch};
 use imctk_ids::{id_vec::IdVec, Id};
 use imctk_ir::{
     env::Env,
-    node::fine::circuit::{AndNode, InitNode, InputNode, RegNode, SteadyInputNode},
+    node::fine::circuit::{AndNode, InitNode, InputNode, RegNode, SteadyInputNode, XorNode},
     var::{Lit, Var},
 };
 use imctk_util::vec_sink::VecSink;
 use zwohash::HashMap;
 
-/// Extracts a sequential AIG for the given sequence of output literals.
+/// An extracted AIG together with extraction metadata.
+pub struct ExtractedAig {
+    /// The extracted AIG
+    pub aig: flussab_aiger::aig::OrderedAig<Lit>,
+    /// Maps environment variables to equivalent AIG literals
+    pub aig_from_env: IdVec<Var, Option<Lit>>,
+    /// Maps enviornment variables to environment literals that are equivalent in the initial time
+    /// step and are used to represent the initial value in the extracted AIG
+    pub init_repr_for_steady: HashMap<Var, Lit>,
+}
+
+/// Extracts an AIGER compatible sequential AIG for the given sequence of output literals.
+///
+/// This will tranparently expand imctk Xor terms into an equivalent network of 3 AIG And gates.
 pub fn extract_aiger(
     env: &Env,
     outputs: impl IntoIterator<Item = Lit>,
     mut expand: impl FnMut(Var) -> bool,
-) -> (
-    flussab_aiger::aig::OrderedAig<Lit>,
-    IdVec<Var, Option<Lit>>,
-    HashMap<Var, Lit>,
-) {
+) -> ExtractedAig {
     // TODO keep expand and/or have alternative for compacting inputs?
-    // TODO custom return type
 
     let mut outputs = Vec::from_iter(outputs.into_iter().map(|lit| env.var_defs().lit_repr(lit)));
 
@@ -396,6 +404,25 @@ pub fn extract_aiger(
             and_gates.push(OrderedAndGate { inputs });
 
             aig_from_env[var] = Some(aiger_and_output ^ and.output.pol());
+        } else if let Some(xor) = node.dyn_cast::<XorNode>() {
+            let [a, b] = xor
+                .term
+                .inputs
+                .into_values()
+                .map(|var| aig_from_env[var].unwrap());
+
+            let aiger_xor_both = Var::from_index(and_offset + and_gates.len()).as_lit();
+            and_gates.push(OrderedAndGate { inputs: [a, b] });
+
+            let aiger_xor_neither = Var::from_index(and_offset + and_gates.len()).as_lit();
+            and_gates.push(OrderedAndGate { inputs: [!a, !b] });
+
+            let aiger_xor_output = Var::from_index(and_offset + and_gates.len()).as_lit();
+            and_gates.push(OrderedAndGate {
+                inputs: [!aiger_xor_both, !aiger_xor_neither],
+            });
+
+            aig_from_env[var] = Some(aiger_xor_output ^ xor.output.pol());
         } else if let Some(init) = node.dyn_cast::<InitNode>() {
             let aig_init = init
                 .term
@@ -445,7 +472,21 @@ pub fn extract_aiger(
         ..Default::default()
     };
 
-    (aig, aig_from_env, init_repr_for_steady)
+    ExtractedAig {
+        aig,
+        aig_from_env,
+        init_repr_for_steady,
+    }
+}
+
+/// An extracted combinational-only AIG together with extraction metadata.
+pub struct ExtractedCombAig {
+    /// The extracted AIG
+    pub aig: OrderedAig<Lit>,
+    /// Maps environment variables to equivalent AIG literals
+    pub aig_from_env: IdVec<Var, Option<Lit>>,
+    /// Maps AIG variables to equivalent environment literals
+    pub env_from_aig: IdVec<Var, Lit>,
 }
 
 /// Extracts a combinational AIG containing only the given topologically ordered variables.
@@ -454,7 +495,7 @@ pub fn extract_comb_aiger(
     env: &Env,
     vars: impl IntoIterator<Item = Var>,
     mut force_input: impl FnMut(Var) -> bool,
-) -> (OrderedAig<Lit>, IdVec<Var, Option<Lit>>, IdVec<Var, Lit>) {
+) -> ExtractedCombAig {
     let mut aig_from_env: IdVec<Var, Option<Lit>> = Default::default();
     let mut env_from_aig: IdVec<Var, Lit> = Default::default();
     aig_from_env.resize(env.var_defs().len(), None);
@@ -522,5 +563,9 @@ pub fn extract_comb_aiger(
         ..Default::default()
     };
 
-    (aig, aig_from_env, env_from_aig)
+    ExtractedCombAig {
+        aig,
+        aig_from_env,
+        env_from_aig,
+    }
 }
