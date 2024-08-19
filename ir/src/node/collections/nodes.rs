@@ -32,6 +32,7 @@ struct RawNodeChunk<V: GenericNodeType> {
     len: u16,
     next: u16,
     type_index: u16,
+    on_spare_capacity_list: bool,
 }
 
 impl<V: GenericNodeType> fmt::Debug for RawNodeChunk<V> {
@@ -60,6 +61,7 @@ impl<V: GenericNodeType> RawNodeChunk<V> {
             len: 0,
             next: 0,
             type_index,
+            on_spare_capacity_list: false,
         }
     }
     fn new_with_capacity(vtable: V, type_index: u16, capacity: usize) -> Self {
@@ -208,6 +210,7 @@ impl<V: GenericNodeType> RawNodeChunk<V> {
         unsafe { *self.bitmap().get_unchecked(index / 8) & (1 << (index % 8)) != 0 }
     }
 
+    #[must_use]
     fn take_present(&mut self, index: usize) -> bool {
         if index >= self.capacity() {
             return false;
@@ -227,6 +230,8 @@ impl<V: GenericNodeType> RawNodeChunk<V> {
 
         let new_cap = (self.capacity() * 2).clamp(1, 1 << 15);
         assert!(new_cap > self.capacity());
+
+        debug_assert!((0..self.capacity()).all(|i| self.is_present(i)));
 
         self.resize_buf(new_cap);
 
@@ -274,11 +279,41 @@ impl<V: GenericNodeType> RawNodeChunk<V> {
 
         true
     }
+
+    pub fn reuse_slot(&mut self, index: usize) {
+        assert!(index < self.capacity());
+        debug_assert!(!self.is_present(index));
+
+        // SAFETY: we already rejected out-of-bounds indices
+        let ptr = unsafe { self.slot_ptr(index) };
+
+        // SAFETY: the next field of the union slot is a u16
+        unsafe { (ptr as *mut u16).write(self.next) };
+
+        self.next = index as u16;
+
+        self.len -= 1;
+    }
+
+    pub fn check_spare_capacity(&mut self, chunk_index: usize, type_data: &mut NodeTypeChunks) {
+        if self.on_spare_capacity_list {
+            return;
+        }
+        if self.len as usize > CHUNK_SIZE * 3 / 4 {
+            return;
+        }
+        self.on_spare_capacity_list = true;
+        type_data
+            .chunks_with_spare_capacity
+            .push(chunk_index as u32);
+    }
 }
 
 impl<T: Node> KnownNodeChunk<T> {
     pub fn insert(&mut self, item: T) -> (usize, &mut T) {
         let index = self.next as usize;
+
+        debug_assert!(!self.is_present(index));
 
         if self.next == self.cap {
             self.grow(); // Ensures that `self.next` becomes a valid index of a free slot or panics
@@ -291,6 +326,8 @@ impl<T: Node> KnownNodeChunk<T> {
         // SAFETY: this reads the `_next` field of the slot union
         self.next = unsafe { (ptr as *mut u16).read() };
         self.len += 1;
+
+        debug_assert!(self.len as usize <= CHUNK_SIZE);
 
         let ptr = ptr as *mut T;
         // SAFETY: this writes the `_entry` field of the slot union
@@ -426,6 +463,7 @@ struct NodeTypeChunks {
     active_chunk: u32,
     len: usize,
     chunks: IndexSet<u32, BuildHasherDefault<ZwoHasher>>,
+    chunks_with_spare_capacity: Vec<u32>,
 }
 
 const CHUNK_SIZE: usize = 1 << 12;
@@ -506,6 +544,7 @@ impl Nodes {
                     node_type: NodeType::of::<T>(),
                     active_chunk: new_chunk as u32,
                     chunks: [new_chunk as u32].into_iter().collect(),
+                    chunks_with_spare_capacity: Default::default(),
                     len: 0,
                 });
 
@@ -545,17 +584,27 @@ impl Nodes {
         // SAFETY: the `active_chunk` index of the entries in `self.types` will always be in-bounds
         let mut chunk = unsafe { self.chunks.get_unchecked_mut(chunk_index) };
 
-        if chunk.len() == CHUNK_SIZE {
-            chunk_index = self.chunks.len();
+        while chunk.len() == CHUNK_SIZE {
+            if let Some(spare_chunk_index) = type_data.chunks_with_spare_capacity.pop() {
+                type_data.active_chunk = spare_chunk_index;
+                chunk_index = spare_chunk_index as usize;
+                // SAFETY: chunks with spare capacity only contains previously allocated chunks of
+                // the corresponding node type
+                chunk = unsafe { self.chunks.get_unchecked_mut(chunk_index) };
+                chunk.on_spare_capacity_list = false;
+            } else {
+                chunk_index = self.chunks.len();
 
-            self.chunks.push(
-                <KnownNodeChunk<T>>::new_known_with_capacity(type_index, CHUNK_SIZE).into_dynamic(),
-            );
-            type_data.active_chunk = chunk_index as u32;
-            type_data.chunks.insert(chunk_index as u32);
+                self.chunks.push(
+                    <KnownNodeChunk<T>>::new_known_with_capacity(type_index, CHUNK_SIZE)
+                        .into_dynamic(),
+                );
+                type_data.active_chunk = chunk_index as u32;
+                type_data.chunks.insert(chunk_index as u32);
 
-            // SAFETY: we just pushed an item to that index
-            chunk = unsafe { self.chunks.get_unchecked_mut(chunk_index) };
+                // SAFETY: we just pushed an item to that index
+                chunk = unsafe { self.chunks.get_unchecked_mut(chunk_index) };
+            }
         }
 
         // SAFETY: we obtained the chunk either via the `NodeTypeChunks` obtained from
@@ -630,9 +679,10 @@ impl Nodes {
                     Some(node) => {
                         self.len -= 1;
                         // SAFETY: the type_index value of a chunk is always in bounds
-                        unsafe {
-                            self.types.get_unchecked_mut(chunk.type_index as usize).len -= 1;
-                        }
+                        let type_data =
+                            unsafe { self.types.get_unchecked_mut(chunk.type_index as usize) };
+                        type_data.len -= 1;
+                        chunk.check_spare_capacity(chunk_index, type_data);
                         Ok(node)
                     }
                     None => Err(NodeError::NotPresent),
@@ -667,20 +717,23 @@ impl Nodes {
         let slot_mut = chunk.get_mut(chunk_slot)?;
         let slot_ptr = slot_mut as *mut DynNode;
 
-        chunk.take_present(chunk_slot);
+        if !chunk.take_present(chunk_slot) {
+            return None;
+        }
 
         // SAFETY: even though the slot is already marked as free by take_present, we maintain
-        // ownership of the storage until we return (after that point re-use of the slot would be
-        // possible). Since we pass the resulting `Take` reference to a HRTB closure, the `Take`
-        // reference cannot escape and we know that no one is still using the storage when we
-        // return.
+        // ownership of the storage until the passed closure returns (after that point re-use of the
+        // slot would be possible). Since we pass the resulting `Take` reference to a HRTB closure,
+        // the `Take` reference cannot escape and we know that no one is still using the storage
+        // when it returns.
         let result = f(unsafe { Take::from_raw_ptr(slot_ptr) });
 
-        self.len -= 1;
+        chunk.reuse_slot(chunk_slot);
+
         // SAFETY: the type_index value of a chunk is always in bounds
-        unsafe {
-            self.types.get_unchecked_mut(chunk.type_index as usize).len -= 1;
-        }
+        let type_data = unsafe { self.types.get_unchecked_mut(chunk.type_index as usize) };
+        type_data.len -= 1;
+        chunk.check_spare_capacity(chunk_index, type_data);
 
         Some(result)
     }
@@ -700,9 +753,12 @@ impl Nodes {
         let dropped = chunk.drop(chunk_slot);
         self.len -= dropped as usize;
         // SAFETY: the type_index value of a chunk is always in bounds
-        unsafe {
-            self.types.get_unchecked_mut(chunk.type_index as usize).len -= dropped as usize;
+        let type_data = unsafe { self.types.get_unchecked_mut(chunk.type_index as usize) };
+        type_data.len -= dropped as usize;
+        if dropped {
+            chunk.check_spare_capacity(chunk_index, type_data);
         }
+
         dropped
     }
 
