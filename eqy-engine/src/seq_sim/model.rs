@@ -1,5 +1,5 @@
 use imctk::extract::extract_topo_sorted_primary_defs;
-use imctk_ids::{id_index_set::IdIndexSet, id_vec::IdVec};
+use imctk_ids::{id_vec::IdVec, indexed_id_vec::IndexedIdVec};
 use imctk_ir::{
     env::Env,
     node::fine::circuit::{AndNode, InitNode, RegNode, XorNode},
@@ -85,7 +85,7 @@ pub fn extract_sim_model(env: &Env, targets: impl IntoIterator<Item = Var>) -> S
     let mut regs: Vec<Var> = vec![];
     let mut inputs: Vec<Var> = vec![];
     let mut steady_inputs: Vec<Var> = vec![];
-    let mut read_state: IdIndexSet<Var, Var> = Default::default();
+    let mut read_state: IndexedIdVec<Var, Var> = Default::default();
     // Vec<(Var, Lit)> = vec![];
 
     env_from_step.push(Lit::FALSE);

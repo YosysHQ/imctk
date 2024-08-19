@@ -13,9 +13,9 @@
 use core::hash::Hash;
 
 mod id;
-pub mod id_index_set;
 mod id_range;
 pub mod id_vec;
+pub mod indexed_id_vec;
 
 /// Derives an [`Id`] instance for a newtype wrapper around an existing [`Id`] type.
 ///
