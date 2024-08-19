@@ -1,9 +1,17 @@
-use std::{ffi::c_int, marker::PhantomData, mem::ManuallyDrop, os::raw::c_void};
+use std::{cell::RefCell, ffi::c_int, marker::PhantomData, mem::ManuallyDrop, os::raw::c_void};
 
 use imctk_abc_sys as abc;
 use imctk_ir::var::{Lit, Var};
 use imctk_util::unordered_pair::UnorderedPair;
 use sealed::{CircuitMode, SolverMode};
+
+unsafe fn from_raw_parts_nullptr<'a, T>(ptr: *const T, len: usize) -> &'a [T] {
+    if len == 0 {
+        &[]
+    } else {
+        std::slice::from_raw_parts(ptr, len)
+    }
+}
 
 pub struct CnfOnly;
 pub struct CircuitJust;
@@ -61,7 +69,7 @@ impl<Mode: SolverMode> Default for Solver<'static, Mode> {
                 state: State::Setup,
                 _phantom: PhantomData,
             };
-            new.add_clause(&[Lit::TRUE]);
+            new.add_tagged_clause(&[Lit::TRUE], 1 << 31);
             new
         }
     }
@@ -76,6 +84,16 @@ impl<Mode: SolverMode> Drop for Solver<'_, Mode> {
 }
 
 impl<Mode: SolverMode> Solver<'_, Mode> {
+    pub fn reset(&mut self) {
+        self.state = State::Setup;
+        unsafe {
+            abc::imctk_abc_glucose2_reset(self.ptr);
+            abc::imctk_abc_glucose2_set_incremental_mode(self.ptr);
+            abc::imctk_abc_glucose2_set_jftr(self.ptr, Mode::JFTR);
+        }
+        self.add_tagged_clause(&[Lit::TRUE], 1 << 31);
+    }
+
     fn ensure_var(&mut self, var: Var) {
         self.state = State::Setup;
         assert!(var.index() < (c_int::MAX / 2) as usize);
@@ -105,6 +123,18 @@ impl<Mode: SolverMode> Solver<'_, Mode> {
                 lits.as_ptr().cast(),
                 lits.len().try_into().unwrap(),
             );
+        }
+    }
+
+    pub fn add_tagged_clause(&mut self, lits: &[Lit], tag: u32) {
+        self.state = State::Setup;
+        let saved_tag = unsafe { abc::imctk_abc_glucose2_proof_trace_default_tag(self.ptr) };
+        unsafe {
+            abc::imctk_abc_glucose2_proof_trace_set_default_tag(self.ptr, tag);
+        }
+        self.add_clause(lits);
+        unsafe {
+            abc::imctk_abc_glucose2_proof_trace_set_default_tag(self.ptr, saved_tag);
         }
     }
 
@@ -142,6 +172,10 @@ impl<Mode: SolverMode> Solver<'_, Mode> {
                 );
             }
         }
+    }
+
+    pub fn produce_inner_model(&mut self, produce_inner: bool) {
+        unsafe { abc::imctk_abc_glucose2_produce_inner_model(self.ptr, produce_inner as i32) };
     }
 
     pub fn add_xor(&mut self, output: Var, inputs: UnorderedPair<Lit>) {
@@ -200,6 +234,15 @@ impl<Mode: SolverMode> Solver<'_, Mode> {
         unsafe { abc::imctk_abc_glucose2_mark_cone(self.ptr, var.index() as c_int) }
     }
 
+    pub fn mark_var(&mut self, var: Var) {
+        self.state = State::Setup;
+        if Mode::JFTR == 0 || !self.valid_var(var) {
+            return;
+        }
+
+        unsafe { abc::imctk_abc_glucose2_mark_var(self.ptr, var.index() as c_int) }
+    }
+
     pub fn solve_assuming(&mut self, assumptions: &[Lit]) -> Option<bool> {
         // FIXME abc's glucose2 can crash when there are duplicate vars in the assumptions, either
         // fix that in glucose or work around it here.
@@ -230,9 +273,18 @@ impl<Mode: SolverMode> Solver<'_, Mode> {
         }
     }
 
+    pub fn failed_assumptions(&mut self) -> &[Lit] {
+        unsafe {
+            let nlits = abc::imctk_abc_glucose2_conflict_size(self.ptr);
+            let lits = abc::imctk_abc_glucose2_conflict_lits(self.ptr);
+
+            from_raw_parts_nullptr(lits.cast::<Lit>(), nlits as usize)
+        }
+    }
+
     pub fn cumulative_conflict_limit(&mut self, limit: usize) {
         self.state = State::Setup;
-        unsafe { abc::imctk_abc_glucose2_set_conf_budget(self.ptr, limit as i64) }
+        unsafe { abc::imctk_abc_glucose2_set_conf_budget(self.ptr, i64::try_from(limit).unwrap()) }
     }
 
     pub fn clear_limits(&mut self) {
@@ -251,14 +303,45 @@ impl<Mode: SolverMode> Solver<'_, Mode> {
             Some(std::slice::from_raw_parts(cex.add(1).cast::<Lit>(), len))
         }
     }
+
+    pub fn conflicts(&mut self) -> u64 {
+        unsafe { abc::imctk_abc_glucose2_conflicts(self.ptr) as u64 }
+    }
 }
 
 pub trait ProofTracer {
     fn learnt_clause(&mut self, clause_lits: &[Lit], tags: &[u32], units: &[Lit]) -> u32;
     fn learnt_unit(&mut self, unit: Lit, tag: u32, units: &[Lit]);
-    fn conflict(&mut self, tags: &[u32], units: &[Lit]);
+    fn conflict(&mut self, conflict_lits: &[Lit], tags: &[u32], units: &[Lit]);
 }
 
+impl<T: ProofTracer> ProofTracer for &'_ RefCell<T> {
+    fn learnt_clause(&mut self, clause_lits: &[Lit], tags: &[u32], units: &[Lit]) -> u32 {
+        self.borrow_mut().learnt_clause(clause_lits, tags, units)
+    }
+
+    fn learnt_unit(&mut self, unit: Lit, tag: u32, units: &[Lit]) {
+        self.borrow_mut().learnt_unit(unit, tag, units)
+    }
+
+    fn conflict(&mut self, conflict_lits: &[Lit], tags: &[u32], units: &[Lit]) {
+        self.borrow_mut().conflict(conflict_lits, tags, units)
+    }
+}
+
+impl<T: ProofTracer> ProofTracer for &'_ mut T {
+    fn learnt_clause(&mut self, clause_lits: &[Lit], tags: &[u32], units: &[Lit]) -> u32 {
+        (*self).learnt_clause(clause_lits, tags, units)
+    }
+
+    fn learnt_unit(&mut self, unit: Lit, tag: u32, units: &[Lit]) {
+        (*self).learnt_unit(unit, tag, units)
+    }
+
+    fn conflict(&mut self, conflict_lits: &[Lit], tags: &[u32], units: &[Lit]) {
+        (*self).conflict(conflict_lits, tags, units)
+    }
+}
 struct AbortOnUnwind;
 
 impl Drop for AbortOnUnwind {
@@ -268,6 +351,19 @@ impl Drop for AbortOnUnwind {
 }
 
 impl<Mode: SolverMode> Solver<'_, Mode> {
+    pub fn stop_proof_tracing(self) -> Solver<'static, Mode> {
+        unsafe { abc::imctk_abc_glucose2_stop_proof_trace(self.ptr) }
+
+        let new = Solver {
+            ptr: self.ptr,
+            state: self.state,
+            _phantom: PhantomData,
+        };
+
+        let _ = ManuallyDrop::new(self);
+
+        new
+    }
     pub fn with_proof_tracer<T: ProofTracer>(self, tracer: &mut T) -> Solver<'_, Mode> {
         unsafe extern "C" fn learnt_clause_wrapper<T: ProofTracer>(
             tracer: *mut c_void,
@@ -281,9 +377,9 @@ impl<Mode: SolverMode> Solver<'_, Mode> {
             unsafe {
                 let abort_on_unwind = AbortOnUnwind;
                 let tracer = &mut *tracer.cast::<T>();
-                let lits = std::slice::from_raw_parts(lits.cast::<Lit>(), nlits as usize);
-                let tags = std::slice::from_raw_parts(tags, ntags as usize);
-                let units = std::slice::from_raw_parts(units.cast::<Lit>(), nunits as usize);
+                let lits = from_raw_parts_nullptr(lits.cast::<Lit>(), nlits as usize);
+                let tags = from_raw_parts_nullptr(tags, ntags as usize);
+                let units = from_raw_parts_nullptr(units.cast::<Lit>(), nunits as usize);
                 let tag = tracer.learnt_clause(lits, tags, units);
                 let _ = ManuallyDrop::new(abort_on_unwind);
                 tag
@@ -300,13 +396,15 @@ impl<Mode: SolverMode> Solver<'_, Mode> {
                 let abort_on_unwind = AbortOnUnwind;
                 let tracer = &mut *tracer.cast::<T>();
                 let lit = Lit::from_code(lit as usize);
-                let units = std::slice::from_raw_parts(units.cast::<Lit>(), nunits as usize);
+                let units = from_raw_parts_nullptr(units.cast::<Lit>(), nunits as usize);
                 tracer.learnt_unit(lit, tag, units);
                 let _ = ManuallyDrop::new(abort_on_unwind);
             }
         }
         unsafe extern "C" fn conflict_wrapper<T: ProofTracer>(
             tracer: *mut c_void,
+            lits: *const c_int,
+            nlits: c_int,
             tags: *const u32,
             ntags: c_int,
             units: *const c_int,
@@ -315,9 +413,10 @@ impl<Mode: SolverMode> Solver<'_, Mode> {
             unsafe {
                 let abort_on_unwind = AbortOnUnwind;
                 let tracer = &mut *tracer.cast::<T>();
-                let tags = std::slice::from_raw_parts(tags, ntags as usize);
-                let units = std::slice::from_raw_parts(units.cast::<Lit>(), nunits as usize);
-                tracer.conflict(tags, units);
+                let lits = from_raw_parts_nullptr(lits.cast::<Lit>(), nlits as usize);
+                let tags = from_raw_parts_nullptr(tags, ntags as usize);
+                let units = from_raw_parts_nullptr(units.cast::<Lit>(), nunits as usize);
+                tracer.conflict(lits, tags, units);
                 let _ = ManuallyDrop::new(abort_on_unwind);
             }
         }
@@ -332,11 +431,15 @@ impl<Mode: SolverMode> Solver<'_, Mode> {
             );
         }
 
-        Solver {
+        let new = Solver {
             ptr: self.ptr,
             state: self.state,
             _phantom: PhantomData,
-        }
+        };
+
+        let _ = ManuallyDrop::new(self);
+
+        new
     }
 }
 

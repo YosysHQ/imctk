@@ -26,6 +26,8 @@ int imctk_abc_glucose2_solve_limited(void *s, const int *lits, int nlits,
 
 int *imctk_abc_glucose2_get_cex(void *s);
 
+void imctk_abc_glucose2_produce_inner_model(void *s, int produce_inner);
+
 int imctk_abc_glucose2_value(void *s, int var);
 
 void imctk_abc_glucose2_markapprox(void *s, int v0, int v1, int nlim);
@@ -40,7 +42,11 @@ void imctk_abc_glucose2_start_new_round(void *s);
 
 void imctk_abc_glucose2_mark_cone(void *s, int var);
 
+void imctk_abc_glucose2_mark_var(void *s, int var);
+
 void imctk_abc_glucose2_prelocate(void *s, int var_num);
+
+int64_t imctk_abc_glucose2_conflicts(void *s);
 
 void imctk_abc_glucose2_set_conf_budget(void *s, int64_t budget);
 
@@ -53,14 +59,19 @@ void imctk_abc_glucose2_start_proof_trace(
                               int nunits),
     void (*learnt_unit)(void *data, int lit, uint32_t tag, const int *units,
                         int nunits),
-    void (*conflict)(void *data, const uint32_t *tags, int ntags,
-                     const int *units, int nunits));
+    void (*conflict)(void *data, const int *lits, int nlits,
+                     const uint32_t *tags, int ntags, const int *units,
+                     int nunits));
 
 void imctk_abc_glucose2_stop_proof_trace(void *s);
 
 void imctk_abc_glucose2_proof_trace_set_default_tag(void *s, uint32_t tag);
 
 uint32_t imctk_abc_glucose2_proof_trace_default_tag(void *s);
+
+int imctk_abc_glucose2_conflict_size(void *s);
+
+const int *imctk_abc_glucose2_conflict_lits(void *s);
 
 ABC_NAMESPACE_HEADER_END
 

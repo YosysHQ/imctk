@@ -908,3 +908,503 @@ int Gia_ObjCellSize_imctk_abc_sys(Gia_Man_t *p, int iLit) { return Gia_ObjCellSi
 int * Gia_ObjCellFanins_imctk_abc_sys(Gia_Man_t *p, int iLit) { return Gia_ObjCellFanins(p, iLit); }
 int Gia_ObjCellFanin_imctk_abc_sys(Gia_Man_t *p, int iLit, int i) { return Gia_ObjCellFanin(p, iLit, i); }
 int Gia_ObjCellId_imctk_abc_sys(Gia_Man_t *p, int iLit) { return Gia_ObjCellId(p, iLit); }
+Aig_Cut_t * Aig_ObjCuts_imctk_abc_sys(Aig_ManCut_t *p, Aig_Obj_t *pObj) { return Aig_ObjCuts(p, pObj); }
+void Aig_ObjSetCuts_imctk_abc_sys(Aig_ManCut_t *p, Aig_Obj_t *pObj, Aig_Cut_t *pCuts) { Aig_ObjSetCuts(p, pObj, pCuts); }
+int Aig_CutLeaveNum_imctk_abc_sys(Aig_Cut_t *pCut) { return Aig_CutLeaveNum(pCut); }
+int * Aig_CutLeaves_imctk_abc_sys(Aig_Cut_t *pCut) { return Aig_CutLeaves(pCut); }
+unsigned int * Aig_CutTruth_imctk_abc_sys(Aig_Cut_t *pCut) { return Aig_CutTruth(pCut); }
+Aig_Cut_t * Aig_CutNext_imctk_abc_sys(Aig_Cut_t *pCut) { return Aig_CutNext(pCut); }
+unsigned int Aig_ObjCutSign_imctk_abc_sys(unsigned int ObjId) { return Aig_ObjCutSign(ObjId); }
+int Aig_WordCountOnes_imctk_abc_sys(unsigned int uWord) { return Aig_WordCountOnes(uWord); }
+int Aig_WordFindFirstBit_imctk_abc_sys(unsigned int uWord) { return Aig_WordFindFirstBit(uWord); }
+Aig_Obj_t * Aig_Regular_imctk_abc_sys(Aig_Obj_t *p) { return Aig_Regular(p); }
+Aig_Obj_t * Aig_Not_imctk_abc_sys(Aig_Obj_t *p) { return Aig_Not(p); }
+Aig_Obj_t * Aig_NotCond_imctk_abc_sys(Aig_Obj_t *p, int c) { return Aig_NotCond(p, c); }
+int Aig_IsComplement_imctk_abc_sys(Aig_Obj_t *p) { return Aig_IsComplement(p); }
+int Aig_ManCiNum_imctk_abc_sys(Aig_Man_t *p) { return Aig_ManCiNum(p); }
+int Aig_ManCoNum_imctk_abc_sys(Aig_Man_t *p) { return Aig_ManCoNum(p); }
+int Aig_ManBufNum_imctk_abc_sys(Aig_Man_t *p) { return Aig_ManBufNum(p); }
+int Aig_ManAndNum_imctk_abc_sys(Aig_Man_t *p) { return Aig_ManAndNum(p); }
+int Aig_ManExorNum_imctk_abc_sys(Aig_Man_t *p) { return Aig_ManExorNum(p); }
+int Aig_ManNodeNum_imctk_abc_sys(Aig_Man_t *p) { return Aig_ManNodeNum(p); }
+int Aig_ManGetCost_imctk_abc_sys(Aig_Man_t *p) { return Aig_ManGetCost(p); }
+int Aig_ManObjNum_imctk_abc_sys(Aig_Man_t *p) { return Aig_ManObjNum(p); }
+int Aig_ManObjNumMax_imctk_abc_sys(Aig_Man_t *p) { return Aig_ManObjNumMax(p); }
+int Aig_ManRegNum_imctk_abc_sys(Aig_Man_t *p) { return Aig_ManRegNum(p); }
+int Aig_ManConstrNum_imctk_abc_sys(Aig_Man_t *p) { return Aig_ManConstrNum(p); }
+Aig_Obj_t * Aig_ManConst0_imctk_abc_sys(Aig_Man_t *p) { return Aig_ManConst0(p); }
+Aig_Obj_t * Aig_ManConst1_imctk_abc_sys(Aig_Man_t *p) { return Aig_ManConst1(p); }
+Aig_Obj_t * Aig_ManGhost_imctk_abc_sys(Aig_Man_t *p) { return Aig_ManGhost(p); }
+Aig_Obj_t * Aig_ManCi_imctk_abc_sys(Aig_Man_t *p, int i) { return Aig_ManCi(p, i); }
+Aig_Obj_t * Aig_ManCo_imctk_abc_sys(Aig_Man_t *p, int i) { return Aig_ManCo(p, i); }
+Aig_Obj_t * Aig_ManLo_imctk_abc_sys(Aig_Man_t *p, int i) { return Aig_ManLo(p, i); }
+Aig_Obj_t * Aig_ManLi_imctk_abc_sys(Aig_Man_t *p, int i) { return Aig_ManLi(p, i); }
+Aig_Obj_t * Aig_ManObj_imctk_abc_sys(Aig_Man_t *p, int i) { return Aig_ManObj(p, i); }
+Aig_Type_t Aig_ObjType_imctk_abc_sys(Aig_Obj_t *pObj) { return Aig_ObjType(pObj); }
+int Aig_ObjIsNone_imctk_abc_sys(Aig_Obj_t *pObj) { return Aig_ObjIsNone(pObj); }
+int Aig_ObjIsConst1_imctk_abc_sys(Aig_Obj_t *pObj) { return Aig_ObjIsConst1(pObj); }
+int Aig_ObjIsCi_imctk_abc_sys(Aig_Obj_t *pObj) { return Aig_ObjIsCi(pObj); }
+int Aig_ObjIsCo_imctk_abc_sys(Aig_Obj_t *pObj) { return Aig_ObjIsCo(pObj); }
+int Aig_ObjIsBuf_imctk_abc_sys(Aig_Obj_t *pObj) { return Aig_ObjIsBuf(pObj); }
+int Aig_ObjIsAnd_imctk_abc_sys(Aig_Obj_t *pObj) { return Aig_ObjIsAnd(pObj); }
+int Aig_ObjIsExor_imctk_abc_sys(Aig_Obj_t *pObj) { return Aig_ObjIsExor(pObj); }
+int Aig_ObjIsNode_imctk_abc_sys(Aig_Obj_t *pObj) { return Aig_ObjIsNode(pObj); }
+int Aig_ObjIsTerm_imctk_abc_sys(Aig_Obj_t *pObj) { return Aig_ObjIsTerm(pObj); }
+int Aig_ObjIsHash_imctk_abc_sys(Aig_Obj_t *pObj) { return Aig_ObjIsHash(pObj); }
+int Aig_ObjIsChoice_imctk_abc_sys(Aig_Man_t *p, Aig_Obj_t *pObj) { return Aig_ObjIsChoice(p, pObj); }
+int Aig_ObjIsCand_imctk_abc_sys(Aig_Obj_t *pObj) { return Aig_ObjIsCand(pObj); }
+int Aig_ObjCioId_imctk_abc_sys(Aig_Obj_t *pObj) { return Aig_ObjCioId(pObj); }
+int Aig_ObjId_imctk_abc_sys(Aig_Obj_t *pObj) { return Aig_ObjId(pObj); }
+int Aig_ObjIsMarkA_imctk_abc_sys(Aig_Obj_t *pObj) { return Aig_ObjIsMarkA(pObj); }
+void Aig_ObjSetMarkA_imctk_abc_sys(Aig_Obj_t *pObj) { Aig_ObjSetMarkA(pObj); }
+void Aig_ObjClearMarkA_imctk_abc_sys(Aig_Obj_t *pObj) { Aig_ObjClearMarkA(pObj); }
+void Aig_ObjSetTravId_imctk_abc_sys(Aig_Obj_t *pObj, int TravId) { Aig_ObjSetTravId(pObj, TravId); }
+void Aig_ObjSetTravIdCurrent_imctk_abc_sys(Aig_Man_t *p, Aig_Obj_t *pObj) { Aig_ObjSetTravIdCurrent(p, pObj); }
+void Aig_ObjSetTravIdPrevious_imctk_abc_sys(Aig_Man_t *p, Aig_Obj_t *pObj) { Aig_ObjSetTravIdPrevious(p, pObj); }
+int Aig_ObjIsTravIdCurrent_imctk_abc_sys(Aig_Man_t *p, Aig_Obj_t *pObj) { return Aig_ObjIsTravIdCurrent(p, pObj); }
+int Aig_ObjIsTravIdPrevious_imctk_abc_sys(Aig_Man_t *p, Aig_Obj_t *pObj) { return Aig_ObjIsTravIdPrevious(p, pObj); }
+int Aig_ObjPhase_imctk_abc_sys(Aig_Obj_t *pObj) { return Aig_ObjPhase(pObj); }
+int Aig_ObjPhaseReal_imctk_abc_sys(Aig_Obj_t *pObj) { return Aig_ObjPhaseReal(pObj); }
+int Aig_ObjRefs_imctk_abc_sys(Aig_Obj_t *pObj) { return Aig_ObjRefs(pObj); }
+void Aig_ObjRef_imctk_abc_sys(Aig_Obj_t *pObj) { Aig_ObjRef(pObj); }
+void Aig_ObjDeref_imctk_abc_sys(Aig_Obj_t *pObj) { Aig_ObjDeref(pObj); }
+void Aig_ObjClearRef_imctk_abc_sys(Aig_Obj_t *pObj) { Aig_ObjClearRef(pObj); }
+int Aig_ObjFaninId0_imctk_abc_sys(Aig_Obj_t *pObj) { return Aig_ObjFaninId0(pObj); }
+int Aig_ObjFaninId1_imctk_abc_sys(Aig_Obj_t *pObj) { return Aig_ObjFaninId1(pObj); }
+int Aig_ObjFaninC0_imctk_abc_sys(Aig_Obj_t *pObj) { return Aig_ObjFaninC0(pObj); }
+int Aig_ObjFaninC1_imctk_abc_sys(Aig_Obj_t *pObj) { return Aig_ObjFaninC1(pObj); }
+Aig_Obj_t * Aig_ObjFanin0_imctk_abc_sys(Aig_Obj_t *pObj) { return Aig_ObjFanin0(pObj); }
+Aig_Obj_t * Aig_ObjFanin1_imctk_abc_sys(Aig_Obj_t *pObj) { return Aig_ObjFanin1(pObj); }
+Aig_Obj_t * Aig_ObjChild0_imctk_abc_sys(Aig_Obj_t *pObj) { return Aig_ObjChild0(pObj); }
+Aig_Obj_t * Aig_ObjChild1_imctk_abc_sys(Aig_Obj_t *pObj) { return Aig_ObjChild1(pObj); }
+Aig_Obj_t * Aig_ObjChild0Copy_imctk_abc_sys(Aig_Obj_t *pObj) { return Aig_ObjChild0Copy(pObj); }
+Aig_Obj_t * Aig_ObjChild1Copy_imctk_abc_sys(Aig_Obj_t *pObj) { return Aig_ObjChild1Copy(pObj); }
+Aig_Obj_t * Aig_ObjChild0Next_imctk_abc_sys(Aig_Obj_t *pObj) { return Aig_ObjChild0Next(pObj); }
+Aig_Obj_t * Aig_ObjChild1Next_imctk_abc_sys(Aig_Obj_t *pObj) { return Aig_ObjChild1Next(pObj); }
+void Aig_ObjChild0Flip_imctk_abc_sys(Aig_Obj_t *pObj) { Aig_ObjChild0Flip(pObj); }
+void Aig_ObjChild1Flip_imctk_abc_sys(Aig_Obj_t *pObj) { Aig_ObjChild1Flip(pObj); }
+Aig_Obj_t * Aig_ObjCopy_imctk_abc_sys(Aig_Obj_t *pObj) { return Aig_ObjCopy(pObj); }
+void Aig_ObjSetCopy_imctk_abc_sys(Aig_Obj_t *pObj, Aig_Obj_t *pCopy) { Aig_ObjSetCopy(pObj, pCopy); }
+Aig_Obj_t * Aig_ObjRealCopy_imctk_abc_sys(Aig_Obj_t *pObj) { return Aig_ObjRealCopy(pObj); }
+int Aig_ObjToLit_imctk_abc_sys(Aig_Obj_t *pObj) { return Aig_ObjToLit(pObj); }
+Aig_Obj_t * Aig_ObjFromLit_imctk_abc_sys(Aig_Man_t *p, int iLit) { return Aig_ObjFromLit(p, iLit); }
+int Aig_ObjLevel_imctk_abc_sys(Aig_Obj_t *pObj) { return Aig_ObjLevel(pObj); }
+int Aig_ObjLevelNew_imctk_abc_sys(Aig_Obj_t *pObj) { return Aig_ObjLevelNew(pObj); }
+int Aig_ObjSetLevel_imctk_abc_sys(Aig_Obj_t *pObj, int i) { return Aig_ObjSetLevel(pObj, i); }
+void Aig_ObjClean_imctk_abc_sys(Aig_Obj_t *pObj) { Aig_ObjClean(pObj); }
+Aig_Obj_t * Aig_ObjFanout0_imctk_abc_sys(Aig_Man_t *p, Aig_Obj_t *pObj) { return Aig_ObjFanout0(p, pObj); }
+Aig_Obj_t * Aig_ObjEquiv_imctk_abc_sys(Aig_Man_t *p, Aig_Obj_t *pObj) { return Aig_ObjEquiv(p, pObj); }
+void Aig_ObjSetEquiv_imctk_abc_sys(Aig_Man_t *p, Aig_Obj_t *pObj, Aig_Obj_t *pEqu) { Aig_ObjSetEquiv(p, pObj, pEqu); }
+Aig_Obj_t * Aig_ObjRepr_imctk_abc_sys(Aig_Man_t *p, Aig_Obj_t *pObj) { return Aig_ObjRepr(p, pObj); }
+void Aig_ObjSetRepr_imctk_abc_sys(Aig_Man_t *p, Aig_Obj_t *pObj, Aig_Obj_t *pRepr) { Aig_ObjSetRepr(p, pObj, pRepr); }
+int Aig_ObjWhatFanin_imctk_abc_sys(Aig_Obj_t *pObj, Aig_Obj_t *pFanin) { return Aig_ObjWhatFanin(pObj, pFanin); }
+int Aig_ObjFanoutC_imctk_abc_sys(Aig_Obj_t *pObj, Aig_Obj_t *pFanout) { return Aig_ObjFanoutC(pObj, pFanout); }
+Aig_Obj_t * Aig_ObjCreateGhost_imctk_abc_sys(Aig_Man_t *p, Aig_Obj_t *p0, Aig_Obj_t *p1, Aig_Type_t Type) { return Aig_ObjCreateGhost(p, p0, p1, Type); }
+Aig_Obj_t * Aig_ManFetchMemory_imctk_abc_sys(Aig_Man_t *p) { return Aig_ManFetchMemory(p); }
+void Aig_ManRecycleMemory_imctk_abc_sys(Aig_Man_t *p, Aig_Obj_t *pEntry) { Aig_ManRecycleMemory(p, pEntry); }
+int Aig_ObjFanout0Int_imctk_abc_sys(Aig_Man_t *p, int ObjId) { return Aig_ObjFanout0Int(p, ObjId); }
+int Aig_ObjFanoutNext_imctk_abc_sys(Aig_Man_t *p, int iFan) { return Aig_ObjFanoutNext(p, iFan); }
+int Hop_BitWordNum_imctk_abc_sys(int nBits) { return Hop_BitWordNum(nBits); }
+int Hop_TruthWordNum_imctk_abc_sys(int nVars) { return Hop_TruthWordNum(nVars); }
+int Hop_InfoHasBit_imctk_abc_sys(unsigned int *p, int i) { return Hop_InfoHasBit(p, i); }
+void Hop_InfoSetBit_imctk_abc_sys(unsigned int *p, int i) { Hop_InfoSetBit(p, i); }
+void Hop_InfoXorBit_imctk_abc_sys(unsigned int *p, int i) { Hop_InfoXorBit(p, i); }
+int Hop_Base2Log_imctk_abc_sys(unsigned int n) { return Hop_Base2Log(n); }
+int Hop_Base10Log_imctk_abc_sys(unsigned int n) { return Hop_Base10Log(n); }
+Hop_Obj_t * Hop_Regular_imctk_abc_sys(Hop_Obj_t *p) { return Hop_Regular(p); }
+Hop_Obj_t * Hop_Not_imctk_abc_sys(Hop_Obj_t *p) { return Hop_Not(p); }
+Hop_Obj_t * Hop_NotCond_imctk_abc_sys(Hop_Obj_t *p, int c) { return Hop_NotCond(p, c); }
+int Hop_IsComplement_imctk_abc_sys(Hop_Obj_t *p) { return Hop_IsComplement(p); }
+Hop_Obj_t * Hop_ManConst0_imctk_abc_sys(Hop_Man_t *p) { return Hop_ManConst0(p); }
+Hop_Obj_t * Hop_ManConst1_imctk_abc_sys(Hop_Man_t *p) { return Hop_ManConst1(p); }
+Hop_Obj_t * Hop_ManGhost_imctk_abc_sys(Hop_Man_t *p) { return Hop_ManGhost(p); }
+Hop_Obj_t * Hop_ManPi_imctk_abc_sys(Hop_Man_t *p, int i) { return Hop_ManPi(p, i); }
+Hop_Obj_t * Hop_ManPo_imctk_abc_sys(Hop_Man_t *p, int i) { return Hop_ManPo(p, i); }
+Hop_Obj_t * Hop_ManObj_imctk_abc_sys(Hop_Man_t *p, int i) { return Hop_ManObj(p, i); }
+Hop_Edge_t Hop_EdgeCreate_imctk_abc_sys(int Id, int fCompl) { return Hop_EdgeCreate(Id, fCompl); }
+int Hop_EdgeId_imctk_abc_sys(Hop_Edge_t Edge) { return Hop_EdgeId(Edge); }
+int Hop_EdgeIsComplement_imctk_abc_sys(Hop_Edge_t Edge) { return Hop_EdgeIsComplement(Edge); }
+Hop_Edge_t Hop_EdgeRegular_imctk_abc_sys(Hop_Edge_t Edge) { return Hop_EdgeRegular(Edge); }
+Hop_Edge_t Hop_EdgeNot_imctk_abc_sys(Hop_Edge_t Edge) { return Hop_EdgeNot(Edge); }
+Hop_Edge_t Hop_EdgeNotCond_imctk_abc_sys(Hop_Edge_t Edge, int fCond) { return Hop_EdgeNotCond(Edge, fCond); }
+int Hop_ManPiNum_imctk_abc_sys(Hop_Man_t *p) { return Hop_ManPiNum(p); }
+int Hop_ManPoNum_imctk_abc_sys(Hop_Man_t *p) { return Hop_ManPoNum(p); }
+int Hop_ManAndNum_imctk_abc_sys(Hop_Man_t *p) { return Hop_ManAndNum(p); }
+int Hop_ManExorNum_imctk_abc_sys(Hop_Man_t *p) { return Hop_ManExorNum(p); }
+int Hop_ManNodeNum_imctk_abc_sys(Hop_Man_t *p) { return Hop_ManNodeNum(p); }
+int Hop_ManGetCost_imctk_abc_sys(Hop_Man_t *p) { return Hop_ManGetCost(p); }
+int Hop_ManObjNum_imctk_abc_sys(Hop_Man_t *p) { return Hop_ManObjNum(p); }
+Hop_Type_t Hop_ObjType_imctk_abc_sys(Hop_Obj_t *pObj) { return Hop_ObjType(pObj); }
+int Hop_ObjIsNone_imctk_abc_sys(Hop_Obj_t *pObj) { return Hop_ObjIsNone(pObj); }
+int Hop_ObjIsConst1_imctk_abc_sys(Hop_Obj_t *pObj) { return Hop_ObjIsConst1(pObj); }
+int Hop_ObjIsPi_imctk_abc_sys(Hop_Obj_t *pObj) { return Hop_ObjIsPi(pObj); }
+int Hop_ObjIsPo_imctk_abc_sys(Hop_Obj_t *pObj) { return Hop_ObjIsPo(pObj); }
+int Hop_ObjIsAnd_imctk_abc_sys(Hop_Obj_t *pObj) { return Hop_ObjIsAnd(pObj); }
+int Hop_ObjIsExor_imctk_abc_sys(Hop_Obj_t *pObj) { return Hop_ObjIsExor(pObj); }
+int Hop_ObjIsNode_imctk_abc_sys(Hop_Obj_t *pObj) { return Hop_ObjIsNode(pObj); }
+int Hop_ObjIsTerm_imctk_abc_sys(Hop_Obj_t *pObj) { return Hop_ObjIsTerm(pObj); }
+int Hop_ObjIsHash_imctk_abc_sys(Hop_Obj_t *pObj) { return Hop_ObjIsHash(pObj); }
+int Hop_ObjIsMarkA_imctk_abc_sys(Hop_Obj_t *pObj) { return Hop_ObjIsMarkA(pObj); }
+void Hop_ObjSetMarkA_imctk_abc_sys(Hop_Obj_t *pObj) { Hop_ObjSetMarkA(pObj); }
+void Hop_ObjClearMarkA_imctk_abc_sys(Hop_Obj_t *pObj) { Hop_ObjClearMarkA(pObj); }
+void Hop_ObjSetTravId_imctk_abc_sys(Hop_Obj_t *pObj, int TravId) { Hop_ObjSetTravId(pObj, TravId); }
+void Hop_ObjSetTravIdCurrent_imctk_abc_sys(Hop_Man_t *p, Hop_Obj_t *pObj) { Hop_ObjSetTravIdCurrent(p, pObj); }
+void Hop_ObjSetTravIdPrevious_imctk_abc_sys(Hop_Man_t *p, Hop_Obj_t *pObj) { Hop_ObjSetTravIdPrevious(p, pObj); }
+int Hop_ObjIsTravIdCurrent_imctk_abc_sys(Hop_Man_t *p, Hop_Obj_t *pObj) { return Hop_ObjIsTravIdCurrent(p, pObj); }
+int Hop_ObjIsTravIdPrevious_imctk_abc_sys(Hop_Man_t *p, Hop_Obj_t *pObj) { return Hop_ObjIsTravIdPrevious(p, pObj); }
+int Hop_ObjTravId_imctk_abc_sys(Hop_Obj_t *pObj) { return Hop_ObjTravId(pObj); }
+int Hop_ObjPhase_imctk_abc_sys(Hop_Obj_t *pObj) { return Hop_ObjPhase(pObj); }
+int Hop_ObjRefs_imctk_abc_sys(Hop_Obj_t *pObj) { return Hop_ObjRefs(pObj); }
+void Hop_ObjRef_imctk_abc_sys(Hop_Obj_t *pObj) { Hop_ObjRef(pObj); }
+void Hop_ObjDeref_imctk_abc_sys(Hop_Obj_t *pObj) { Hop_ObjDeref(pObj); }
+void Hop_ObjClearRef_imctk_abc_sys(Hop_Obj_t *pObj) { Hop_ObjClearRef(pObj); }
+int Hop_ObjFaninC0_imctk_abc_sys(Hop_Obj_t *pObj) { return Hop_ObjFaninC0(pObj); }
+int Hop_ObjFaninC1_imctk_abc_sys(Hop_Obj_t *pObj) { return Hop_ObjFaninC1(pObj); }
+Hop_Obj_t * Hop_ObjFanin0_imctk_abc_sys(Hop_Obj_t *pObj) { return Hop_ObjFanin0(pObj); }
+Hop_Obj_t * Hop_ObjFanin1_imctk_abc_sys(Hop_Obj_t *pObj) { return Hop_ObjFanin1(pObj); }
+Hop_Obj_t * Hop_ObjChild0_imctk_abc_sys(Hop_Obj_t *pObj) { return Hop_ObjChild0(pObj); }
+Hop_Obj_t * Hop_ObjChild1_imctk_abc_sys(Hop_Obj_t *pObj) { return Hop_ObjChild1(pObj); }
+Hop_Obj_t * Hop_ObjChild0Copy_imctk_abc_sys(Hop_Obj_t *pObj) { return Hop_ObjChild0Copy(pObj); }
+Hop_Obj_t * Hop_ObjChild1Copy_imctk_abc_sys(Hop_Obj_t *pObj) { return Hop_ObjChild1Copy(pObj); }
+int Hop_ObjChild0CopyI_imctk_abc_sys(Hop_Obj_t *pObj) { return Hop_ObjChild0CopyI(pObj); }
+int Hop_ObjChild1CopyI_imctk_abc_sys(Hop_Obj_t *pObj) { return Hop_ObjChild1CopyI(pObj); }
+int Hop_ObjLevel_imctk_abc_sys(Hop_Obj_t *pObj) { return Hop_ObjLevel(pObj); }
+int Hop_ObjLevelNew_imctk_abc_sys(Hop_Obj_t *pObj) { return Hop_ObjLevelNew(pObj); }
+int Hop_ObjPhaseCompl_imctk_abc_sys(Hop_Obj_t *pObj) { return Hop_ObjPhaseCompl(pObj); }
+void Hop_ObjClean_imctk_abc_sys(Hop_Obj_t *pObj) { Hop_ObjClean(pObj); }
+int Hop_ObjWhatFanin_imctk_abc_sys(Hop_Obj_t *pObj, Hop_Obj_t *pFanin) { return Hop_ObjWhatFanin(pObj, pFanin); }
+int Hop_ObjFanoutC_imctk_abc_sys(Hop_Obj_t *pObj, Hop_Obj_t *pFanout) { return Hop_ObjFanoutC(pObj, pFanout); }
+Hop_Obj_t * Hop_ObjCreateGhost_imctk_abc_sys(Hop_Man_t *p, Hop_Obj_t *p0, Hop_Obj_t *p1, Hop_Type_t Type) { return Hop_ObjCreateGhost(p, p0, p1, Type); }
+Hop_Obj_t * Hop_ManFetchMemory_imctk_abc_sys(Hop_Man_t *p) { return Hop_ManFetchMemory(p); }
+void Hop_ManRecycleMemory_imctk_abc_sys(Hop_Man_t *p, Hop_Obj_t *pEntry) { Hop_ManRecycleMemory(p, pEntry); }
+void Extra_ProgressBarUpdate_imctk_abc_sys(ProgressBar *p, int nItemsCur, char *pString) { Extra_ProgressBarUpdate(p, nItemsCur, pString); }
+int Extra_BitWordNum_imctk_abc_sys(int nBits) { return Extra_BitWordNum(nBits); }
+int Extra_TruthWordNum_imctk_abc_sys(int nVars) { return Extra_TruthWordNum(nVars); }
+void Extra_TruthSetBit_imctk_abc_sys(unsigned int *p, int Bit) { Extra_TruthSetBit(p, Bit); }
+void Extra_TruthXorBit_imctk_abc_sys(unsigned int *p, int Bit) { Extra_TruthXorBit(p, Bit); }
+int Extra_TruthHasBit_imctk_abc_sys(unsigned int *p, int Bit) { return Extra_TruthHasBit(p, Bit); }
+int Extra_WordCountOnes_imctk_abc_sys(unsigned int uWord) { return Extra_WordCountOnes(uWord); }
+int Extra_TruthCountOnes_imctk_abc_sys(unsigned int *pIn, int nVars) { return Extra_TruthCountOnes(pIn, nVars); }
+int Extra_TruthIsEqual_imctk_abc_sys(unsigned int *pIn0, unsigned int *pIn1, int nVars) { return Extra_TruthIsEqual(pIn0, pIn1, nVars); }
+int Extra_TruthIsConst0_imctk_abc_sys(unsigned int *pIn, int nVars) { return Extra_TruthIsConst0(pIn, nVars); }
+int Extra_TruthIsConst1_imctk_abc_sys(unsigned int *pIn, int nVars) { return Extra_TruthIsConst1(pIn, nVars); }
+int Extra_TruthIsImply_imctk_abc_sys(unsigned int *pIn1, unsigned int *pIn2, int nVars) { return Extra_TruthIsImply(pIn1, pIn2, nVars); }
+void Extra_TruthCopy_imctk_abc_sys(unsigned int *pOut, unsigned int *pIn, int nVars) { Extra_TruthCopy(pOut, pIn, nVars); }
+void Extra_TruthClear_imctk_abc_sys(unsigned int *pOut, int nVars) { Extra_TruthClear(pOut, nVars); }
+void Extra_TruthFill_imctk_abc_sys(unsigned int *pOut, int nVars) { Extra_TruthFill(pOut, nVars); }
+void Extra_TruthNot_imctk_abc_sys(unsigned int *pOut, unsigned int *pIn, int nVars) { Extra_TruthNot(pOut, pIn, nVars); }
+void Extra_TruthAnd_imctk_abc_sys(unsigned int *pOut, unsigned int *pIn0, unsigned int *pIn1, int nVars) { Extra_TruthAnd(pOut, pIn0, pIn1, nVars); }
+void Extra_TruthOr_imctk_abc_sys(unsigned int *pOut, unsigned int *pIn0, unsigned int *pIn1, int nVars) { Extra_TruthOr(pOut, pIn0, pIn1, nVars); }
+void Extra_TruthSharp_imctk_abc_sys(unsigned int *pOut, unsigned int *pIn0, unsigned int *pIn1, int nVars) { Extra_TruthSharp(pOut, pIn0, pIn1, nVars); }
+void Extra_TruthNand_imctk_abc_sys(unsigned int *pOut, unsigned int *pIn0, unsigned int *pIn1, int nVars) { Extra_TruthNand(pOut, pIn0, pIn1, nVars); }
+void Extra_TruthAndPhase_imctk_abc_sys(unsigned int *pOut, unsigned int *pIn0, unsigned int *pIn1, int nVars, int fCompl0, int fCompl1) { Extra_TruthAndPhase(pOut, pIn0, pIn1, nVars, fCompl0, fCompl1); }
+unsigned int Abc_InfoRandomWord_imctk_abc_sys(void) { return Abc_InfoRandomWord(); }
+void Abc_InfoRandom_imctk_abc_sys(unsigned int *p, int nWords) { Abc_InfoRandom(p, nWords); }
+void Abc_InfoClear_imctk_abc_sys(unsigned int *p, int nWords) { Abc_InfoClear(p, nWords); }
+void Abc_InfoFill_imctk_abc_sys(unsigned int *p, int nWords) { Abc_InfoFill(p, nWords); }
+void Abc_InfoNot_imctk_abc_sys(unsigned int *p, int nWords) { Abc_InfoNot(p, nWords); }
+int Abc_InfoIsZero_imctk_abc_sys(unsigned int *p, int nWords) { return Abc_InfoIsZero(p, nWords); }
+int Abc_InfoIsOne_imctk_abc_sys(unsigned int *p, int nWords) { return Abc_InfoIsOne(p, nWords); }
+void Abc_InfoCopy_imctk_abc_sys(unsigned int *p, unsigned int *q, int nWords) { Abc_InfoCopy(p, q, nWords); }
+void Abc_InfoAnd_imctk_abc_sys(unsigned int *p, unsigned int *q, int nWords) { Abc_InfoAnd(p, q, nWords); }
+void Abc_InfoOr_imctk_abc_sys(unsigned int *p, unsigned int *q, int nWords) { Abc_InfoOr(p, q, nWords); }
+void Abc_InfoXor_imctk_abc_sys(unsigned int *p, unsigned int *q, int nWords) { Abc_InfoXor(p, q, nWords); }
+int Abc_InfoIsOrOne_imctk_abc_sys(unsigned int *p, unsigned int *q, int nWords) { return Abc_InfoIsOrOne(p, q, nWords); }
+int Abc_InfoIsOrOne3_imctk_abc_sys(unsigned int *p, unsigned int *q, unsigned int *r, int nWords) { return Abc_InfoIsOrOne3(p, q, r, nWords); }
+int Abc_NtkIsNetlist_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkIsNetlist(pNtk); }
+int Abc_NtkIsLogic_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkIsLogic(pNtk); }
+int Abc_NtkIsStrash_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkIsStrash(pNtk); }
+int Abc_NtkHasSop_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkHasSop(pNtk); }
+int Abc_NtkHasBdd_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkHasBdd(pNtk); }
+int Abc_NtkHasAig_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkHasAig(pNtk); }
+int Abc_NtkHasMapping_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkHasMapping(pNtk); }
+int Abc_NtkHasBlifMv_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkHasBlifMv(pNtk); }
+int Abc_NtkHasBlackbox_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkHasBlackbox(pNtk); }
+int Abc_NtkIsSopNetlist_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkIsSopNetlist(pNtk); }
+int Abc_NtkIsBddNetlist_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkIsBddNetlist(pNtk); }
+int Abc_NtkIsAigNetlist_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkIsAigNetlist(pNtk); }
+int Abc_NtkIsMappedNetlist_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkIsMappedNetlist(pNtk); }
+int Abc_NtkIsBlifMvNetlist_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkIsBlifMvNetlist(pNtk); }
+int Abc_NtkIsSopLogic_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkIsSopLogic(pNtk); }
+int Abc_NtkIsBddLogic_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkIsBddLogic(pNtk); }
+int Abc_NtkIsAigLogic_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkIsAigLogic(pNtk); }
+int Abc_NtkIsMappedLogic_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkIsMappedLogic(pNtk); }
+char * Abc_NtkName_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkName(pNtk); }
+char * Abc_NtkSpec_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkSpec(pNtk); }
+Abc_Ntk_t * Abc_NtkExdc_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkExdc(pNtk); }
+Abc_Ntk_t * Abc_NtkBackup_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkBackup(pNtk); }
+int Abc_NtkStep_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkStep(pNtk); }
+void Abc_NtkSetName_imctk_abc_sys(Abc_Ntk_t *pNtk, char *pName) { Abc_NtkSetName(pNtk, pName); }
+void Abc_NtkSetSpec_imctk_abc_sys(Abc_Ntk_t *pNtk, char *pName) { Abc_NtkSetSpec(pNtk, pName); }
+void Abc_NtkSetBackup_imctk_abc_sys(Abc_Ntk_t *pNtk, Abc_Ntk_t *pNetBackup) { Abc_NtkSetBackup(pNtk, pNetBackup); }
+void Abc_NtkSetStep_imctk_abc_sys(Abc_Ntk_t *pNtk, int iStep) { Abc_NtkSetStep(pNtk, iStep); }
+int Abc_NtkObjNum_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkObjNum(pNtk); }
+int Abc_NtkObjNumMax_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkObjNumMax(pNtk); }
+int Abc_NtkPiNum_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkPiNum(pNtk); }
+int Abc_NtkPoNum_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkPoNum(pNtk); }
+int Abc_NtkCiNum_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkCiNum(pNtk); }
+int Abc_NtkCoNum_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkCoNum(pNtk); }
+int Abc_NtkBoxNum_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkBoxNum(pNtk); }
+int Abc_NtkBiNum_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkBiNum(pNtk); }
+int Abc_NtkBoNum_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkBoNum(pNtk); }
+int Abc_NtkNetNum_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkNetNum(pNtk); }
+int Abc_NtkNodeNum_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkNodeNum(pNtk); }
+int Abc_NtkLatchNum_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkLatchNum(pNtk); }
+int Abc_NtkWhiteboxNum_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkWhiteboxNum(pNtk); }
+int Abc_NtkBlackboxNum_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkBlackboxNum(pNtk); }
+int Abc_NtkIsComb_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkIsComb(pNtk); }
+int Abc_NtkHasOnlyLatchBoxes_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkHasOnlyLatchBoxes(pNtk); }
+int Abc_NtkConstrNum_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkConstrNum(pNtk); }
+Abc_Obj_t * Abc_NtkCreatePi_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkCreatePi(pNtk); }
+Abc_Obj_t * Abc_NtkCreatePo_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkCreatePo(pNtk); }
+Abc_Obj_t * Abc_NtkCreateBi_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkCreateBi(pNtk); }
+Abc_Obj_t * Abc_NtkCreateBo_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkCreateBo(pNtk); }
+Abc_Obj_t * Abc_NtkCreateNet_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkCreateNet(pNtk); }
+Abc_Obj_t * Abc_NtkCreateNode_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkCreateNode(pNtk); }
+Abc_Obj_t * Abc_NtkCreateLatch_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkCreateLatch(pNtk); }
+Abc_Obj_t * Abc_NtkCreateWhitebox_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkCreateWhitebox(pNtk); }
+Abc_Obj_t * Abc_NtkCreateBlackbox_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkCreateBlackbox(pNtk); }
+Abc_Obj_t * Abc_NtkObj_imctk_abc_sys(Abc_Ntk_t *pNtk, int i) { return Abc_NtkObj(pNtk, i); }
+Abc_Obj_t * Abc_NtkPi_imctk_abc_sys(Abc_Ntk_t *pNtk, int i) { return Abc_NtkPi(pNtk, i); }
+Abc_Obj_t * Abc_NtkPo_imctk_abc_sys(Abc_Ntk_t *pNtk, int i) { return Abc_NtkPo(pNtk, i); }
+Abc_Obj_t * Abc_NtkCi_imctk_abc_sys(Abc_Ntk_t *pNtk, int i) { return Abc_NtkCi(pNtk, i); }
+Abc_Obj_t * Abc_NtkCo_imctk_abc_sys(Abc_Ntk_t *pNtk, int i) { return Abc_NtkCo(pNtk, i); }
+Abc_Obj_t * Abc_NtkBox_imctk_abc_sys(Abc_Ntk_t *pNtk, int i) { return Abc_NtkBox(pNtk, i); }
+int Abc_ObjIsComplement_imctk_abc_sys(Abc_Obj_t *p) { return Abc_ObjIsComplement(p); }
+Abc_Obj_t * Abc_ObjRegular_imctk_abc_sys(Abc_Obj_t *p) { return Abc_ObjRegular(p); }
+Abc_Obj_t * Abc_ObjNot_imctk_abc_sys(Abc_Obj_t *p) { return Abc_ObjNot(p); }
+Abc_Obj_t * Abc_ObjNotCond_imctk_abc_sys(Abc_Obj_t *p, int c) { return Abc_ObjNotCond(p, c); }
+unsigned int Abc_ObjType_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjType(pObj); }
+unsigned int Abc_ObjId_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjId(pObj); }
+int Abc_ObjLevel_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjLevel(pObj); }
+Vec_Int_t * Abc_ObjFaninVec_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjFaninVec(pObj); }
+Vec_Int_t * Abc_ObjFanoutVec_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjFanoutVec(pObj); }
+Abc_Obj_t * Abc_ObjCopy_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjCopy(pObj); }
+Abc_Ntk_t * Abc_ObjNtk_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjNtk(pObj); }
+Abc_Ntk_t * Abc_ObjModel_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjModel(pObj); }
+void * Abc_ObjData_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjData(pObj); }
+Abc_Obj_t * Abc_ObjEquiv_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjEquiv(pObj); }
+Abc_Obj_t * Abc_ObjCopyCond_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjCopyCond(pObj); }
+void Abc_ObjSetLevel_imctk_abc_sys(Abc_Obj_t *pObj, int Level) { Abc_ObjSetLevel(pObj, Level); }
+void Abc_ObjSetCopy_imctk_abc_sys(Abc_Obj_t *pObj, Abc_Obj_t *pCopy) { Abc_ObjSetCopy(pObj, pCopy); }
+void Abc_ObjSetData_imctk_abc_sys(Abc_Obj_t *pObj, void *pData) { Abc_ObjSetData(pObj, pData); }
+int Abc_ObjIsNone_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjIsNone(pObj); }
+int Abc_ObjIsPi_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjIsPi(pObj); }
+int Abc_ObjIsPo_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjIsPo(pObj); }
+int Abc_ObjIsBi_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjIsBi(pObj); }
+int Abc_ObjIsBo_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjIsBo(pObj); }
+int Abc_ObjIsCi_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjIsCi(pObj); }
+int Abc_ObjIsCo_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjIsCo(pObj); }
+int Abc_ObjIsTerm_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjIsTerm(pObj); }
+int Abc_ObjIsNet_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjIsNet(pObj); }
+int Abc_ObjIsNode_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjIsNode(pObj); }
+int Abc_ObjIsLatch_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjIsLatch(pObj); }
+int Abc_ObjIsBox_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjIsBox(pObj); }
+int Abc_ObjIsWhitebox_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjIsWhitebox(pObj); }
+int Abc_ObjIsBlackbox_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjIsBlackbox(pObj); }
+int Abc_ObjIsBarBuf_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjIsBarBuf(pObj); }
+void Abc_ObjBlackboxToWhitebox_imctk_abc_sys(Abc_Obj_t *pObj) { Abc_ObjBlackboxToWhitebox(pObj); }
+int Abc_ObjFaninNum_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjFaninNum(pObj); }
+int Abc_ObjFanoutNum_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjFanoutNum(pObj); }
+int Abc_ObjFaninId_imctk_abc_sys(Abc_Obj_t *pObj, int i) { return Abc_ObjFaninId(pObj, i); }
+int Abc_ObjFaninId0_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjFaninId0(pObj); }
+int Abc_ObjFaninId1_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjFaninId1(pObj); }
+int Abc_ObjFanoutEdgeNum_imctk_abc_sys(Abc_Obj_t *pObj, Abc_Obj_t *pFanout) { return Abc_ObjFanoutEdgeNum(pObj, pFanout); }
+Abc_Obj_t * Abc_ObjFanout_imctk_abc_sys(Abc_Obj_t *pObj, int i) { return Abc_ObjFanout(pObj, i); }
+Abc_Obj_t * Abc_ObjFanout0_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjFanout0(pObj); }
+Abc_Obj_t * Abc_ObjFanin_imctk_abc_sys(Abc_Obj_t *pObj, int i) { return Abc_ObjFanin(pObj, i); }
+Abc_Obj_t * Abc_ObjFanin0_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjFanin0(pObj); }
+Abc_Obj_t * Abc_ObjFanin1_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjFanin1(pObj); }
+Abc_Obj_t * Abc_ObjFanin0Ntk_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjFanin0Ntk(pObj); }
+Abc_Obj_t * Abc_ObjFanout0Ntk_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjFanout0Ntk(pObj); }
+int Abc_ObjFaninC0_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjFaninC0(pObj); }
+int Abc_ObjFaninC1_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjFaninC1(pObj); }
+int Abc_ObjFaninC_imctk_abc_sys(Abc_Obj_t *pObj, int i) { return Abc_ObjFaninC(pObj, i); }
+void Abc_ObjSetFaninC_imctk_abc_sys(Abc_Obj_t *pObj, int i) { Abc_ObjSetFaninC(pObj, i); }
+void Abc_ObjXorFaninC_imctk_abc_sys(Abc_Obj_t *pObj, int i) { Abc_ObjXorFaninC(pObj, i); }
+Abc_Obj_t * Abc_ObjChild_imctk_abc_sys(Abc_Obj_t *pObj, int i) { return Abc_ObjChild(pObj, i); }
+Abc_Obj_t * Abc_ObjChild0_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjChild0(pObj); }
+Abc_Obj_t * Abc_ObjChild1_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjChild1(pObj); }
+Abc_Obj_t * Abc_ObjChildCopy_imctk_abc_sys(Abc_Obj_t *pObj, int i) { return Abc_ObjChildCopy(pObj, i); }
+Abc_Obj_t * Abc_ObjChild0Copy_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjChild0Copy(pObj); }
+Abc_Obj_t * Abc_ObjChild1Copy_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjChild1Copy(pObj); }
+Abc_Obj_t * Abc_ObjChild0Data_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjChild0Data(pObj); }
+Abc_Obj_t * Abc_ObjChild1Data_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjChild1Data(pObj); }
+Abc_Obj_t * Abc_ObjFromLit_imctk_abc_sys(Abc_Ntk_t *p, int iLit) { return Abc_ObjFromLit(p, iLit); }
+int Abc_ObjToLit_imctk_abc_sys(Abc_Obj_t *p) { return Abc_ObjToLit(p); }
+int Abc_ObjFaninPhase_imctk_abc_sys(Abc_Obj_t *p, int i) { return Abc_ObjFaninPhase(p, i); }
+void Abc_ObjFaninFlipPhase_imctk_abc_sys(Abc_Obj_t *p, int i) { Abc_ObjFaninFlipPhase(p, i); }
+int Abc_AigNodeIsConst_imctk_abc_sys(Abc_Obj_t *pNode) { return Abc_AigNodeIsConst(pNode); }
+int Abc_AigNodeIsAnd_imctk_abc_sys(Abc_Obj_t *pNode) { return Abc_AigNodeIsAnd(pNode); }
+int Abc_AigNodeIsChoice_imctk_abc_sys(Abc_Obj_t *pNode) { return Abc_AigNodeIsChoice(pNode); }
+int Abc_NodeIsPersistant_imctk_abc_sys(Abc_Obj_t *pNode) { return Abc_NodeIsPersistant(pNode); }
+void Abc_NodeSetPersistant_imctk_abc_sys(Abc_Obj_t *pNode) { Abc_NodeSetPersistant(pNode); }
+void Abc_NodeClearPersistant_imctk_abc_sys(Abc_Obj_t *pNode) { Abc_NodeClearPersistant(pNode); }
+void Abc_NtkIncrementTravId_imctk_abc_sys(Abc_Ntk_t *p) { Abc_NtkIncrementTravId(p); }
+int Abc_NodeTravId_imctk_abc_sys(Abc_Obj_t *p) { return Abc_NodeTravId(p); }
+void Abc_NodeSetTravId_imctk_abc_sys(Abc_Obj_t *p, int TravId) { Abc_NodeSetTravId(p, TravId); }
+void Abc_NodeSetTravIdCurrent_imctk_abc_sys(Abc_Obj_t *p) { Abc_NodeSetTravIdCurrent(p); }
+void Abc_NodeSetTravIdPrevious_imctk_abc_sys(Abc_Obj_t *p) { Abc_NodeSetTravIdPrevious(p); }
+int Abc_NodeIsTravIdCurrent_imctk_abc_sys(Abc_Obj_t *p) { return Abc_NodeIsTravIdCurrent(p); }
+int Abc_NodeIsTravIdPrevious_imctk_abc_sys(Abc_Obj_t *p) { return Abc_NodeIsTravIdPrevious(p); }
+void Abc_NodeSetTravIdCurrentId_imctk_abc_sys(Abc_Ntk_t *p, int i) { Abc_NodeSetTravIdCurrentId(p, i); }
+int Abc_NodeIsTravIdCurrentId_imctk_abc_sys(Abc_Ntk_t *p, int i) { return Abc_NodeIsTravIdCurrentId(p, i); }
+void Abc_LatchSetInitNone_imctk_abc_sys(Abc_Obj_t *pLatch) { Abc_LatchSetInitNone(pLatch); }
+void Abc_LatchSetInit0_imctk_abc_sys(Abc_Obj_t *pLatch) { Abc_LatchSetInit0(pLatch); }
+void Abc_LatchSetInit1_imctk_abc_sys(Abc_Obj_t *pLatch) { Abc_LatchSetInit1(pLatch); }
+void Abc_LatchSetInitDc_imctk_abc_sys(Abc_Obj_t *pLatch) { Abc_LatchSetInitDc(pLatch); }
+int Abc_LatchIsInitNone_imctk_abc_sys(Abc_Obj_t *pLatch) { return Abc_LatchIsInitNone(pLatch); }
+int Abc_LatchIsInit0_imctk_abc_sys(Abc_Obj_t *pLatch) { return Abc_LatchIsInit0(pLatch); }
+int Abc_LatchIsInit1_imctk_abc_sys(Abc_Obj_t *pLatch) { return Abc_LatchIsInit1(pLatch); }
+int Abc_LatchIsInitDc_imctk_abc_sys(Abc_Obj_t *pLatch) { return Abc_LatchIsInitDc(pLatch); }
+int Abc_LatchInit_imctk_abc_sys(Abc_Obj_t *pLatch) { return Abc_LatchInit(pLatch); }
+void * Abc_NtkGlobalBdd_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkGlobalBdd(pNtk); }
+void * Abc_NtkGlobalBddMan_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkGlobalBddMan(pNtk); }
+void ** Abc_NtkGlobalBddArray_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkGlobalBddArray(pNtk); }
+void * Abc_ObjGlobalBdd_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjGlobalBdd(pObj); }
+void Abc_ObjSetGlobalBdd_imctk_abc_sys(Abc_Obj_t *pObj, void *bF) { Abc_ObjSetGlobalBdd(pObj, bF); }
+void * Abc_NtkMvVar_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkMvVar(pNtk); }
+void * Abc_NtkMvVarMan_imctk_abc_sys(Abc_Ntk_t *pNtk) { return Abc_NtkMvVarMan(pNtk); }
+void * Abc_ObjMvVar_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjMvVar(pObj); }
+int Abc_ObjMvVarNum_imctk_abc_sys(Abc_Obj_t *pObj) { return Abc_ObjMvVarNum(pObj); }
+void Abc_ObjSetMvVar_imctk_abc_sys(Abc_Obj_t *pObj, void *pV) { Abc_ObjSetMvVar(pObj, pV); }
+int Saig_ManPiNum_imctk_abc_sys(Aig_Man_t *p) { return Saig_ManPiNum(p); }
+int Saig_ManPoNum_imctk_abc_sys(Aig_Man_t *p) { return Saig_ManPoNum(p); }
+int Saig_ManCiNum_imctk_abc_sys(Aig_Man_t *p) { return Saig_ManCiNum(p); }
+int Saig_ManCoNum_imctk_abc_sys(Aig_Man_t *p) { return Saig_ManCoNum(p); }
+int Saig_ManRegNum_imctk_abc_sys(Aig_Man_t *p) { return Saig_ManRegNum(p); }
+int Saig_ManConstrNum_imctk_abc_sys(Aig_Man_t *p) { return Saig_ManConstrNum(p); }
+Aig_Obj_t * Saig_ManLo_imctk_abc_sys(Aig_Man_t *p, int i) { return Saig_ManLo(p, i); }
+Aig_Obj_t * Saig_ManLi_imctk_abc_sys(Aig_Man_t *p, int i) { return Saig_ManLi(p, i); }
+int Saig_ObjIsPi_imctk_abc_sys(Aig_Man_t *p, Aig_Obj_t *pObj) { return Saig_ObjIsPi(p, pObj); }
+int Saig_ObjIsPo_imctk_abc_sys(Aig_Man_t *p, Aig_Obj_t *pObj) { return Saig_ObjIsPo(p, pObj); }
+int Saig_ObjIsLo_imctk_abc_sys(Aig_Man_t *p, Aig_Obj_t *pObj) { return Saig_ObjIsLo(p, pObj); }
+int Saig_ObjIsLi_imctk_abc_sys(Aig_Man_t *p, Aig_Obj_t *pObj) { return Saig_ObjIsLi(p, pObj); }
+Aig_Obj_t * Saig_ObjLoToLi_imctk_abc_sys(Aig_Man_t *p, Aig_Obj_t *pObj) { return Saig_ObjLoToLi(p, pObj); }
+Aig_Obj_t * Saig_ObjLiToLo_imctk_abc_sys(Aig_Man_t *p, Aig_Obj_t *pObj) { return Saig_ObjLiToLo(p, pObj); }
+int Saig_ObjRegId_imctk_abc_sys(Aig_Man_t *p, Aig_Obj_t *pObj) { return Saig_ObjRegId(p, pObj); }
+Dar_Cut_t * Dar_ObjCuts_imctk_abc_sys(Aig_Obj_t *pObj) { return Dar_ObjCuts(pObj); }
+void Dar_ObjSetCuts_imctk_abc_sys(Aig_Obj_t *pObj, Dar_Cut_t *pCuts) { Dar_ObjSetCuts(pObj, pCuts); }
+Dar_Cut_t * Dar_ObjBestCut_imctk_abc_sys(Aig_Obj_t *pObj) { return Dar_ObjBestCut(pObj); }
+int Cnf_CutSopCost_imctk_abc_sys(Cnf_Man_t *p, Dar_Cut_t *pCut) { return Cnf_CutSopCost(p, pCut); }
+int Cnf_CutLeaveNum_imctk_abc_sys(Cnf_Cut_t *pCut) { return Cnf_CutLeaveNum(pCut); }
+int * Cnf_CutLeaves_imctk_abc_sys(Cnf_Cut_t *pCut) { return Cnf_CutLeaves(pCut); }
+unsigned int * Cnf_CutTruth_imctk_abc_sys(Cnf_Cut_t *pCut) { return Cnf_CutTruth(pCut); }
+Cnf_Cut_t * Cnf_ObjBestCut_imctk_abc_sys(Aig_Obj_t *pObj) { return Cnf_ObjBestCut(pObj); }
+void Cnf_ObjSetBestCut_imctk_abc_sys(Aig_Obj_t *pObj, Cnf_Cut_t *pCut) { Cnf_ObjSetBestCut(pObj, pCut); }
+Hash_Int_t * Hash_IntAlloc_imctk_abc_sys(int nBins) { return Hash_IntAlloc(nBins); }
+int Hash_IntExists_imctk_abc_sys(Hash_Int_t *p, int key) { return Hash_IntExists(p, key); }
+void Hash_IntWriteEntry_imctk_abc_sys(Hash_Int_t *p, int key, int data) { Hash_IntWriteEntry(p, key, data); }
+int Hash_IntEntry_imctk_abc_sys(Hash_Int_t *p, int key, int fCreate) { return Hash_IntEntry(p, key, fCreate); }
+int * Hash_IntEntryPtr_imctk_abc_sys(Hash_Int_t *p, int key) { return Hash_IntEntryPtr(p, key); }
+void Hash_IntFree_imctk_abc_sys(Hash_Int_t *p) { Hash_IntFree(p); }
+void veci_new_imctk_abc_sys(veci *v) { veci_new(v); }
+void veci_delete_imctk_abc_sys(veci *v) { veci_delete(v); }
+int * veci_begin_imctk_abc_sys(veci *v) { return veci_begin(v); }
+int veci_size_imctk_abc_sys(veci *v) { return veci_size(v); }
+void veci_resize_imctk_abc_sys(veci *v, int k) { veci_resize(v, k); }
+int veci_pop_imctk_abc_sys(veci *v) { return veci_pop(v); }
+void veci_push_imctk_abc_sys(veci *v, int e) { veci_push(v, e); }
+void veci_remove_imctk_abc_sys(veci *v, int e) { veci_remove(v, e); }
+void vecp_new_imctk_abc_sys(vecp *v) { vecp_new(v); }
+void vecp_delete_imctk_abc_sys(vecp *v) { vecp_delete(v); }
+void ** vecp_begin_imctk_abc_sys(vecp *v) { return vecp_begin(v); }
+int vecp_size_imctk_abc_sys(vecp *v) { return vecp_size(v); }
+void vecp_resize_imctk_abc_sys(vecp *v, int k) { vecp_resize(v, k); }
+void vecp_push_imctk_abc_sys(vecp *v, void *e) { vecp_push(v, e); }
+void vecp_remove_imctk_abc_sys(vecp *v, void *e) { vecp_remove(v, e); }
+lit toLit_imctk_abc_sys(int v) { return toLit(v); }
+lit toLitCond_imctk_abc_sys(int v, int c) { return toLitCond(v, c); }
+lit lit_neg_imctk_abc_sys(lit l) { return lit_neg(l); }
+int lit_var_imctk_abc_sys(lit l) { return lit_var(l); }
+int lit_sign_imctk_abc_sys(lit l) { return lit_sign(l); }
+int lit_print_imctk_abc_sys(lit l) { return lit_print(l); }
+lit lit_read_imctk_abc_sys(int s) { return lit_read(s); }
+int lit_check_imctk_abc_sys(lit l, int n) { return lit_check(l, n); }
+int Sat_MemLimit_imctk_abc_sys(int *p) { return Sat_MemLimit(p); }
+int Sat_MemIncLimit_imctk_abc_sys(int *p, int nInts) { return Sat_MemIncLimit(p, nInts); }
+void Sat_MemWriteLimit_imctk_abc_sys(int *p, int nInts) { Sat_MemWriteLimit(p, nInts); }
+int Sat_MemHandPage_imctk_abc_sys(Sat_Mem_t *p, cla h) { return Sat_MemHandPage(p, h); }
+int Sat_MemHandShift_imctk_abc_sys(Sat_Mem_t *p, cla h) { return Sat_MemHandShift(p, h); }
+int Sat_MemIntSize_imctk_abc_sys(int size, int lrn) { return Sat_MemIntSize(size, lrn); }
+int Sat_MemClauseSize_imctk_abc_sys(clause *p) { return Sat_MemClauseSize(p); }
+int Sat_MemClauseSize2_imctk_abc_sys(clause *p) { return Sat_MemClauseSize2(p); }
+clause * Sat_MemClause_imctk_abc_sys(Sat_Mem_t *p, int i, int k) { return Sat_MemClause(p, i, k); }
+clause * Sat_MemClauseHand_imctk_abc_sys(Sat_Mem_t *p, cla h) { return Sat_MemClauseHand(p, h); }
+int Sat_MemEntryNum_imctk_abc_sys(Sat_Mem_t *p, int lrn) { return Sat_MemEntryNum(p, lrn); }
+cla Sat_MemHand_imctk_abc_sys(Sat_Mem_t *p, int i, int k) { return Sat_MemHand(p, i, k); }
+cla Sat_MemHandCurrent_imctk_abc_sys(Sat_Mem_t *p, int lrn) { return Sat_MemHandCurrent(p, lrn); }
+int Sat_MemClauseUsed_imctk_abc_sys(Sat_Mem_t *p, cla h) { return Sat_MemClauseUsed(p, h); }
+double Sat_MemMemoryHand_imctk_abc_sys(Sat_Mem_t *p, cla h) { return Sat_MemMemoryHand(p, h); }
+double Sat_MemMemoryUsed_imctk_abc_sys(Sat_Mem_t *p, int lrn) { return Sat_MemMemoryUsed(p, lrn); }
+double Sat_MemMemoryAllUsed_imctk_abc_sys(Sat_Mem_t *p) { return Sat_MemMemoryAllUsed(p); }
+double Sat_MemMemoryAll_imctk_abc_sys(Sat_Mem_t *p) { return Sat_MemMemoryAll(p); }
+int clause_from_lit_imctk_abc_sys(lit l) { return clause_from_lit(l); }
+int clause_is_lit_imctk_abc_sys(cla h) { return clause_is_lit(h); }
+lit clause_read_lit_imctk_abc_sys(cla h) { return clause_read_lit(h); }
+int clause_learnt_h_imctk_abc_sys(Sat_Mem_t *p, cla h) { return clause_learnt_h(p, h); }
+int clause_learnt_imctk_abc_sys(clause *c) { return clause_learnt(c); }
+int clause_id_imctk_abc_sys(clause *c) { return clause_id(c); }
+void clause_set_id_imctk_abc_sys(clause *c, int id) { clause_set_id(c, id); }
+int clause_size_imctk_abc_sys(clause *c) { return clause_size(c); }
+lit * clause_begin_imctk_abc_sys(clause *c) { return clause_begin(c); }
+lit * clause_end_imctk_abc_sys(clause *c) { return clause_end(c); }
+void clause_print__imctk_abc_sys(clause *c) { clause_print_(c); }
+int Sat_MemCountL_imctk_abc_sys(Sat_Mem_t *p) { return Sat_MemCountL(p); }
+void Sat_MemAlloc__imctk_abc_sys(Sat_Mem_t *p, int nPageSize) { Sat_MemAlloc_(p, nPageSize); }
+Sat_Mem_t * Sat_MemAlloc_imctk_abc_sys(int nPageSize) { return Sat_MemAlloc(nPageSize); }
+void Sat_MemRestart_imctk_abc_sys(Sat_Mem_t *p) { Sat_MemRestart(p); }
+void Sat_MemBookMark_imctk_abc_sys(Sat_Mem_t *p) { Sat_MemBookMark(p); }
+void Sat_MemRollBack_imctk_abc_sys(Sat_Mem_t *p) { Sat_MemRollBack(p); }
+void Sat_MemFree__imctk_abc_sys(Sat_Mem_t *p) { Sat_MemFree_(p); }
+void Sat_MemFree_imctk_abc_sys(Sat_Mem_t *p) { Sat_MemFree(p); }
+int Sat_MemAppend_imctk_abc_sys(Sat_Mem_t *p, int *pArray, int nSize, int lrn, int fPlus1) { return Sat_MemAppend(p, pArray, nSize, lrn, fPlus1); }
+void Sat_MemShrink_imctk_abc_sys(Sat_Mem_t *p, int h, int lrn) { Sat_MemShrink(p, h, lrn); }
+int Sat_MemCompactLearned_imctk_abc_sys(Sat_Mem_t *p, int fDoMove) { return Sat_MemCompactLearned(p, fDoMove); }
+word Xdbl_Exp_imctk_abc_sys(xdbl a) { return Xdbl_Exp(a); }
+word Xdbl_Mnt_imctk_abc_sys(xdbl a) { return Xdbl_Mnt(a); }
+xdbl Xdbl_Create_imctk_abc_sys(word Exp, word Mnt) { return Xdbl_Create(Exp, Mnt); }
+xdbl Xdbl_Const1_imctk_abc_sys(void) { return Xdbl_Const1(); }
+xdbl Xdbl_Const2_imctk_abc_sys(void) { return Xdbl_Const2(); }
+xdbl Xdbl_Const3_imctk_abc_sys(void) { return Xdbl_Const3(); }
+xdbl Xdbl_Const12_imctk_abc_sys(void) { return Xdbl_Const12(); }
+xdbl Xdbl_Const1point5_imctk_abc_sys(void) { return Xdbl_Const1point5(); }
+xdbl Xdbl_Const2point5_imctk_abc_sys(void) { return Xdbl_Const2point5(); }
+xdbl Xdbl_Maximum_imctk_abc_sys(void) { return Xdbl_Maximum(); }
+double Xdbl_ToDouble_imctk_abc_sys(xdbl a) { return Xdbl_ToDouble(a); }
+xdbl Xdbl_FromDouble_imctk_abc_sys(double a) { return Xdbl_FromDouble(a); }
+xdbl Xdbl_Add_imctk_abc_sys(xdbl a, xdbl b) { return Xdbl_Add(a, b); }
+xdbl Xdbl_Mul_imctk_abc_sys(xdbl a, xdbl b) { return Xdbl_Mul(a, b); }
+xdbl Xdbl_Div_imctk_abc_sys(xdbl a, unsigned int Deg2) { return Xdbl_Div(a, Deg2); }
+void Xdbl_Test_imctk_abc_sys(void) { Xdbl_Test(); }
+clause * clause_read_imctk_abc_sys(sat_solver *s, cla h) { return clause_read(s, h); }
+int sat_solver_var_value_imctk_abc_sys(sat_solver *s, int v) { return sat_solver_var_value(s, v); }
+int sat_solver_var_literal_imctk_abc_sys(sat_solver *s, int v) { return sat_solver_var_literal(s, v); }
+void sat_solver_flip_print_clause_imctk_abc_sys(sat_solver *s) { sat_solver_flip_print_clause(s); }
+void sat_solver_act_var_clear_imctk_abc_sys(sat_solver *s) { sat_solver_act_var_clear(s); }
+void sat_solver_compress_imctk_abc_sys(sat_solver *s) { sat_solver_compress(s); }
+void sat_solver_delete_p_imctk_abc_sys(sat_solver **ps) { sat_solver_delete_p(ps); }
+void sat_solver_clean_polarity_imctk_abc_sys(sat_solver *s, int *pVars, int nVars) { sat_solver_clean_polarity(s, pVars, nVars); }
+void sat_solver_set_polarity_imctk_abc_sys(sat_solver *s, int *pVars, int nVars) { sat_solver_set_polarity(s, pVars, nVars); }
+void sat_solver_set_literal_polarity_imctk_abc_sys(sat_solver *s, int *pLits, int nLits) { sat_solver_set_literal_polarity(s, pLits, nLits); }
+int sat_solver_final_imctk_abc_sys(sat_solver *s, int **ppArray) { return sat_solver_final(s, ppArray); }
+void sat_solver_randomize_imctk_abc_sys(sat_solver *pSat, int iVar, int nVars) { sat_solver_randomize(pSat, iVar, nVars); }
+abctime sat_solver_set_runtime_limit_imctk_abc_sys(sat_solver *s, abctime Limit) { return sat_solver_set_runtime_limit(s, Limit); }
+int sat_solver_set_random_imctk_abc_sys(sat_solver *s, int fNotUseRandom) { return sat_solver_set_random(s, fNotUseRandom); }
+void sat_solver_bookmark_imctk_abc_sys(sat_solver *s) { sat_solver_bookmark(s); }
+void sat_solver_set_pivot_variables_imctk_abc_sys(sat_solver *s, int *pPivots, int nPivots) { sat_solver_set_pivot_variables(s, pPivots, nPivots); }
+int sat_solver_count_usedvars_imctk_abc_sys(sat_solver *s) { return sat_solver_count_usedvars(s); }
+void sat_solver_set_runid_imctk_abc_sys(sat_solver *s, int id) { sat_solver_set_runid(s, id); }
+void sat_solver_set_stop_func_imctk_abc_sys(sat_solver *s, int (*fnct) (int)) { sat_solver_set_stop_func(s, fnct); }
+int sat_solver_add_const_imctk_abc_sys(sat_solver *pSat, int iVar, int fCompl) { return sat_solver_add_const(pSat, iVar, fCompl); }
+int sat_solver_add_buffer_imctk_abc_sys(sat_solver *pSat, int iVarA, int iVarB, int fCompl) { return sat_solver_add_buffer(pSat, iVarA, iVarB, fCompl); }
+int sat_solver_add_buffer_enable_imctk_abc_sys(sat_solver *pSat, int iVarA, int iVarB, int iVarEn, int fCompl) { return sat_solver_add_buffer_enable(pSat, iVarA, iVarB, iVarEn, fCompl); }
+int sat_solver_add_and_imctk_abc_sys(sat_solver *pSat, int iVar, int iVar0, int iVar1, int fCompl0, int fCompl1, int fCompl) { return sat_solver_add_and(pSat, iVar, iVar0, iVar1, fCompl0, fCompl1, fCompl); }
+int sat_solver_add_xor_imctk_abc_sys(sat_solver *pSat, int iVarA, int iVarB, int iVarC, int fCompl) { return sat_solver_add_xor(pSat, iVarA, iVarB, iVarC, fCompl); }
+int sat_solver_add_mux_imctk_abc_sys(sat_solver *pSat, int iVarZ, int iVarC, int iVarT, int iVarE, int iComplC, int iComplT, int iComplE, int iComplZ) { return sat_solver_add_mux(pSat, iVarZ, iVarC, iVarT, iVarE, iComplC, iComplT, iComplE, iComplZ); }
+int sat_solver_add_mux41_imctk_abc_sys(sat_solver *pSat, int iVarZ, int iVarC0, int iVarC1, int iVarD0, int iVarD1, int iVarD2, int iVarD3) { return sat_solver_add_mux41(pSat, iVarZ, iVarC0, iVarC1, iVarD0, iVarD1, iVarD2, iVarD3); }
+int sat_solver_add_xor_and_imctk_abc_sys(sat_solver *pSat, int iVarF, int iVarA, int iVarB, int iVarC) { return sat_solver_add_xor_and(pSat, iVarF, iVarA, iVarB, iVarC); }
+int sat_solver_add_constraint_imctk_abc_sys(sat_solver *pSat, int iVar, int iVar2, int fCompl) { return sat_solver_add_constraint(pSat, iVar, iVar2, fCompl); }
+int sat_solver_add_half_sorter_imctk_abc_sys(sat_solver *pSat, int iVarA, int iVarB, int iVar0, int iVar1) { return sat_solver_add_half_sorter(pSat, iVarA, iVarB, iVar0, iVar1); }
+sat_solver * Pdr_ManSolver_imctk_abc_sys(Pdr_Man_t *p, int k) { return Pdr_ManSolver(p, k); }
+abctime Pdr_ManTimeLimit_imctk_abc_sys(Pdr_Man_t *p) { return Pdr_ManTimeLimit(p); }

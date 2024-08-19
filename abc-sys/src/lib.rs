@@ -24,14 +24,6 @@ mod tests {
 
             abc::Gia_ManAppendCo(gia, obj_2);
 
-            // let mut params: Cec_ParFra_t = std::mem::zeroed();
-            // Cec4_ManSetParams(&mut params);
-            // params.fVerbose = 0;
-
-            // let new_gia = Cec5_ManSimulateTest(gia, &mut params, 1, 600, 1, 500);
-            // Gia_ManStop(gia);
-            // gia = new_gia;
-
             abc::Gia_ManStop(gia);
         }
     }

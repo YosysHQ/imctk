@@ -2,8 +2,13 @@
 #define IMCTK_ABC_SYS_BINDINGS_H
 
 #include "aig/gia/gia.h"
+#include "aig/gia/giaAig.h"
+#include "base/abc/abc.h"
+#include "base/main/main.h"
 #include "misc/util/abc_global.h"
 #include "proof/cec/cec.h"
+#include "proof/pdr/pdr.h"
+#include "proof/pdr/pdrInt.h"
 
 #include "glucose2_bindings.h"
 
@@ -11,11 +16,17 @@
 extern "C" {
 #endif
 
+extern unsigned int enable_dbg_outs;
+
 void Cec4_ManSetParams(Cec_ParFra_t *pPars);
 Gia_Man_t *Cec5_ManSimulateTest(Gia_Man_t *p, Cec_ParFra_t *pPars, int fCbs,
                                 int approxLim, int subBatchSz,
 
                                 int adaRecycle);
+
+Abc_Ntk_t *Abc_NtkFromAigPhase(Aig_Man_t *pMan);
+
+int Abc_NtkDarPdr(Abc_Ntk_t *pNtk, Pdr_Par_t *pPars);
 
 #ifdef __cplusplus
 }

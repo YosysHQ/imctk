@@ -122,6 +122,22 @@ pub const GIA_VOID: u32 = 268435455;
 pub const GIA_ZER: u32 = 1;
 pub const GIA_ONE: u32 = 2;
 pub const GIA_UND: u32 = 3;
+pub const st__DEFAULT_MAX_DENSITY: u32 = 5;
+pub const st__DEFAULT_INIT_TABLE_SIZE: u32 = 11;
+pub const st__DEFAULT_GROW_FACTOR: f64 = 2.0;
+pub const st__DEFAULT_REORDER_FLAG: u32 = 0;
+pub const st__OUT_OF_MEM: i32 = -10000;
+pub const STMM_DEFAULT_MAX_DENSITY: u32 = 5;
+pub const STMM_DEFAULT_INIT_TABLE_SIZE: u32 = 11;
+pub const STMM_DEFAULT_GROW_FACTOR: f64 = 2.0;
+pub const STMM_DEFAULT_REORDER_FLAG: u32 = 0;
+pub const STMM_OUT_OF_MEM: i32 = -10000;
+pub const IO_WRITE_LINE_LENGTH: u32 = 78;
+pub const false_: u32 = 0;
+pub const true_: u32 = 1;
+pub const LEARNT_MAX_START_DEFAULT: u32 = 10000;
+pub const LEARNT_MAX_INCRE_DEFAULT: u32 = 1000;
+pub const LEARNT_MAX_RATIO_DEFAULT: u32 = 50;
 pub type ABC_PTRDIFF_T = isize;
 pub type ABC_PTRUINT_T = usize;
 pub type ABC_PTRINT_T = isize;
@@ -11228,6 +11244,10450 @@ extern "C" {
         vEO_phase: *mut Vec_Bit_t,
     ) -> *mut Gia_Man_t;
 }
+pub type Aig_Man_t = Aig_Man_t_;
+pub type Aig_Obj_t = Aig_Obj_t_;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Aig_MmFixed_t_ {
+    _unused: [u8; 0],
+}
+pub type Aig_MmFixed_t = Aig_MmFixed_t_;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Aig_MmFlex_t_ {
+    _unused: [u8; 0],
+}
+pub type Aig_MmFlex_t = Aig_MmFlex_t_;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Aig_MmStep_t_ {
+    _unused: [u8; 0],
+}
+pub type Aig_MmStep_t = Aig_MmStep_t_;
+pub const Aig_Type_t_AIG_OBJ_NONE: Aig_Type_t = 0;
+pub const Aig_Type_t_AIG_OBJ_CONST1: Aig_Type_t = 1;
+pub const Aig_Type_t_AIG_OBJ_CI: Aig_Type_t = 2;
+pub const Aig_Type_t_AIG_OBJ_CO: Aig_Type_t = 3;
+pub const Aig_Type_t_AIG_OBJ_BUF: Aig_Type_t = 4;
+pub const Aig_Type_t_AIG_OBJ_AND: Aig_Type_t = 5;
+pub const Aig_Type_t_AIG_OBJ_EXOR: Aig_Type_t = 6;
+pub const Aig_Type_t_AIG_OBJ_VOID: Aig_Type_t = 7;
+pub type Aig_Type_t = ::std::os::raw::c_uint;
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct Aig_Obj_t_ {
+    pub __bindgen_anon_1: Aig_Obj_t___bindgen_ty_1,
+    pub pFanin0: *mut Aig_Obj_t,
+    pub pFanin1: *mut Aig_Obj_t,
+    pub _bitfield_align_1: [u32; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 8usize]>,
+    pub TravId: ::std::os::raw::c_int,
+    pub Id: ::std::os::raw::c_int,
+    pub __bindgen_anon_2: Aig_Obj_t___bindgen_ty_2,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union Aig_Obj_t___bindgen_ty_1 {
+    pub pNext: *mut Aig_Obj_t,
+    pub CioId: ::std::os::raw::c_int,
+}
+#[test]
+fn bindgen_test_layout_Aig_Obj_t___bindgen_ty_1() {
+    const UNINIT: ::std::mem::MaybeUninit<Aig_Obj_t___bindgen_ty_1> =
+        ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<Aig_Obj_t___bindgen_ty_1>(),
+        8usize,
+        concat!("Size of: ", stringify!(Aig_Obj_t___bindgen_ty_1))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<Aig_Obj_t___bindgen_ty_1>(),
+        8usize,
+        concat!("Alignment of ", stringify!(Aig_Obj_t___bindgen_ty_1))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pNext) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Obj_t___bindgen_ty_1),
+            "::",
+            stringify!(pNext)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).CioId) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Obj_t___bindgen_ty_1),
+            "::",
+            stringify!(CioId)
+        )
+    );
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union Aig_Obj_t___bindgen_ty_2 {
+    pub pData: *mut ::std::os::raw::c_void,
+    pub iData: ::std::os::raw::c_int,
+    pub dData: f32,
+}
+#[test]
+fn bindgen_test_layout_Aig_Obj_t___bindgen_ty_2() {
+    const UNINIT: ::std::mem::MaybeUninit<Aig_Obj_t___bindgen_ty_2> =
+        ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<Aig_Obj_t___bindgen_ty_2>(),
+        8usize,
+        concat!("Size of: ", stringify!(Aig_Obj_t___bindgen_ty_2))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<Aig_Obj_t___bindgen_ty_2>(),
+        8usize,
+        concat!("Alignment of ", stringify!(Aig_Obj_t___bindgen_ty_2))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pData) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Obj_t___bindgen_ty_2),
+            "::",
+            stringify!(pData)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).iData) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Obj_t___bindgen_ty_2),
+            "::",
+            stringify!(iData)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).dData) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Obj_t___bindgen_ty_2),
+            "::",
+            stringify!(dData)
+        )
+    );
+}
+#[test]
+fn bindgen_test_layout_Aig_Obj_t_() {
+    const UNINIT: ::std::mem::MaybeUninit<Aig_Obj_t_> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<Aig_Obj_t_>(),
+        48usize,
+        concat!("Size of: ", stringify!(Aig_Obj_t_))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<Aig_Obj_t_>(),
+        8usize,
+        concat!("Alignment of ", stringify!(Aig_Obj_t_))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pFanin0) as usize - ptr as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Obj_t_),
+            "::",
+            stringify!(pFanin0)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pFanin1) as usize - ptr as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Obj_t_),
+            "::",
+            stringify!(pFanin1)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).TravId) as usize - ptr as usize },
+        32usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Obj_t_),
+            "::",
+            stringify!(TravId)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).Id) as usize - ptr as usize },
+        36usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Obj_t_),
+            "::",
+            stringify!(Id)
+        )
+    );
+}
+impl Aig_Obj_t_ {
+    #[inline]
+    pub fn Type(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(0usize, 3u8) as u32) }
+    }
+    #[inline]
+    pub fn set_Type(&mut self, val: ::std::os::raw::c_uint) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(0usize, 3u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn fPhase(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(3usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_fPhase(&mut self, val: ::std::os::raw::c_uint) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(3usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn fMarkA(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_fMarkA(&mut self, val: ::std::os::raw::c_uint) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(4usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn fMarkB(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(5usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_fMarkB(&mut self, val: ::std::os::raw::c_uint) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(5usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn nRefs(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(6usize, 26u8) as u32) }
+    }
+    #[inline]
+    pub fn set_nRefs(&mut self, val: ::std::os::raw::c_uint) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(6usize, 26u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn Level(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(32usize, 24u8) as u32) }
+    }
+    #[inline]
+    pub fn set_Level(&mut self, val: ::std::os::raw::c_uint) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(32usize, 24u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn nCuts(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(56usize, 8u8) as u32) }
+    }
+    #[inline]
+    pub fn set_nCuts(&mut self, val: ::std::os::raw::c_uint) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(56usize, 8u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(
+        Type: ::std::os::raw::c_uint,
+        fPhase: ::std::os::raw::c_uint,
+        fMarkA: ::std::os::raw::c_uint,
+        fMarkB: ::std::os::raw::c_uint,
+        nRefs: ::std::os::raw::c_uint,
+        Level: ::std::os::raw::c_uint,
+        nCuts: ::std::os::raw::c_uint,
+    ) -> __BindgenBitfieldUnit<[u8; 8usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 8usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 3u8, {
+            let Type: u32 = unsafe { ::std::mem::transmute(Type) };
+            Type as u64
+        });
+        __bindgen_bitfield_unit.set(3usize, 1u8, {
+            let fPhase: u32 = unsafe { ::std::mem::transmute(fPhase) };
+            fPhase as u64
+        });
+        __bindgen_bitfield_unit.set(4usize, 1u8, {
+            let fMarkA: u32 = unsafe { ::std::mem::transmute(fMarkA) };
+            fMarkA as u64
+        });
+        __bindgen_bitfield_unit.set(5usize, 1u8, {
+            let fMarkB: u32 = unsafe { ::std::mem::transmute(fMarkB) };
+            fMarkB as u64
+        });
+        __bindgen_bitfield_unit.set(6usize, 26u8, {
+            let nRefs: u32 = unsafe { ::std::mem::transmute(nRefs) };
+            nRefs as u64
+        });
+        __bindgen_bitfield_unit.set(32usize, 24u8, {
+            let Level: u32 = unsafe { ::std::mem::transmute(Level) };
+            Level as u64
+        });
+        __bindgen_bitfield_unit.set(56usize, 8u8, {
+            let nCuts: u32 = unsafe { ::std::mem::transmute(nCuts) };
+            nCuts as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct Aig_Man_t_ {
+    pub pName: *mut ::std::os::raw::c_char,
+    pub pSpec: *mut ::std::os::raw::c_char,
+    pub vCis: *mut Vec_Ptr_t,
+    pub vCos: *mut Vec_Ptr_t,
+    pub vObjs: *mut Vec_Ptr_t,
+    pub vBufs: *mut Vec_Ptr_t,
+    pub pConst1: *mut Aig_Obj_t,
+    pub Ghost: Aig_Obj_t,
+    pub nRegs: ::std::os::raw::c_int,
+    pub nTruePis: ::std::os::raw::c_int,
+    pub nTruePos: ::std::os::raw::c_int,
+    pub nAsserts: ::std::os::raw::c_int,
+    pub nConstrs: ::std::os::raw::c_int,
+    pub nBarBufs: ::std::os::raw::c_int,
+    pub nObjs: [::std::os::raw::c_int; 7usize],
+    pub nDeleted: ::std::os::raw::c_int,
+    pub pTable: *mut *mut Aig_Obj_t,
+    pub nTableSize: ::std::os::raw::c_int,
+    pub pFanData: *mut ::std::os::raw::c_int,
+    pub nFansAlloc: ::std::os::raw::c_int,
+    pub vLevels: *mut Vec_Vec_t,
+    pub nBufReplaces: ::std::os::raw::c_int,
+    pub nBufFixes: ::std::os::raw::c_int,
+    pub nBufMax: ::std::os::raw::c_int,
+    pub pOrderData: *mut ::std::os::raw::c_uint,
+    pub nOrderAlloc: ::std::os::raw::c_int,
+    pub iPrev: ::std::os::raw::c_int,
+    pub iNext: ::std::os::raw::c_int,
+    pub nAndTotal: ::std::os::raw::c_int,
+    pub nAndPrev: ::std::os::raw::c_int,
+    pub pEquivs: *mut *mut Aig_Obj_t,
+    pub pReprs: *mut *mut Aig_Obj_t,
+    pub nReprsAlloc: ::std::os::raw::c_int,
+    pub pMemObjs: *mut Aig_MmFixed_t,
+    pub vLevelR: *mut Vec_Int_t,
+    pub nLevelMax: ::std::os::raw::c_int,
+    pub pData: *mut ::std::os::raw::c_void,
+    pub pData2: *mut ::std::os::raw::c_void,
+    pub nTravIds: ::std::os::raw::c_int,
+    pub fCatchExor: ::std::os::raw::c_int,
+    pub fAddStrash: ::std::os::raw::c_int,
+    pub pObjCopies: *mut *mut Aig_Obj_t,
+    pub pImpFunc: ::std::option::Option<
+        unsafe extern "C" fn(arg1: *mut ::std::os::raw::c_void, arg2: *mut ::std::os::raw::c_void),
+    >,
+    pub pImpData: *mut ::std::os::raw::c_void,
+    pub pManTime: *mut ::std::os::raw::c_void,
+    pub pManCuts: *mut ::std::os::raw::c_void,
+    pub pFastSim: *mut ::std::os::raw::c_int,
+    pub pTerSimData: *mut ::std::os::raw::c_uint,
+    pub vMapped: *mut Vec_Ptr_t,
+    pub vFlopNums: *mut Vec_Int_t,
+    pub vFlopReprs: *mut Vec_Int_t,
+    pub pSeqModel: *mut Abc_Cex_t,
+    pub vSeqModelVec: *mut Vec_Ptr_t,
+    pub pManExdc: *mut Aig_Man_t,
+    pub vOnehots: *mut Vec_Ptr_t,
+    pub fCreatePios: ::std::os::raw::c_int,
+    pub vEquPairs: *mut Vec_Int_t,
+    pub vClockDoms: *mut Vec_Vec_t,
+    pub vProbs: *mut Vec_Int_t,
+    pub vCiNumsOrig: *mut Vec_Int_t,
+    pub nComplEdges: ::std::os::raw::c_int,
+    pub Time2Quit: abctime,
+    pub time1: abctime,
+    pub time2: abctime,
+    pub unfold2_type_I: *mut Vec_Ptr_t,
+    pub unfold2_type_II: *mut Vec_Ptr_t,
+}
+#[test]
+fn bindgen_test_layout_Aig_Man_t_() {
+    const UNINIT: ::std::mem::MaybeUninit<Aig_Man_t_> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<Aig_Man_t_>(),
+        528usize,
+        concat!("Size of: ", stringify!(Aig_Man_t_))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<Aig_Man_t_>(),
+        8usize,
+        concat!("Alignment of ", stringify!(Aig_Man_t_))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pName) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(pName)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pSpec) as usize - ptr as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(pSpec)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vCis) as usize - ptr as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(vCis)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vCos) as usize - ptr as usize },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(vCos)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vObjs) as usize - ptr as usize },
+        32usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(vObjs)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vBufs) as usize - ptr as usize },
+        40usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(vBufs)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pConst1) as usize - ptr as usize },
+        48usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(pConst1)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).Ghost) as usize - ptr as usize },
+        56usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(Ghost)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nRegs) as usize - ptr as usize },
+        104usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(nRegs)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nTruePis) as usize - ptr as usize },
+        108usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(nTruePis)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nTruePos) as usize - ptr as usize },
+        112usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(nTruePos)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nAsserts) as usize - ptr as usize },
+        116usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(nAsserts)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nConstrs) as usize - ptr as usize },
+        120usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(nConstrs)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nBarBufs) as usize - ptr as usize },
+        124usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(nBarBufs)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nObjs) as usize - ptr as usize },
+        128usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(nObjs)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nDeleted) as usize - ptr as usize },
+        156usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(nDeleted)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pTable) as usize - ptr as usize },
+        160usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(pTable)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nTableSize) as usize - ptr as usize },
+        168usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(nTableSize)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pFanData) as usize - ptr as usize },
+        176usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(pFanData)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nFansAlloc) as usize - ptr as usize },
+        184usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(nFansAlloc)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vLevels) as usize - ptr as usize },
+        192usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(vLevels)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nBufReplaces) as usize - ptr as usize },
+        200usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(nBufReplaces)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nBufFixes) as usize - ptr as usize },
+        204usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(nBufFixes)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nBufMax) as usize - ptr as usize },
+        208usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(nBufMax)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pOrderData) as usize - ptr as usize },
+        216usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(pOrderData)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nOrderAlloc) as usize - ptr as usize },
+        224usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(nOrderAlloc)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).iPrev) as usize - ptr as usize },
+        228usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(iPrev)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).iNext) as usize - ptr as usize },
+        232usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(iNext)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nAndTotal) as usize - ptr as usize },
+        236usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(nAndTotal)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nAndPrev) as usize - ptr as usize },
+        240usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(nAndPrev)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pEquivs) as usize - ptr as usize },
+        248usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(pEquivs)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pReprs) as usize - ptr as usize },
+        256usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(pReprs)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nReprsAlloc) as usize - ptr as usize },
+        264usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(nReprsAlloc)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pMemObjs) as usize - ptr as usize },
+        272usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(pMemObjs)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vLevelR) as usize - ptr as usize },
+        280usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(vLevelR)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nLevelMax) as usize - ptr as usize },
+        288usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(nLevelMax)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pData) as usize - ptr as usize },
+        296usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(pData)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pData2) as usize - ptr as usize },
+        304usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(pData2)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nTravIds) as usize - ptr as usize },
+        312usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(nTravIds)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fCatchExor) as usize - ptr as usize },
+        316usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(fCatchExor)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fAddStrash) as usize - ptr as usize },
+        320usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(fAddStrash)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pObjCopies) as usize - ptr as usize },
+        328usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(pObjCopies)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pImpFunc) as usize - ptr as usize },
+        336usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(pImpFunc)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pImpData) as usize - ptr as usize },
+        344usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(pImpData)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pManTime) as usize - ptr as usize },
+        352usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(pManTime)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pManCuts) as usize - ptr as usize },
+        360usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(pManCuts)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pFastSim) as usize - ptr as usize },
+        368usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(pFastSim)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pTerSimData) as usize - ptr as usize },
+        376usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(pTerSimData)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vMapped) as usize - ptr as usize },
+        384usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(vMapped)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vFlopNums) as usize - ptr as usize },
+        392usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(vFlopNums)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vFlopReprs) as usize - ptr as usize },
+        400usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(vFlopReprs)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pSeqModel) as usize - ptr as usize },
+        408usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(pSeqModel)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vSeqModelVec) as usize - ptr as usize },
+        416usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(vSeqModelVec)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pManExdc) as usize - ptr as usize },
+        424usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(pManExdc)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vOnehots) as usize - ptr as usize },
+        432usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(vOnehots)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fCreatePios) as usize - ptr as usize },
+        440usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(fCreatePios)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vEquPairs) as usize - ptr as usize },
+        448usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(vEquPairs)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vClockDoms) as usize - ptr as usize },
+        456usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(vClockDoms)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vProbs) as usize - ptr as usize },
+        464usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(vProbs)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vCiNumsOrig) as usize - ptr as usize },
+        472usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(vCiNumsOrig)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nComplEdges) as usize - ptr as usize },
+        480usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(nComplEdges)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).Time2Quit) as usize - ptr as usize },
+        488usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(Time2Quit)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).time1) as usize - ptr as usize },
+        496usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(time1)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).time2) as usize - ptr as usize },
+        504usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(time2)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).unfold2_type_I) as usize - ptr as usize },
+        512usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(unfold2_type_I)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).unfold2_type_II) as usize - ptr as usize },
+        520usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Man_t_),
+            "::",
+            stringify!(unfold2_type_II)
+        )
+    );
+}
+pub type Aig_ManCut_t = Aig_ManCut_t_;
+pub type Aig_Cut_t = Aig_Cut_t_;
+#[repr(C)]
+#[derive(Debug)]
+pub struct Aig_Cut_t_ {
+    pub pNext: *mut Aig_Cut_t,
+    pub Cost: ::std::os::raw::c_int,
+    pub uSign: ::std::os::raw::c_uint,
+    pub iNode: ::std::os::raw::c_int,
+    pub nCutSize: ::std::os::raw::c_short,
+    pub nLeafMax: ::std::os::raw::c_char,
+    pub nFanins: ::std::os::raw::c_char,
+    pub pFanins: __IncompleteArrayField<::std::os::raw::c_int>,
+}
+#[test]
+fn bindgen_test_layout_Aig_Cut_t_() {
+    const UNINIT: ::std::mem::MaybeUninit<Aig_Cut_t_> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<Aig_Cut_t_>(),
+        24usize,
+        concat!("Size of: ", stringify!(Aig_Cut_t_))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<Aig_Cut_t_>(),
+        8usize,
+        concat!("Alignment of ", stringify!(Aig_Cut_t_))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pNext) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Cut_t_),
+            "::",
+            stringify!(pNext)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).Cost) as usize - ptr as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Cut_t_),
+            "::",
+            stringify!(Cost)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).uSign) as usize - ptr as usize },
+        12usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Cut_t_),
+            "::",
+            stringify!(uSign)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).iNode) as usize - ptr as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Cut_t_),
+            "::",
+            stringify!(iNode)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nCutSize) as usize - ptr as usize },
+        20usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Cut_t_),
+            "::",
+            stringify!(nCutSize)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nLeafMax) as usize - ptr as usize },
+        22usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Cut_t_),
+            "::",
+            stringify!(nLeafMax)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nFanins) as usize - ptr as usize },
+        23usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Cut_t_),
+            "::",
+            stringify!(nFanins)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pFanins) as usize - ptr as usize },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_Cut_t_),
+            "::",
+            stringify!(pFanins)
+        )
+    );
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Aig_ManCut_t_ {
+    pub pAig: *mut Aig_Man_t,
+    pub pCuts: *mut *mut Aig_Cut_t,
+    pub nCutsMax: ::std::os::raw::c_int,
+    pub nLeafMax: ::std::os::raw::c_int,
+    pub fTruth: ::std::os::raw::c_int,
+    pub fVerbose: ::std::os::raw::c_int,
+    pub nCutSize: ::std::os::raw::c_int,
+    pub nTruthWords: ::std::os::raw::c_int,
+    pub pMemCuts: *mut Aig_MmFixed_t,
+    pub puTemp: [*mut ::std::os::raw::c_uint; 4usize],
+}
+#[test]
+fn bindgen_test_layout_Aig_ManCut_t_() {
+    const UNINIT: ::std::mem::MaybeUninit<Aig_ManCut_t_> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<Aig_ManCut_t_>(),
+        80usize,
+        concat!("Size of: ", stringify!(Aig_ManCut_t_))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<Aig_ManCut_t_>(),
+        8usize,
+        concat!("Alignment of ", stringify!(Aig_ManCut_t_))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pAig) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_ManCut_t_),
+            "::",
+            stringify!(pAig)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pCuts) as usize - ptr as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_ManCut_t_),
+            "::",
+            stringify!(pCuts)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nCutsMax) as usize - ptr as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_ManCut_t_),
+            "::",
+            stringify!(nCutsMax)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nLeafMax) as usize - ptr as usize },
+        20usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_ManCut_t_),
+            "::",
+            stringify!(nLeafMax)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fTruth) as usize - ptr as usize },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_ManCut_t_),
+            "::",
+            stringify!(fTruth)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fVerbose) as usize - ptr as usize },
+        28usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_ManCut_t_),
+            "::",
+            stringify!(fVerbose)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nCutSize) as usize - ptr as usize },
+        32usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_ManCut_t_),
+            "::",
+            stringify!(nCutSize)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nTruthWords) as usize - ptr as usize },
+        36usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_ManCut_t_),
+            "::",
+            stringify!(nTruthWords)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pMemCuts) as usize - ptr as usize },
+        40usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_ManCut_t_),
+            "::",
+            stringify!(pMemCuts)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).puTemp) as usize - ptr as usize },
+        48usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Aig_ManCut_t_),
+            "::",
+            stringify!(puTemp)
+        )
+    );
+}
+extern "C" {
+    #[link_name = "Aig_ObjCuts_imctk_abc_sys"]
+    pub fn Aig_ObjCuts(p: *mut Aig_ManCut_t, pObj: *mut Aig_Obj_t) -> *mut Aig_Cut_t;
+}
+extern "C" {
+    #[link_name = "Aig_ObjSetCuts_imctk_abc_sys"]
+    pub fn Aig_ObjSetCuts(p: *mut Aig_ManCut_t, pObj: *mut Aig_Obj_t, pCuts: *mut Aig_Cut_t);
+}
+extern "C" {
+    #[link_name = "Aig_CutLeaveNum_imctk_abc_sys"]
+    pub fn Aig_CutLeaveNum(pCut: *mut Aig_Cut_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_CutLeaves_imctk_abc_sys"]
+    pub fn Aig_CutLeaves(pCut: *mut Aig_Cut_t) -> *mut ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_CutTruth_imctk_abc_sys"]
+    pub fn Aig_CutTruth(pCut: *mut Aig_Cut_t) -> *mut ::std::os::raw::c_uint;
+}
+extern "C" {
+    #[link_name = "Aig_CutNext_imctk_abc_sys"]
+    pub fn Aig_CutNext(pCut: *mut Aig_Cut_t) -> *mut Aig_Cut_t;
+}
+extern "C" {
+    #[link_name = "Aig_ObjCutSign_imctk_abc_sys"]
+    pub fn Aig_ObjCutSign(ObjId: ::std::os::raw::c_uint) -> ::std::os::raw::c_uint;
+}
+extern "C" {
+    #[link_name = "Aig_WordCountOnes_imctk_abc_sys"]
+    pub fn Aig_WordCountOnes(uWord: ::std::os::raw::c_uint) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_WordFindFirstBit_imctk_abc_sys"]
+    pub fn Aig_WordFindFirstBit(uWord: ::std::os::raw::c_uint) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_Regular_imctk_abc_sys"]
+    pub fn Aig_Regular(p: *mut Aig_Obj_t) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    #[link_name = "Aig_Not_imctk_abc_sys"]
+    pub fn Aig_Not(p: *mut Aig_Obj_t) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    #[link_name = "Aig_NotCond_imctk_abc_sys"]
+    pub fn Aig_NotCond(p: *mut Aig_Obj_t, c: ::std::os::raw::c_int) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    #[link_name = "Aig_IsComplement_imctk_abc_sys"]
+    pub fn Aig_IsComplement(p: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ManCiNum_imctk_abc_sys"]
+    pub fn Aig_ManCiNum(p: *mut Aig_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ManCoNum_imctk_abc_sys"]
+    pub fn Aig_ManCoNum(p: *mut Aig_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ManBufNum_imctk_abc_sys"]
+    pub fn Aig_ManBufNum(p: *mut Aig_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ManAndNum_imctk_abc_sys"]
+    pub fn Aig_ManAndNum(p: *mut Aig_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ManExorNum_imctk_abc_sys"]
+    pub fn Aig_ManExorNum(p: *mut Aig_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ManNodeNum_imctk_abc_sys"]
+    pub fn Aig_ManNodeNum(p: *mut Aig_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ManGetCost_imctk_abc_sys"]
+    pub fn Aig_ManGetCost(p: *mut Aig_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ManObjNum_imctk_abc_sys"]
+    pub fn Aig_ManObjNum(p: *mut Aig_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ManObjNumMax_imctk_abc_sys"]
+    pub fn Aig_ManObjNumMax(p: *mut Aig_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ManRegNum_imctk_abc_sys"]
+    pub fn Aig_ManRegNum(p: *mut Aig_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ManConstrNum_imctk_abc_sys"]
+    pub fn Aig_ManConstrNum(p: *mut Aig_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ManConst0_imctk_abc_sys"]
+    pub fn Aig_ManConst0(p: *mut Aig_Man_t) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    #[link_name = "Aig_ManConst1_imctk_abc_sys"]
+    pub fn Aig_ManConst1(p: *mut Aig_Man_t) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    #[link_name = "Aig_ManGhost_imctk_abc_sys"]
+    pub fn Aig_ManGhost(p: *mut Aig_Man_t) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    #[link_name = "Aig_ManCi_imctk_abc_sys"]
+    pub fn Aig_ManCi(p: *mut Aig_Man_t, i: ::std::os::raw::c_int) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    #[link_name = "Aig_ManCo_imctk_abc_sys"]
+    pub fn Aig_ManCo(p: *mut Aig_Man_t, i: ::std::os::raw::c_int) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    #[link_name = "Aig_ManLo_imctk_abc_sys"]
+    pub fn Aig_ManLo(p: *mut Aig_Man_t, i: ::std::os::raw::c_int) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    #[link_name = "Aig_ManLi_imctk_abc_sys"]
+    pub fn Aig_ManLi(p: *mut Aig_Man_t, i: ::std::os::raw::c_int) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    #[link_name = "Aig_ManObj_imctk_abc_sys"]
+    pub fn Aig_ManObj(p: *mut Aig_Man_t, i: ::std::os::raw::c_int) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    #[link_name = "Aig_ObjType_imctk_abc_sys"]
+    pub fn Aig_ObjType(pObj: *mut Aig_Obj_t) -> Aig_Type_t;
+}
+extern "C" {
+    #[link_name = "Aig_ObjIsNone_imctk_abc_sys"]
+    pub fn Aig_ObjIsNone(pObj: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ObjIsConst1_imctk_abc_sys"]
+    pub fn Aig_ObjIsConst1(pObj: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ObjIsCi_imctk_abc_sys"]
+    pub fn Aig_ObjIsCi(pObj: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ObjIsCo_imctk_abc_sys"]
+    pub fn Aig_ObjIsCo(pObj: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ObjIsBuf_imctk_abc_sys"]
+    pub fn Aig_ObjIsBuf(pObj: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ObjIsAnd_imctk_abc_sys"]
+    pub fn Aig_ObjIsAnd(pObj: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ObjIsExor_imctk_abc_sys"]
+    pub fn Aig_ObjIsExor(pObj: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ObjIsNode_imctk_abc_sys"]
+    pub fn Aig_ObjIsNode(pObj: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ObjIsTerm_imctk_abc_sys"]
+    pub fn Aig_ObjIsTerm(pObj: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ObjIsHash_imctk_abc_sys"]
+    pub fn Aig_ObjIsHash(pObj: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ObjIsChoice_imctk_abc_sys"]
+    pub fn Aig_ObjIsChoice(p: *mut Aig_Man_t, pObj: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ObjIsCand_imctk_abc_sys"]
+    pub fn Aig_ObjIsCand(pObj: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ObjCioId_imctk_abc_sys"]
+    pub fn Aig_ObjCioId(pObj: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ObjId_imctk_abc_sys"]
+    pub fn Aig_ObjId(pObj: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ObjIsMarkA_imctk_abc_sys"]
+    pub fn Aig_ObjIsMarkA(pObj: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ObjSetMarkA_imctk_abc_sys"]
+    pub fn Aig_ObjSetMarkA(pObj: *mut Aig_Obj_t);
+}
+extern "C" {
+    #[link_name = "Aig_ObjClearMarkA_imctk_abc_sys"]
+    pub fn Aig_ObjClearMarkA(pObj: *mut Aig_Obj_t);
+}
+extern "C" {
+    #[link_name = "Aig_ObjSetTravId_imctk_abc_sys"]
+    pub fn Aig_ObjSetTravId(pObj: *mut Aig_Obj_t, TravId: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[link_name = "Aig_ObjSetTravIdCurrent_imctk_abc_sys"]
+    pub fn Aig_ObjSetTravIdCurrent(p: *mut Aig_Man_t, pObj: *mut Aig_Obj_t);
+}
+extern "C" {
+    #[link_name = "Aig_ObjSetTravIdPrevious_imctk_abc_sys"]
+    pub fn Aig_ObjSetTravIdPrevious(p: *mut Aig_Man_t, pObj: *mut Aig_Obj_t);
+}
+extern "C" {
+    #[link_name = "Aig_ObjIsTravIdCurrent_imctk_abc_sys"]
+    pub fn Aig_ObjIsTravIdCurrent(p: *mut Aig_Man_t, pObj: *mut Aig_Obj_t)
+        -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ObjIsTravIdPrevious_imctk_abc_sys"]
+    pub fn Aig_ObjIsTravIdPrevious(
+        p: *mut Aig_Man_t,
+        pObj: *mut Aig_Obj_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ObjPhase_imctk_abc_sys"]
+    pub fn Aig_ObjPhase(pObj: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ObjPhaseReal_imctk_abc_sys"]
+    pub fn Aig_ObjPhaseReal(pObj: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ObjRefs_imctk_abc_sys"]
+    pub fn Aig_ObjRefs(pObj: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ObjRef_imctk_abc_sys"]
+    pub fn Aig_ObjRef(pObj: *mut Aig_Obj_t);
+}
+extern "C" {
+    #[link_name = "Aig_ObjDeref_imctk_abc_sys"]
+    pub fn Aig_ObjDeref(pObj: *mut Aig_Obj_t);
+}
+extern "C" {
+    #[link_name = "Aig_ObjClearRef_imctk_abc_sys"]
+    pub fn Aig_ObjClearRef(pObj: *mut Aig_Obj_t);
+}
+extern "C" {
+    #[link_name = "Aig_ObjFaninId0_imctk_abc_sys"]
+    pub fn Aig_ObjFaninId0(pObj: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ObjFaninId1_imctk_abc_sys"]
+    pub fn Aig_ObjFaninId1(pObj: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ObjFaninC0_imctk_abc_sys"]
+    pub fn Aig_ObjFaninC0(pObj: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ObjFaninC1_imctk_abc_sys"]
+    pub fn Aig_ObjFaninC1(pObj: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ObjFanin0_imctk_abc_sys"]
+    pub fn Aig_ObjFanin0(pObj: *mut Aig_Obj_t) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    #[link_name = "Aig_ObjFanin1_imctk_abc_sys"]
+    pub fn Aig_ObjFanin1(pObj: *mut Aig_Obj_t) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    #[link_name = "Aig_ObjChild0_imctk_abc_sys"]
+    pub fn Aig_ObjChild0(pObj: *mut Aig_Obj_t) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    #[link_name = "Aig_ObjChild1_imctk_abc_sys"]
+    pub fn Aig_ObjChild1(pObj: *mut Aig_Obj_t) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    #[link_name = "Aig_ObjChild0Copy_imctk_abc_sys"]
+    pub fn Aig_ObjChild0Copy(pObj: *mut Aig_Obj_t) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    #[link_name = "Aig_ObjChild1Copy_imctk_abc_sys"]
+    pub fn Aig_ObjChild1Copy(pObj: *mut Aig_Obj_t) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    #[link_name = "Aig_ObjChild0Next_imctk_abc_sys"]
+    pub fn Aig_ObjChild0Next(pObj: *mut Aig_Obj_t) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    #[link_name = "Aig_ObjChild1Next_imctk_abc_sys"]
+    pub fn Aig_ObjChild1Next(pObj: *mut Aig_Obj_t) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    #[link_name = "Aig_ObjChild0Flip_imctk_abc_sys"]
+    pub fn Aig_ObjChild0Flip(pObj: *mut Aig_Obj_t);
+}
+extern "C" {
+    #[link_name = "Aig_ObjChild1Flip_imctk_abc_sys"]
+    pub fn Aig_ObjChild1Flip(pObj: *mut Aig_Obj_t);
+}
+extern "C" {
+    #[link_name = "Aig_ObjCopy_imctk_abc_sys"]
+    pub fn Aig_ObjCopy(pObj: *mut Aig_Obj_t) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    #[link_name = "Aig_ObjSetCopy_imctk_abc_sys"]
+    pub fn Aig_ObjSetCopy(pObj: *mut Aig_Obj_t, pCopy: *mut Aig_Obj_t);
+}
+extern "C" {
+    #[link_name = "Aig_ObjRealCopy_imctk_abc_sys"]
+    pub fn Aig_ObjRealCopy(pObj: *mut Aig_Obj_t) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    #[link_name = "Aig_ObjToLit_imctk_abc_sys"]
+    pub fn Aig_ObjToLit(pObj: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ObjFromLit_imctk_abc_sys"]
+    pub fn Aig_ObjFromLit(p: *mut Aig_Man_t, iLit: ::std::os::raw::c_int) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    #[link_name = "Aig_ObjLevel_imctk_abc_sys"]
+    pub fn Aig_ObjLevel(pObj: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ObjLevelNew_imctk_abc_sys"]
+    pub fn Aig_ObjLevelNew(pObj: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ObjSetLevel_imctk_abc_sys"]
+    pub fn Aig_ObjSetLevel(pObj: *mut Aig_Obj_t, i: ::std::os::raw::c_int)
+        -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ObjClean_imctk_abc_sys"]
+    pub fn Aig_ObjClean(pObj: *mut Aig_Obj_t);
+}
+extern "C" {
+    #[link_name = "Aig_ObjFanout0_imctk_abc_sys"]
+    pub fn Aig_ObjFanout0(p: *mut Aig_Man_t, pObj: *mut Aig_Obj_t) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    #[link_name = "Aig_ObjEquiv_imctk_abc_sys"]
+    pub fn Aig_ObjEquiv(p: *mut Aig_Man_t, pObj: *mut Aig_Obj_t) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    #[link_name = "Aig_ObjSetEquiv_imctk_abc_sys"]
+    pub fn Aig_ObjSetEquiv(p: *mut Aig_Man_t, pObj: *mut Aig_Obj_t, pEqu: *mut Aig_Obj_t);
+}
+extern "C" {
+    #[link_name = "Aig_ObjRepr_imctk_abc_sys"]
+    pub fn Aig_ObjRepr(p: *mut Aig_Man_t, pObj: *mut Aig_Obj_t) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    #[link_name = "Aig_ObjSetRepr_imctk_abc_sys"]
+    pub fn Aig_ObjSetRepr(p: *mut Aig_Man_t, pObj: *mut Aig_Obj_t, pRepr: *mut Aig_Obj_t);
+}
+extern "C" {
+    #[link_name = "Aig_ObjWhatFanin_imctk_abc_sys"]
+    pub fn Aig_ObjWhatFanin(pObj: *mut Aig_Obj_t, pFanin: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ObjFanoutC_imctk_abc_sys"]
+    pub fn Aig_ObjFanoutC(pObj: *mut Aig_Obj_t, pFanout: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ObjCreateGhost_imctk_abc_sys"]
+    pub fn Aig_ObjCreateGhost(
+        p: *mut Aig_Man_t,
+        p0: *mut Aig_Obj_t,
+        p1: *mut Aig_Obj_t,
+        Type: Aig_Type_t,
+    ) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    #[link_name = "Aig_ManFetchMemory_imctk_abc_sys"]
+    pub fn Aig_ManFetchMemory(p: *mut Aig_Man_t) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    #[link_name = "Aig_ManRecycleMemory_imctk_abc_sys"]
+    pub fn Aig_ManRecycleMemory(p: *mut Aig_Man_t, pEntry: *mut Aig_Obj_t);
+}
+extern "C" {
+    #[link_name = "Aig_ObjFanout0Int_imctk_abc_sys"]
+    pub fn Aig_ObjFanout0Int(
+        p: *mut Aig_Man_t,
+        ObjId: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Aig_ObjFanoutNext_imctk_abc_sys"]
+    pub fn Aig_ObjFanoutNext(
+        p: *mut Aig_Man_t,
+        iFan: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Aig_ManCheck(p: *mut Aig_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Aig_ManCheckMarkA(p: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Aig_ManCheckPhase(p: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Aig_ComputeCuts(
+        pAig: *mut Aig_Man_t,
+        nCutsMax: ::std::os::raw::c_int,
+        nLeafMax: ::std::os::raw::c_int,
+        fTruth: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> *mut Aig_ManCut_t;
+}
+extern "C" {
+    pub fn Aig_ManCutStop(p: *mut Aig_ManCut_t);
+}
+extern "C" {
+    pub fn Aig_ManVerifyTopoOrder(p: *mut Aig_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Aig_ManDfs(p: *mut Aig_Man_t, fNodesOnly: ::std::os::raw::c_int) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Aig_ManDfsAll(p: *mut Aig_Man_t) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Aig_ManDfsPreorder(
+        p: *mut Aig_Man_t,
+        fNodesOnly: ::std::os::raw::c_int,
+    ) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Aig_ManLevelize(p: *mut Aig_Man_t) -> *mut Vec_Vec_t;
+}
+extern "C" {
+    pub fn Aig_ManDfsNodes(
+        p: *mut Aig_Man_t,
+        ppNodes: *mut *mut Aig_Obj_t,
+        nNodes: ::std::os::raw::c_int,
+    ) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Aig_ManDfsChoices(p: *mut Aig_Man_t) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Aig_ManDfsReverse(p: *mut Aig_Man_t) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Aig_ManLevelNum(p: *mut Aig_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Aig_ManChoiceLevel(p: *mut Aig_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Aig_DagSize(pObj: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Aig_SupportSize(p: *mut Aig_Man_t, pObj: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Aig_Support(p: *mut Aig_Man_t, pObj: *mut Aig_Obj_t) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Aig_SupportNodes(
+        p: *mut Aig_Man_t,
+        ppObjs: *mut *mut Aig_Obj_t,
+        nObjs: ::std::os::raw::c_int,
+        vSupp: *mut Vec_Ptr_t,
+    );
+}
+extern "C" {
+    pub fn Aig_ConeUnmark_rec(pObj: *mut Aig_Obj_t);
+}
+extern "C" {
+    pub fn Aig_Transfer(
+        pSour: *mut Aig_Man_t,
+        pDest: *mut Aig_Man_t,
+        pObj: *mut Aig_Obj_t,
+        nVars: ::std::os::raw::c_int,
+    ) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    pub fn Aig_Compose(
+        p: *mut Aig_Man_t,
+        pRoot: *mut Aig_Obj_t,
+        pFunc: *mut Aig_Obj_t,
+        iVar: ::std::os::raw::c_int,
+    ) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    pub fn Aig_ObjCollectCut(
+        pRoot: *mut Aig_Obj_t,
+        vLeaves: *mut Vec_Ptr_t,
+        vNodes: *mut Vec_Ptr_t,
+    );
+}
+extern "C" {
+    pub fn Aig_ObjCollectSuper(
+        pObj: *mut Aig_Obj_t,
+        vSuper: *mut Vec_Ptr_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Aig_ManDupSimpleDfs_rec(
+        pNew: *mut Aig_Man_t,
+        p: *mut Aig_Man_t,
+        pObj: *mut Aig_Obj_t,
+    ) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    pub fn Aig_ManDupSimple(p: *mut Aig_Man_t) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManDupSimpleWithHints(p: *mut Aig_Man_t, vHints: *mut Vec_Int_t) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManDupSimpleDfs(p: *mut Aig_Man_t) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManDupSimpleDfsPart(
+        p: *mut Aig_Man_t,
+        vPis: *mut Vec_Ptr_t,
+        vCos: *mut Vec_Ptr_t,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManDupOrdered(p: *mut Aig_Man_t) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManDupCof(
+        p: *mut Aig_Man_t,
+        iInput: ::std::os::raw::c_int,
+        Value: ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManDupTrim(p: *mut Aig_Man_t) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManDupExor(p: *mut Aig_Man_t) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManDupDfs(p: *mut Aig_Man_t) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManOrderPios(p: *mut Aig_Man_t, pOrder: *mut Aig_Man_t) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Aig_ManDupDfsGuided(p: *mut Aig_Man_t, vPios: *mut Vec_Ptr_t) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManDupLevelized(p: *mut Aig_Man_t) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManDupWithoutPos(p: *mut Aig_Man_t) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManDupFlopsOnly(p: *mut Aig_Man_t) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManDupRepres(p: *mut Aig_Man_t) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManDupRepresDfs(p: *mut Aig_Man_t) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManCreateMiter(
+        p1: *mut Aig_Man_t,
+        p2: *mut Aig_Man_t,
+        fImpl: ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManDupOrpos(p: *mut Aig_Man_t, fAddRegs: ::std::os::raw::c_int) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManDupOneOutput(
+        p: *mut Aig_Man_t,
+        iPoNum: ::std::os::raw::c_int,
+        fAddRegs: ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManDupUnsolvedOutputs(
+        p: *mut Aig_Man_t,
+        fAddRegs: ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManDupArray(vArray: *mut Vec_Ptr_t) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManDupNodes(pMan: *mut Aig_Man_t, vArray: *mut Vec_Ptr_t) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ObjAddFanout(p: *mut Aig_Man_t, pObj: *mut Aig_Obj_t, pFanout: *mut Aig_Obj_t);
+}
+extern "C" {
+    pub fn Aig_ObjRemoveFanout(p: *mut Aig_Man_t, pObj: *mut Aig_Obj_t, pFanout: *mut Aig_Obj_t);
+}
+extern "C" {
+    pub fn Aig_ManFanoutStart(p: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Aig_ManFanoutStop(p: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Aig_ManFrames(
+        pAig: *mut Aig_Man_t,
+        nFs: ::std::os::raw::c_int,
+        fInit: ::std::os::raw::c_int,
+        fOuts: ::std::os::raw::c_int,
+        fRegs: ::std::os::raw::c_int,
+        fEnlarge: ::std::os::raw::c_int,
+        ppObjMap: *mut *mut *mut Aig_Obj_t,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManStart(nNodesMax: ::std::os::raw::c_int) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManStartFrom(p: *mut Aig_Man_t) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManExtractMiter(
+        p: *mut Aig_Man_t,
+        pNode1: *mut Aig_Obj_t,
+        pNode2: *mut Aig_Obj_t,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManStop(p: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Aig_ManStopP(p: *mut *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Aig_ManCleanup(p: *mut Aig_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Aig_ManAntiCleanup(p: *mut Aig_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Aig_ManCiCleanup(p: *mut Aig_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Aig_ManCoCleanup(p: *mut Aig_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Aig_ManPrintStats(p: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Aig_ManReportImprovement(p: *mut Aig_Man_t, pNew: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Aig_ManSetRegNum(p: *mut Aig_Man_t, nRegs: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Aig_ManFlipFirstPo(p: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Aig_ManReleaseData(p: *mut Aig_Man_t) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    pub fn Aig_ManStartMemory(p: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Aig_ManStopMemory(p: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Aig_NodeRef_rec(
+        pNode: *mut Aig_Obj_t,
+        LevelMin: ::std::os::raw::c_uint,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Aig_NodeDeref_rec(
+        pNode: *mut Aig_Obj_t,
+        LevelMin: ::std::os::raw::c_uint,
+        pPower: *mut f32,
+        pProbs: *mut f32,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Aig_NodeMffcSupp(
+        p: *mut Aig_Man_t,
+        pNode: *mut Aig_Obj_t,
+        LevelMin: ::std::os::raw::c_int,
+        vSupp: *mut Vec_Ptr_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Aig_NodeMffcLabel(
+        p: *mut Aig_Man_t,
+        pNode: *mut Aig_Obj_t,
+        pPower: *mut f32,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Aig_NodeMffcLabelCut(
+        p: *mut Aig_Man_t,
+        pNode: *mut Aig_Obj_t,
+        vLeaves: *mut Vec_Ptr_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Aig_NodeMffcExtendCut(
+        p: *mut Aig_Man_t,
+        pNode: *mut Aig_Obj_t,
+        vLeaves: *mut Vec_Ptr_t,
+        vResult: *mut Vec_Ptr_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Aig_ObjCreateCi(p: *mut Aig_Man_t) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    pub fn Aig_ObjCreateCo(p: *mut Aig_Man_t, pDriver: *mut Aig_Obj_t) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    pub fn Aig_ObjCreate(p: *mut Aig_Man_t, pGhost: *mut Aig_Obj_t) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    pub fn Aig_ObjConnect(
+        p: *mut Aig_Man_t,
+        pObj: *mut Aig_Obj_t,
+        pFan0: *mut Aig_Obj_t,
+        pFan1: *mut Aig_Obj_t,
+    );
+}
+extern "C" {
+    pub fn Aig_ObjDisconnect(p: *mut Aig_Man_t, pObj: *mut Aig_Obj_t);
+}
+extern "C" {
+    pub fn Aig_ObjDelete(p: *mut Aig_Man_t, pObj: *mut Aig_Obj_t);
+}
+extern "C" {
+    pub fn Aig_ObjDelete_rec(
+        p: *mut Aig_Man_t,
+        pObj: *mut Aig_Obj_t,
+        fFreeTop: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Aig_ObjDeletePo(p: *mut Aig_Man_t, pObj: *mut Aig_Obj_t);
+}
+extern "C" {
+    pub fn Aig_ObjPrint(p: *mut Aig_Man_t, pObj: *mut Aig_Obj_t);
+}
+extern "C" {
+    pub fn Aig_ObjPatchFanin0(p: *mut Aig_Man_t, pObj: *mut Aig_Obj_t, pFaninNew: *mut Aig_Obj_t);
+}
+extern "C" {
+    pub fn Aig_ObjReplace(
+        p: *mut Aig_Man_t,
+        pObjOld: *mut Aig_Obj_t,
+        pObjNew: *mut Aig_Obj_t,
+        fUpdateLevel: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Aig_IthVar(p: *mut Aig_Man_t, i: ::std::os::raw::c_int) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    pub fn Aig_Oper(
+        p: *mut Aig_Man_t,
+        p0: *mut Aig_Obj_t,
+        p1: *mut Aig_Obj_t,
+        Type: Aig_Type_t,
+    ) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    pub fn Aig_And(p: *mut Aig_Man_t, p0: *mut Aig_Obj_t, p1: *mut Aig_Obj_t) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    pub fn Aig_Or(p: *mut Aig_Man_t, p0: *mut Aig_Obj_t, p1: *mut Aig_Obj_t) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    pub fn Aig_Exor(p: *mut Aig_Man_t, p0: *mut Aig_Obj_t, p1: *mut Aig_Obj_t) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    pub fn Aig_Mux(
+        p: *mut Aig_Man_t,
+        pC: *mut Aig_Obj_t,
+        p1: *mut Aig_Obj_t,
+        p0: *mut Aig_Obj_t,
+    ) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    pub fn Aig_Maj(
+        p: *mut Aig_Man_t,
+        pA: *mut Aig_Obj_t,
+        pB: *mut Aig_Obj_t,
+        pC: *mut Aig_Obj_t,
+    ) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    pub fn Aig_Multi(
+        p: *mut Aig_Man_t,
+        pArgs: *mut *mut Aig_Obj_t,
+        nArgs: ::std::os::raw::c_int,
+        Type: Aig_Type_t,
+    ) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    pub fn Aig_Miter(p: *mut Aig_Man_t, vPairs: *mut Vec_Ptr_t) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    pub fn Aig_MiterTwo(
+        p: *mut Aig_Man_t,
+        vNodes1: *mut Vec_Ptr_t,
+        vNodes2: *mut Vec_Ptr_t,
+    ) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    pub fn Aig_CreateAnd(p: *mut Aig_Man_t, nVars: ::std::os::raw::c_int) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    pub fn Aig_CreateOr(p: *mut Aig_Man_t, nVars: ::std::os::raw::c_int) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    pub fn Aig_CreateExor(p: *mut Aig_Man_t, nVars: ::std::os::raw::c_int) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    pub fn Aig_ManOrderStart(p: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Aig_ManOrderStop(p: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Aig_ObjOrderInsert(p: *mut Aig_Man_t, ObjId: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Aig_ObjOrderRemove(p: *mut Aig_Man_t, ObjId: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Aig_ObjOrderAdvance(p: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Aig_ManSupports(p: *mut Aig_Man_t) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Aig_ManSupportsInverse(p: *mut Aig_Man_t) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Aig_ManSupportsRegisters(p: *mut Aig_Man_t) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Aig_ManPartitionSmart(
+        p: *mut Aig_Man_t,
+        nPartSizeLimit: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+        pvPartSupps: *mut *mut Vec_Ptr_t,
+    ) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Aig_ManPartitionSmartRegisters(
+        pAig: *mut Aig_Man_t,
+        nSuppSizeLimit: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Aig_ManPartitionNaive(
+        p: *mut Aig_Man_t,
+        nPartSize: ::std::os::raw::c_int,
+    ) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Aig_ManMiterPartitioned(
+        p1: *mut Aig_Man_t,
+        p2: *mut Aig_Man_t,
+        nPartSize: ::std::os::raw::c_int,
+        fSmart: ::std::os::raw::c_int,
+    ) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Aig_ManChoicePartitioned(
+        vAigs: *mut Vec_Ptr_t,
+        nPartSize: ::std::os::raw::c_int,
+        nConfMax: ::std::os::raw::c_int,
+        nLevelMax: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManFraigPartitioned(
+        pAig: *mut Aig_Man_t,
+        nPartSize: ::std::os::raw::c_int,
+        nConfMax: ::std::os::raw::c_int,
+        nLevelMax: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManChoiceConstructive(
+        vAigs: *mut Vec_Ptr_t,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManRegPartitionSimple(
+        pAig: *mut Aig_Man_t,
+        nPartSize: ::std::os::raw::c_int,
+        nOverSize: ::std::os::raw::c_int,
+    ) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Aig_ManPartDivide(
+        vResult: *mut Vec_Ptr_t,
+        vDomain: *mut Vec_Int_t,
+        nPartSize: ::std::os::raw::c_int,
+        nOverSize: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Aig_ManRegPartitionSmart(
+        pAig: *mut Aig_Man_t,
+        nPartSize: ::std::os::raw::c_int,
+    ) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Aig_ManRegCreatePart(
+        pAig: *mut Aig_Man_t,
+        vPart: *mut Vec_Int_t,
+        pnCountPis: *mut ::std::os::raw::c_int,
+        pnCountRegs: *mut ::std::os::raw::c_int,
+        ppMapBack: *mut *mut ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManRegProjectOnehots(
+        pAig: *mut Aig_Man_t,
+        pPart: *mut Aig_Man_t,
+        vOnehots: *mut Vec_Ptr_t,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Aig_ManReprStart(p: *mut Aig_Man_t, nIdMax: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Aig_ManReprStop(p: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Aig_ObjCreateRepr(p: *mut Aig_Man_t, pNode1: *mut Aig_Obj_t, pNode2: *mut Aig_Obj_t);
+}
+extern "C" {
+    pub fn Aig_ManTransferRepr(pNew: *mut Aig_Man_t, p: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Aig_ManDupRepr(p: *mut Aig_Man_t, fOrdered: ::std::os::raw::c_int) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManDupReprBasic(p: *mut Aig_Man_t) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManCountReprs(p: *mut Aig_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Aig_ManRehash(p: *mut Aig_Man_t) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ObjCheckTfi(
+        p: *mut Aig_Man_t,
+        pNew: *mut Aig_Obj_t,
+        pOld: *mut Aig_Obj_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Aig_ManMarkValidChoices(p: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Aig_TransferMappedClasses(
+        pAig: *mut Aig_Man_t,
+        pPart: *mut Aig_Man_t,
+        pMapBack: *mut ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Rtm_ManRetime(
+        p: *mut Aig_Man_t,
+        fForward: ::std::os::raw::c_int,
+        nStepsMax: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManRetimeFrontier(
+        p: *mut Aig_Man_t,
+        nStepsMax: ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManRemap(p: *mut Aig_Man_t, vMap: *mut Vec_Ptr_t) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManSeqCleanup(p: *mut Aig_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Aig_ManSeqCleanupBasic(p: *mut Aig_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Aig_ManCountMergeRegs(p: *mut Aig_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Aig_ManReduceLaches(
+        p: *mut Aig_Man_t,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManComputeSccs(p: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Aig_ManScl(
+        pAig: *mut Aig_Man_t,
+        fLatchConst: ::std::os::raw::c_int,
+        fLatchEqual: ::std::os::raw::c_int,
+        fUseMvSweep: ::std::os::raw::c_int,
+        nFramesSymb: ::std::os::raw::c_int,
+        nFramesSatur: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+        fVeryVerbose: ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManShow(pMan: *mut Aig_Man_t, fHaig: ::std::os::raw::c_int, vBold: *mut Vec_Ptr_t);
+}
+extern "C" {
+    pub fn Aig_TableLookup(p: *mut Aig_Man_t, pGhost: *mut Aig_Obj_t) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    pub fn Aig_TableLookupTwo(
+        p: *mut Aig_Man_t,
+        pFanin0: *mut Aig_Obj_t,
+        pFanin1: *mut Aig_Obj_t,
+    ) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    pub fn Aig_TableInsert(p: *mut Aig_Man_t, pObj: *mut Aig_Obj_t);
+}
+extern "C" {
+    pub fn Aig_TableDelete(p: *mut Aig_Man_t, pObj: *mut Aig_Obj_t);
+}
+extern "C" {
+    pub fn Aig_TableCountEntries(p: *mut Aig_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Aig_TableProfile(p: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Aig_TableClear(p: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Aig_ObjClearReverseLevel(p: *mut Aig_Man_t, pObj: *mut Aig_Obj_t);
+}
+extern "C" {
+    pub fn Aig_ObjRequiredLevel(p: *mut Aig_Man_t, pObj: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Aig_ManStartReverseLevels(p: *mut Aig_Man_t, nMaxLevelIncrease: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Aig_ManStopReverseLevels(p: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Aig_ManUpdateLevel(p: *mut Aig_Man_t, pObjNew: *mut Aig_Obj_t);
+}
+extern "C" {
+    pub fn Aig_ManUpdateReverseLevel(p: *mut Aig_Man_t, pObjNew: *mut Aig_Obj_t);
+}
+extern "C" {
+    pub fn Aig_ManVerifyLevel(p: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Aig_ManVerifyReverseLevel(p: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Aig_ManCutTruth(
+        pRoot: *mut Aig_Obj_t,
+        vLeaves: *mut Vec_Ptr_t,
+        vNodes: *mut Vec_Ptr_t,
+        vTruthElem: *mut Vec_Ptr_t,
+        vTruthStore: *mut Vec_Ptr_t,
+    ) -> *mut ::std::os::raw::c_uint;
+}
+extern "C" {
+    pub fn Aig_ManConstReduce(
+        p: *mut Aig_Man_t,
+        fUseMvSweep: ::std::os::raw::c_int,
+        nFramesSymb: ::std::os::raw::c_int,
+        nFramesSatur: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+        fVeryVerbose: ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Aig_ManIncrementTravId(p: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Aig_TimeStamp() -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Aig_ManHasNoGaps(p: *mut Aig_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Aig_ManLevels(p: *mut Aig_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Aig_ManResetRefs(p: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Aig_ManCleanMarkA(p: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Aig_ManCleanMarkB(p: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Aig_ManCleanMarkAB(p: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Aig_ManCleanData(p: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Aig_ObjCleanData_rec(pObj: *mut Aig_Obj_t);
+}
+extern "C" {
+    pub fn Aig_ManCleanNext(p: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Aig_ObjCollectMulti(pFunc: *mut Aig_Obj_t, vSuper: *mut Vec_Ptr_t);
+}
+extern "C" {
+    pub fn Aig_ObjIsMuxType(pObj: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Aig_ObjRecognizeExor(
+        pObj: *mut Aig_Obj_t,
+        ppFan0: *mut *mut Aig_Obj_t,
+        ppFan1: *mut *mut Aig_Obj_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Aig_ObjRecognizeMux(
+        pObj: *mut Aig_Obj_t,
+        ppObjT: *mut *mut Aig_Obj_t,
+        ppObjE: *mut *mut Aig_Obj_t,
+    ) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    pub fn Aig_ObjReal_rec(pObj: *mut Aig_Obj_t) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    pub fn Aig_ObjCompareIdIncrease(
+        pp1: *mut *mut Aig_Obj_t,
+        pp2: *mut *mut Aig_Obj_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Aig_ObjPrintEqn(
+        pFile: *mut FILE,
+        pObj: *mut Aig_Obj_t,
+        vLevels: *mut Vec_Vec_t,
+        Level: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Aig_ObjPrintVerilog(
+        pFile: *mut FILE,
+        pObj: *mut Aig_Obj_t,
+        vLevels: *mut Vec_Vec_t,
+        Level: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Aig_ObjPrintVerbose(pObj: *mut Aig_Obj_t, fHaig: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Aig_ManPrintVerbose(p: *mut Aig_Man_t, fHaig: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Aig_ManDump(p: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Aig_ManDumpBlif(
+        p: *mut Aig_Man_t,
+        pFileName: *mut ::std::os::raw::c_char,
+        vPiNames: *mut Vec_Ptr_t,
+        vPoNames: *mut Vec_Ptr_t,
+    );
+}
+extern "C" {
+    pub fn Aig_ManDumpVerilog(p: *mut Aig_Man_t, pFileName: *mut ::std::os::raw::c_char);
+}
+extern "C" {
+    pub fn Aig_ManSetCioIds(p: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Aig_ManCleanCioIds(p: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Aig_ManChoiceNum(p: *mut Aig_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Aig_FileNameGenericAppend(
+        pBase: *mut ::std::os::raw::c_char,
+        pSuffix: *mut ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Aig_ManRandom(fReset: ::std::os::raw::c_int) -> ::std::os::raw::c_uint;
+}
+extern "C" {
+    pub fn Aig_ManRandom64(fReset: ::std::os::raw::c_int) -> word;
+}
+extern "C" {
+    pub fn Aig_ManRandomInfo(
+        vInfo: *mut Vec_Ptr_t,
+        iInputStart: ::std::os::raw::c_int,
+        iWordStart: ::std::os::raw::c_int,
+        iWordStop: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Aig_NodeUnionLists(vArr1: *mut Vec_Ptr_t, vArr2: *mut Vec_Ptr_t, vArr: *mut Vec_Ptr_t);
+}
+extern "C" {
+    pub fn Aig_NodeIntersectLists(
+        vArr1: *mut Vec_Ptr_t,
+        vArr2: *mut Vec_Ptr_t,
+        vArr: *mut Vec_Ptr_t,
+    );
+}
+extern "C" {
+    pub fn Aig_ManSetPhase(pAig: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Aig_ManMuxesCollect(pAig: *mut Aig_Man_t) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Aig_ManMuxesDeref(pAig: *mut Aig_Man_t, vMuxes: *mut Vec_Ptr_t);
+}
+extern "C" {
+    pub fn Aig_ManMuxesRef(pAig: *mut Aig_Man_t, vMuxes: *mut Vec_Ptr_t);
+}
+extern "C" {
+    pub fn Aig_ManInvertConstraints(pAig: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Aig_ManFindCut(
+        pRoot: *mut Aig_Obj_t,
+        vFront: *mut Vec_Ptr_t,
+        vVisited: *mut Vec_Ptr_t,
+        nSizeLimit: ::std::os::raw::c_int,
+        nFanoutLimit: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Aig_MmFixedStart(
+        nEntrySize: ::std::os::raw::c_int,
+        nEntriesMax: ::std::os::raw::c_int,
+    ) -> *mut Aig_MmFixed_t;
+}
+extern "C" {
+    pub fn Aig_MmFixedStop(p: *mut Aig_MmFixed_t, fVerbose: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Aig_MmFixedEntryFetch(p: *mut Aig_MmFixed_t) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Aig_MmFixedEntryRecycle(p: *mut Aig_MmFixed_t, pEntry: *mut ::std::os::raw::c_char);
+}
+extern "C" {
+    pub fn Aig_MmFixedRestart(p: *mut Aig_MmFixed_t);
+}
+extern "C" {
+    pub fn Aig_MmFixedReadMemUsage(p: *mut Aig_MmFixed_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Aig_MmFixedReadMaxEntriesUsed(p: *mut Aig_MmFixed_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Aig_MmFlexStart() -> *mut Aig_MmFlex_t;
+}
+extern "C" {
+    pub fn Aig_MmFlexStop(p: *mut Aig_MmFlex_t, fVerbose: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Aig_MmFlexEntryFetch(
+        p: *mut Aig_MmFlex_t,
+        nBytes: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Aig_MmFlexRestart(p: *mut Aig_MmFlex_t);
+}
+extern "C" {
+    pub fn Aig_MmFlexReadMemUsage(p: *mut Aig_MmFlex_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Aig_MmStepStart(nSteps: ::std::os::raw::c_int) -> *mut Aig_MmStep_t;
+}
+extern "C" {
+    pub fn Aig_MmStepStop(p: *mut Aig_MmStep_t, fVerbose: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Aig_MmStepEntryFetch(
+        p: *mut Aig_MmStep_t,
+        nBytes: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Aig_MmStepEntryRecycle(
+        p: *mut Aig_MmStep_t,
+        pEntry: *mut ::std::os::raw::c_char,
+        nBytes: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Aig_MmStepReadMemUsage(p: *mut Aig_MmStep_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Gia_ManFromAig(p: *mut Aig_Man_t) -> *mut Gia_Man_t;
+}
+extern "C" {
+    pub fn Gia_ManFromAigChoices(p: *mut Aig_Man_t) -> *mut Gia_Man_t;
+}
+extern "C" {
+    pub fn Gia_ManFromAigSimple(p: *mut Aig_Man_t) -> *mut Gia_Man_t;
+}
+extern "C" {
+    pub fn Gia_ManFromAigSwitch(p: *mut Aig_Man_t) -> *mut Gia_Man_t;
+}
+extern "C" {
+    pub fn Gia_ManToAig(p: *mut Gia_Man_t, fChoices: ::std::os::raw::c_int) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Gia_ManToAigSkip(p: *mut Gia_Man_t, nOutDelta: ::std::os::raw::c_int) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Gia_ManToAigSimple(p: *mut Gia_Man_t) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Gia_ManReprToAigRepr(pAig: *mut Aig_Man_t, pGia: *mut Gia_Man_t);
+}
+extern "C" {
+    pub fn Gia_ManReprToAigRepr2(pAig: *mut Aig_Man_t, pGia: *mut Gia_Man_t);
+}
+extern "C" {
+    pub fn Gia_ManReprFromAigRepr(pAig: *mut Aig_Man_t, pGia: *mut Gia_Man_t);
+}
+extern "C" {
+    pub fn Gia_ManReprFromAigRepr2(pAig: *mut Aig_Man_t, pGia: *mut Gia_Man_t);
+}
+extern "C" {
+    pub fn Gia_ManCompress2(
+        p: *mut Gia_Man_t,
+        fUpdateLevel: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> *mut Gia_Man_t;
+}
+extern "C" {
+    pub fn Gia_ManPerformDch(
+        p: *mut Gia_Man_t,
+        pPars: *mut ::std::os::raw::c_void,
+    ) -> *mut Gia_Man_t;
+}
+extern "C" {
+    pub fn Gia_ManAbstraction(p: *mut Gia_Man_t, vFlops: *mut Vec_Int_t) -> *mut Gia_Man_t;
+}
+extern "C" {
+    pub fn Gia_ManSeqCleanupClasses(
+        p: *mut Gia_Man_t,
+        fConst: ::std::os::raw::c_int,
+        fEquiv: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Gia_ManSolveSat(p: *mut Gia_Man_t) -> ::std::os::raw::c_int;
+}
+pub type Hop_Man_t = Hop_Man_t_;
+pub type Hop_Obj_t = Hop_Obj_t_;
+pub type Hop_Edge_t = ::std::os::raw::c_int;
+pub const Hop_Type_t_AIG_NONE: Hop_Type_t = 0;
+pub const Hop_Type_t_AIG_CONST1: Hop_Type_t = 1;
+pub const Hop_Type_t_AIG_PI: Hop_Type_t = 2;
+pub const Hop_Type_t_AIG_PO: Hop_Type_t = 3;
+pub const Hop_Type_t_AIG_AND: Hop_Type_t = 4;
+pub const Hop_Type_t_AIG_EXOR: Hop_Type_t = 5;
+pub const Hop_Type_t_AIG_VOID: Hop_Type_t = 6;
+pub type Hop_Type_t = ::std::os::raw::c_uint;
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct Hop_Obj_t_ {
+    pub __bindgen_anon_1: Hop_Obj_t___bindgen_ty_1,
+    pub __bindgen_anon_2: Hop_Obj_t___bindgen_ty_2,
+    pub pFanin0: *mut Hop_Obj_t,
+    pub pFanin1: *mut Hop_Obj_t,
+    pub _bitfield_align_1: [u32; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 4usize]>,
+    pub Id: ::std::os::raw::c_int,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union Hop_Obj_t___bindgen_ty_1 {
+    pub pData: *mut ::std::os::raw::c_void,
+    pub iData: ::std::os::raw::c_int,
+}
+#[test]
+fn bindgen_test_layout_Hop_Obj_t___bindgen_ty_1() {
+    const UNINIT: ::std::mem::MaybeUninit<Hop_Obj_t___bindgen_ty_1> =
+        ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<Hop_Obj_t___bindgen_ty_1>(),
+        8usize,
+        concat!("Size of: ", stringify!(Hop_Obj_t___bindgen_ty_1))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<Hop_Obj_t___bindgen_ty_1>(),
+        8usize,
+        concat!("Alignment of ", stringify!(Hop_Obj_t___bindgen_ty_1))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pData) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Hop_Obj_t___bindgen_ty_1),
+            "::",
+            stringify!(pData)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).iData) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Hop_Obj_t___bindgen_ty_1),
+            "::",
+            stringify!(iData)
+        )
+    );
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union Hop_Obj_t___bindgen_ty_2 {
+    pub pNext: *mut Hop_Obj_t,
+    pub PioNum: ::std::os::raw::c_int,
+}
+#[test]
+fn bindgen_test_layout_Hop_Obj_t___bindgen_ty_2() {
+    const UNINIT: ::std::mem::MaybeUninit<Hop_Obj_t___bindgen_ty_2> =
+        ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<Hop_Obj_t___bindgen_ty_2>(),
+        8usize,
+        concat!("Size of: ", stringify!(Hop_Obj_t___bindgen_ty_2))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<Hop_Obj_t___bindgen_ty_2>(),
+        8usize,
+        concat!("Alignment of ", stringify!(Hop_Obj_t___bindgen_ty_2))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pNext) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Hop_Obj_t___bindgen_ty_2),
+            "::",
+            stringify!(pNext)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).PioNum) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Hop_Obj_t___bindgen_ty_2),
+            "::",
+            stringify!(PioNum)
+        )
+    );
+}
+#[test]
+fn bindgen_test_layout_Hop_Obj_t_() {
+    const UNINIT: ::std::mem::MaybeUninit<Hop_Obj_t_> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<Hop_Obj_t_>(),
+        40usize,
+        concat!("Size of: ", stringify!(Hop_Obj_t_))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<Hop_Obj_t_>(),
+        8usize,
+        concat!("Alignment of ", stringify!(Hop_Obj_t_))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pFanin0) as usize - ptr as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Hop_Obj_t_),
+            "::",
+            stringify!(pFanin0)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pFanin1) as usize - ptr as usize },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Hop_Obj_t_),
+            "::",
+            stringify!(pFanin1)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).Id) as usize - ptr as usize },
+        36usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Hop_Obj_t_),
+            "::",
+            stringify!(Id)
+        )
+    );
+}
+impl Hop_Obj_t_ {
+    #[inline]
+    pub fn Type(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(0usize, 3u8) as u32) }
+    }
+    #[inline]
+    pub fn set_Type(&mut self, val: ::std::os::raw::c_uint) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(0usize, 3u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn fPhase(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(3usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_fPhase(&mut self, val: ::std::os::raw::c_uint) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(3usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn fMarkA(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_fMarkA(&mut self, val: ::std::os::raw::c_uint) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(4usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn fMarkB(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(5usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_fMarkB(&mut self, val: ::std::os::raw::c_uint) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(5usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn nRefs(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(6usize, 26u8) as u32) }
+    }
+    #[inline]
+    pub fn set_nRefs(&mut self, val: ::std::os::raw::c_uint) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(6usize, 26u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(
+        Type: ::std::os::raw::c_uint,
+        fPhase: ::std::os::raw::c_uint,
+        fMarkA: ::std::os::raw::c_uint,
+        fMarkB: ::std::os::raw::c_uint,
+        nRefs: ::std::os::raw::c_uint,
+    ) -> __BindgenBitfieldUnit<[u8; 4usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 4usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 3u8, {
+            let Type: u32 = unsafe { ::std::mem::transmute(Type) };
+            Type as u64
+        });
+        __bindgen_bitfield_unit.set(3usize, 1u8, {
+            let fPhase: u32 = unsafe { ::std::mem::transmute(fPhase) };
+            fPhase as u64
+        });
+        __bindgen_bitfield_unit.set(4usize, 1u8, {
+            let fMarkA: u32 = unsafe { ::std::mem::transmute(fMarkA) };
+            fMarkA as u64
+        });
+        __bindgen_bitfield_unit.set(5usize, 1u8, {
+            let fMarkB: u32 = unsafe { ::std::mem::transmute(fMarkB) };
+            fMarkB as u64
+        });
+        __bindgen_bitfield_unit.set(6usize, 26u8, {
+            let nRefs: u32 = unsafe { ::std::mem::transmute(nRefs) };
+            nRefs as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct Hop_Man_t_ {
+    pub vPis: *mut Vec_Ptr_t,
+    pub vPos: *mut Vec_Ptr_t,
+    pub vObjs: *mut Vec_Ptr_t,
+    pub pConst1: *mut Hop_Obj_t,
+    pub Ghost: Hop_Obj_t,
+    pub nObjs: [::std::os::raw::c_int; 6usize],
+    pub nCreated: ::std::os::raw::c_int,
+    pub nDeleted: ::std::os::raw::c_int,
+    pub pTable: *mut *mut Hop_Obj_t,
+    pub nTableSize: ::std::os::raw::c_int,
+    pub pData: *mut ::std::os::raw::c_void,
+    pub nTravIds: ::std::os::raw::c_int,
+    pub fRefCount: ::std::os::raw::c_int,
+    pub fCatchExor: ::std::os::raw::c_int,
+    pub vChunks: *mut Vec_Ptr_t,
+    pub vPages: *mut Vec_Ptr_t,
+    pub pListFree: *mut Hop_Obj_t,
+    pub time1: abctime,
+    pub time2: abctime,
+}
+#[test]
+fn bindgen_test_layout_Hop_Man_t_() {
+    const UNINIT: ::std::mem::MaybeUninit<Hop_Man_t_> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<Hop_Man_t_>(),
+        184usize,
+        concat!("Size of: ", stringify!(Hop_Man_t_))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<Hop_Man_t_>(),
+        8usize,
+        concat!("Alignment of ", stringify!(Hop_Man_t_))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vPis) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Hop_Man_t_),
+            "::",
+            stringify!(vPis)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vPos) as usize - ptr as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Hop_Man_t_),
+            "::",
+            stringify!(vPos)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vObjs) as usize - ptr as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Hop_Man_t_),
+            "::",
+            stringify!(vObjs)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pConst1) as usize - ptr as usize },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Hop_Man_t_),
+            "::",
+            stringify!(pConst1)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).Ghost) as usize - ptr as usize },
+        32usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Hop_Man_t_),
+            "::",
+            stringify!(Ghost)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nObjs) as usize - ptr as usize },
+        72usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Hop_Man_t_),
+            "::",
+            stringify!(nObjs)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nCreated) as usize - ptr as usize },
+        96usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Hop_Man_t_),
+            "::",
+            stringify!(nCreated)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nDeleted) as usize - ptr as usize },
+        100usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Hop_Man_t_),
+            "::",
+            stringify!(nDeleted)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pTable) as usize - ptr as usize },
+        104usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Hop_Man_t_),
+            "::",
+            stringify!(pTable)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nTableSize) as usize - ptr as usize },
+        112usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Hop_Man_t_),
+            "::",
+            stringify!(nTableSize)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pData) as usize - ptr as usize },
+        120usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Hop_Man_t_),
+            "::",
+            stringify!(pData)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nTravIds) as usize - ptr as usize },
+        128usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Hop_Man_t_),
+            "::",
+            stringify!(nTravIds)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fRefCount) as usize - ptr as usize },
+        132usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Hop_Man_t_),
+            "::",
+            stringify!(fRefCount)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fCatchExor) as usize - ptr as usize },
+        136usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Hop_Man_t_),
+            "::",
+            stringify!(fCatchExor)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vChunks) as usize - ptr as usize },
+        144usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Hop_Man_t_),
+            "::",
+            stringify!(vChunks)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vPages) as usize - ptr as usize },
+        152usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Hop_Man_t_),
+            "::",
+            stringify!(vPages)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pListFree) as usize - ptr as usize },
+        160usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Hop_Man_t_),
+            "::",
+            stringify!(pListFree)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).time1) as usize - ptr as usize },
+        168usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Hop_Man_t_),
+            "::",
+            stringify!(time1)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).time2) as usize - ptr as usize },
+        176usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Hop_Man_t_),
+            "::",
+            stringify!(time2)
+        )
+    );
+}
+extern "C" {
+    pub fn Hop_ManAddMemory(p: *mut Hop_Man_t);
+}
+extern "C" {
+    #[link_name = "Hop_BitWordNum_imctk_abc_sys"]
+    pub fn Hop_BitWordNum(nBits: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_TruthWordNum_imctk_abc_sys"]
+    pub fn Hop_TruthWordNum(nVars: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_InfoHasBit_imctk_abc_sys"]
+    pub fn Hop_InfoHasBit(
+        p: *mut ::std::os::raw::c_uint,
+        i: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_InfoSetBit_imctk_abc_sys"]
+    pub fn Hop_InfoSetBit(p: *mut ::std::os::raw::c_uint, i: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[link_name = "Hop_InfoXorBit_imctk_abc_sys"]
+    pub fn Hop_InfoXorBit(p: *mut ::std::os::raw::c_uint, i: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[link_name = "Hop_Base2Log_imctk_abc_sys"]
+    pub fn Hop_Base2Log(n: ::std::os::raw::c_uint) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_Base10Log_imctk_abc_sys"]
+    pub fn Hop_Base10Log(n: ::std::os::raw::c_uint) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_Regular_imctk_abc_sys"]
+    pub fn Hop_Regular(p: *mut Hop_Obj_t) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    #[link_name = "Hop_Not_imctk_abc_sys"]
+    pub fn Hop_Not(p: *mut Hop_Obj_t) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    #[link_name = "Hop_NotCond_imctk_abc_sys"]
+    pub fn Hop_NotCond(p: *mut Hop_Obj_t, c: ::std::os::raw::c_int) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    #[link_name = "Hop_IsComplement_imctk_abc_sys"]
+    pub fn Hop_IsComplement(p: *mut Hop_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_ManConst0_imctk_abc_sys"]
+    pub fn Hop_ManConst0(p: *mut Hop_Man_t) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    #[link_name = "Hop_ManConst1_imctk_abc_sys"]
+    pub fn Hop_ManConst1(p: *mut Hop_Man_t) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    #[link_name = "Hop_ManGhost_imctk_abc_sys"]
+    pub fn Hop_ManGhost(p: *mut Hop_Man_t) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    #[link_name = "Hop_ManPi_imctk_abc_sys"]
+    pub fn Hop_ManPi(p: *mut Hop_Man_t, i: ::std::os::raw::c_int) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    #[link_name = "Hop_ManPo_imctk_abc_sys"]
+    pub fn Hop_ManPo(p: *mut Hop_Man_t, i: ::std::os::raw::c_int) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    #[link_name = "Hop_ManObj_imctk_abc_sys"]
+    pub fn Hop_ManObj(p: *mut Hop_Man_t, i: ::std::os::raw::c_int) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    #[link_name = "Hop_EdgeCreate_imctk_abc_sys"]
+    pub fn Hop_EdgeCreate(Id: ::std::os::raw::c_int, fCompl: ::std::os::raw::c_int) -> Hop_Edge_t;
+}
+extern "C" {
+    #[link_name = "Hop_EdgeId_imctk_abc_sys"]
+    pub fn Hop_EdgeId(Edge: Hop_Edge_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_EdgeIsComplement_imctk_abc_sys"]
+    pub fn Hop_EdgeIsComplement(Edge: Hop_Edge_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_EdgeRegular_imctk_abc_sys"]
+    pub fn Hop_EdgeRegular(Edge: Hop_Edge_t) -> Hop_Edge_t;
+}
+extern "C" {
+    #[link_name = "Hop_EdgeNot_imctk_abc_sys"]
+    pub fn Hop_EdgeNot(Edge: Hop_Edge_t) -> Hop_Edge_t;
+}
+extern "C" {
+    #[link_name = "Hop_EdgeNotCond_imctk_abc_sys"]
+    pub fn Hop_EdgeNotCond(Edge: Hop_Edge_t, fCond: ::std::os::raw::c_int) -> Hop_Edge_t;
+}
+extern "C" {
+    #[link_name = "Hop_ManPiNum_imctk_abc_sys"]
+    pub fn Hop_ManPiNum(p: *mut Hop_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_ManPoNum_imctk_abc_sys"]
+    pub fn Hop_ManPoNum(p: *mut Hop_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_ManAndNum_imctk_abc_sys"]
+    pub fn Hop_ManAndNum(p: *mut Hop_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_ManExorNum_imctk_abc_sys"]
+    pub fn Hop_ManExorNum(p: *mut Hop_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_ManNodeNum_imctk_abc_sys"]
+    pub fn Hop_ManNodeNum(p: *mut Hop_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_ManGetCost_imctk_abc_sys"]
+    pub fn Hop_ManGetCost(p: *mut Hop_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_ManObjNum_imctk_abc_sys"]
+    pub fn Hop_ManObjNum(p: *mut Hop_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_ObjType_imctk_abc_sys"]
+    pub fn Hop_ObjType(pObj: *mut Hop_Obj_t) -> Hop_Type_t;
+}
+extern "C" {
+    #[link_name = "Hop_ObjIsNone_imctk_abc_sys"]
+    pub fn Hop_ObjIsNone(pObj: *mut Hop_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_ObjIsConst1_imctk_abc_sys"]
+    pub fn Hop_ObjIsConst1(pObj: *mut Hop_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_ObjIsPi_imctk_abc_sys"]
+    pub fn Hop_ObjIsPi(pObj: *mut Hop_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_ObjIsPo_imctk_abc_sys"]
+    pub fn Hop_ObjIsPo(pObj: *mut Hop_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_ObjIsAnd_imctk_abc_sys"]
+    pub fn Hop_ObjIsAnd(pObj: *mut Hop_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_ObjIsExor_imctk_abc_sys"]
+    pub fn Hop_ObjIsExor(pObj: *mut Hop_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_ObjIsNode_imctk_abc_sys"]
+    pub fn Hop_ObjIsNode(pObj: *mut Hop_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_ObjIsTerm_imctk_abc_sys"]
+    pub fn Hop_ObjIsTerm(pObj: *mut Hop_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_ObjIsHash_imctk_abc_sys"]
+    pub fn Hop_ObjIsHash(pObj: *mut Hop_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_ObjIsMarkA_imctk_abc_sys"]
+    pub fn Hop_ObjIsMarkA(pObj: *mut Hop_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_ObjSetMarkA_imctk_abc_sys"]
+    pub fn Hop_ObjSetMarkA(pObj: *mut Hop_Obj_t);
+}
+extern "C" {
+    #[link_name = "Hop_ObjClearMarkA_imctk_abc_sys"]
+    pub fn Hop_ObjClearMarkA(pObj: *mut Hop_Obj_t);
+}
+extern "C" {
+    #[link_name = "Hop_ObjSetTravId_imctk_abc_sys"]
+    pub fn Hop_ObjSetTravId(pObj: *mut Hop_Obj_t, TravId: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[link_name = "Hop_ObjSetTravIdCurrent_imctk_abc_sys"]
+    pub fn Hop_ObjSetTravIdCurrent(p: *mut Hop_Man_t, pObj: *mut Hop_Obj_t);
+}
+extern "C" {
+    #[link_name = "Hop_ObjSetTravIdPrevious_imctk_abc_sys"]
+    pub fn Hop_ObjSetTravIdPrevious(p: *mut Hop_Man_t, pObj: *mut Hop_Obj_t);
+}
+extern "C" {
+    #[link_name = "Hop_ObjIsTravIdCurrent_imctk_abc_sys"]
+    pub fn Hop_ObjIsTravIdCurrent(p: *mut Hop_Man_t, pObj: *mut Hop_Obj_t)
+        -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_ObjIsTravIdPrevious_imctk_abc_sys"]
+    pub fn Hop_ObjIsTravIdPrevious(
+        p: *mut Hop_Man_t,
+        pObj: *mut Hop_Obj_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_ObjTravId_imctk_abc_sys"]
+    pub fn Hop_ObjTravId(pObj: *mut Hop_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_ObjPhase_imctk_abc_sys"]
+    pub fn Hop_ObjPhase(pObj: *mut Hop_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_ObjRefs_imctk_abc_sys"]
+    pub fn Hop_ObjRefs(pObj: *mut Hop_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_ObjRef_imctk_abc_sys"]
+    pub fn Hop_ObjRef(pObj: *mut Hop_Obj_t);
+}
+extern "C" {
+    #[link_name = "Hop_ObjDeref_imctk_abc_sys"]
+    pub fn Hop_ObjDeref(pObj: *mut Hop_Obj_t);
+}
+extern "C" {
+    #[link_name = "Hop_ObjClearRef_imctk_abc_sys"]
+    pub fn Hop_ObjClearRef(pObj: *mut Hop_Obj_t);
+}
+extern "C" {
+    #[link_name = "Hop_ObjFaninC0_imctk_abc_sys"]
+    pub fn Hop_ObjFaninC0(pObj: *mut Hop_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_ObjFaninC1_imctk_abc_sys"]
+    pub fn Hop_ObjFaninC1(pObj: *mut Hop_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_ObjFanin0_imctk_abc_sys"]
+    pub fn Hop_ObjFanin0(pObj: *mut Hop_Obj_t) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    #[link_name = "Hop_ObjFanin1_imctk_abc_sys"]
+    pub fn Hop_ObjFanin1(pObj: *mut Hop_Obj_t) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    #[link_name = "Hop_ObjChild0_imctk_abc_sys"]
+    pub fn Hop_ObjChild0(pObj: *mut Hop_Obj_t) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    #[link_name = "Hop_ObjChild1_imctk_abc_sys"]
+    pub fn Hop_ObjChild1(pObj: *mut Hop_Obj_t) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    #[link_name = "Hop_ObjChild0Copy_imctk_abc_sys"]
+    pub fn Hop_ObjChild0Copy(pObj: *mut Hop_Obj_t) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    #[link_name = "Hop_ObjChild1Copy_imctk_abc_sys"]
+    pub fn Hop_ObjChild1Copy(pObj: *mut Hop_Obj_t) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    #[link_name = "Hop_ObjChild0CopyI_imctk_abc_sys"]
+    pub fn Hop_ObjChild0CopyI(pObj: *mut Hop_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_ObjChild1CopyI_imctk_abc_sys"]
+    pub fn Hop_ObjChild1CopyI(pObj: *mut Hop_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_ObjLevel_imctk_abc_sys"]
+    pub fn Hop_ObjLevel(pObj: *mut Hop_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_ObjLevelNew_imctk_abc_sys"]
+    pub fn Hop_ObjLevelNew(pObj: *mut Hop_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_ObjPhaseCompl_imctk_abc_sys"]
+    pub fn Hop_ObjPhaseCompl(pObj: *mut Hop_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_ObjClean_imctk_abc_sys"]
+    pub fn Hop_ObjClean(pObj: *mut Hop_Obj_t);
+}
+extern "C" {
+    #[link_name = "Hop_ObjWhatFanin_imctk_abc_sys"]
+    pub fn Hop_ObjWhatFanin(pObj: *mut Hop_Obj_t, pFanin: *mut Hop_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_ObjFanoutC_imctk_abc_sys"]
+    pub fn Hop_ObjFanoutC(pObj: *mut Hop_Obj_t, pFanout: *mut Hop_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hop_ObjCreateGhost_imctk_abc_sys"]
+    pub fn Hop_ObjCreateGhost(
+        p: *mut Hop_Man_t,
+        p0: *mut Hop_Obj_t,
+        p1: *mut Hop_Obj_t,
+        Type: Hop_Type_t,
+    ) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    #[link_name = "Hop_ManFetchMemory_imctk_abc_sys"]
+    pub fn Hop_ManFetchMemory(p: *mut Hop_Man_t) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    #[link_name = "Hop_ManRecycleMemory_imctk_abc_sys"]
+    pub fn Hop_ManRecycleMemory(p: *mut Hop_Man_t, pEntry: *mut Hop_Obj_t);
+}
+extern "C" {
+    pub fn Hop_ManBalance(p: *mut Hop_Man_t, fUpdateLevel: ::std::os::raw::c_int)
+        -> *mut Hop_Man_t;
+}
+extern "C" {
+    pub fn Hop_NodeBalanceBuildSuper(
+        p: *mut Hop_Man_t,
+        vSuper: *mut Vec_Ptr_t,
+        Type: Hop_Type_t,
+        fUpdateLevel: ::std::os::raw::c_int,
+    ) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    pub fn Hop_ManCheck(p: *mut Hop_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Hop_ManDfs(p: *mut Hop_Man_t) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Hop_ManDfsNode(p: *mut Hop_Man_t, pNode: *mut Hop_Obj_t) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Hop_ManCountLevels(p: *mut Hop_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Hop_ManCreateRefs(p: *mut Hop_Man_t);
+}
+extern "C" {
+    pub fn Hop_DagSize(pObj: *mut Hop_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Hop_ObjFanoutCount(
+        pObj: *mut Hop_Obj_t,
+        pPivot: *mut Hop_Obj_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Hop_ConeUnmark_rec(pObj: *mut Hop_Obj_t);
+}
+extern "C" {
+    pub fn Hop_Transfer(
+        pSour: *mut Hop_Man_t,
+        pDest: *mut Hop_Man_t,
+        pObj: *mut Hop_Obj_t,
+        nVars: ::std::os::raw::c_int,
+    ) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    pub fn Hop_Compose(
+        p: *mut Hop_Man_t,
+        pRoot: *mut Hop_Obj_t,
+        pFunc: *mut Hop_Obj_t,
+        iVar: ::std::os::raw::c_int,
+    ) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    pub fn Hop_Complement(
+        p: *mut Hop_Man_t,
+        pRoot: *mut Hop_Obj_t,
+        iVar: ::std::os::raw::c_int,
+    ) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    pub fn Hop_Remap(
+        p: *mut Hop_Man_t,
+        pRoot: *mut Hop_Obj_t,
+        uSupp: ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+    ) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    pub fn Hop_Permute(
+        p: *mut Hop_Man_t,
+        pRoot: *mut Hop_Obj_t,
+        nRootVars: ::std::os::raw::c_int,
+        pPermute: *mut ::std::os::raw::c_int,
+    ) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    pub fn Hop_ManStart() -> *mut Hop_Man_t;
+}
+extern "C" {
+    pub fn Hop_ManDup(p: *mut Hop_Man_t) -> *mut Hop_Man_t;
+}
+extern "C" {
+    pub fn Hop_ManStop(p: *mut Hop_Man_t);
+}
+extern "C" {
+    pub fn Hop_ManCleanup(p: *mut Hop_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Hop_ManPrintStats(p: *mut Hop_Man_t);
+}
+extern "C" {
+    pub fn Hop_ManStartMemory(p: *mut Hop_Man_t);
+}
+extern "C" {
+    pub fn Hop_ManStopMemory(p: *mut Hop_Man_t);
+}
+extern "C" {
+    pub fn Hop_ObjCreatePi(p: *mut Hop_Man_t) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    pub fn Hop_ObjCreatePo(p: *mut Hop_Man_t, pDriver: *mut Hop_Obj_t) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    pub fn Hop_ObjCreate(p: *mut Hop_Man_t, pGhost: *mut Hop_Obj_t) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    pub fn Hop_ObjConnect(
+        p: *mut Hop_Man_t,
+        pObj: *mut Hop_Obj_t,
+        pFan0: *mut Hop_Obj_t,
+        pFan1: *mut Hop_Obj_t,
+    );
+}
+extern "C" {
+    pub fn Hop_ObjDisconnect(p: *mut Hop_Man_t, pObj: *mut Hop_Obj_t);
+}
+extern "C" {
+    pub fn Hop_ObjDelete(p: *mut Hop_Man_t, pObj: *mut Hop_Obj_t);
+}
+extern "C" {
+    pub fn Hop_ObjDelete_rec(p: *mut Hop_Man_t, pObj: *mut Hop_Obj_t);
+}
+extern "C" {
+    pub fn Hop_ObjRepr(pObj: *mut Hop_Obj_t) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    pub fn Hop_ObjCreateChoice(pOld: *mut Hop_Obj_t, pNew: *mut Hop_Obj_t);
+}
+extern "C" {
+    pub fn Hop_IthVar(p: *mut Hop_Man_t, i: ::std::os::raw::c_int) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    pub fn Hop_Oper(
+        p: *mut Hop_Man_t,
+        p0: *mut Hop_Obj_t,
+        p1: *mut Hop_Obj_t,
+        Type: Hop_Type_t,
+    ) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    pub fn Hop_And(p: *mut Hop_Man_t, p0: *mut Hop_Obj_t, p1: *mut Hop_Obj_t) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    pub fn Hop_Or(p: *mut Hop_Man_t, p0: *mut Hop_Obj_t, p1: *mut Hop_Obj_t) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    pub fn Hop_Exor(p: *mut Hop_Man_t, p0: *mut Hop_Obj_t, p1: *mut Hop_Obj_t) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    pub fn Hop_Mux(
+        p: *mut Hop_Man_t,
+        pC: *mut Hop_Obj_t,
+        p1: *mut Hop_Obj_t,
+        p0: *mut Hop_Obj_t,
+    ) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    pub fn Hop_Maj(
+        p: *mut Hop_Man_t,
+        pA: *mut Hop_Obj_t,
+        pB: *mut Hop_Obj_t,
+        pC: *mut Hop_Obj_t,
+    ) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    pub fn Hop_Miter(p: *mut Hop_Man_t, vPairs: *mut Vec_Ptr_t) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    pub fn Hop_CreateAnd(p: *mut Hop_Man_t, nVars: ::std::os::raw::c_int) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    pub fn Hop_CreateOr(p: *mut Hop_Man_t, nVars: ::std::os::raw::c_int) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    pub fn Hop_CreateExor(p: *mut Hop_Man_t, nVars: ::std::os::raw::c_int) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    pub fn Hop_TableLookup(p: *mut Hop_Man_t, pGhost: *mut Hop_Obj_t) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    pub fn Hop_TableInsert(p: *mut Hop_Man_t, pObj: *mut Hop_Obj_t);
+}
+extern "C" {
+    pub fn Hop_TableDelete(p: *mut Hop_Man_t, pObj: *mut Hop_Obj_t);
+}
+extern "C" {
+    pub fn Hop_TableCountEntries(p: *mut Hop_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Hop_TableProfile(p: *mut Hop_Man_t);
+}
+extern "C" {
+    pub fn Hop_ManConvertAigToTruth(
+        p: *mut Hop_Man_t,
+        pRoot: *mut Hop_Obj_t,
+        nVars: ::std::os::raw::c_int,
+        vTruth: *mut Vec_Int_t,
+        fMsbFirst: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_uint;
+}
+extern "C" {
+    pub fn Hop_ManComputeTruth6(
+        p: *mut Hop_Man_t,
+        pObj: *mut Hop_Obj_t,
+        nVars: ::std::os::raw::c_int,
+    ) -> word;
+}
+extern "C" {
+    pub fn Hop_ManIncrementTravId(p: *mut Hop_Man_t);
+}
+extern "C" {
+    pub fn Hop_ManCleanData(p: *mut Hop_Man_t);
+}
+extern "C" {
+    pub fn Hop_ObjCleanData_rec(pObj: *mut Hop_Obj_t);
+}
+extern "C" {
+    pub fn Hop_ObjCollectMulti(pFunc: *mut Hop_Obj_t, vSuper: *mut Vec_Ptr_t);
+}
+extern "C" {
+    pub fn Hop_ObjIsMuxType(pObj: *mut Hop_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Hop_ObjRecognizeExor(
+        pObj: *mut Hop_Obj_t,
+        ppFan0: *mut *mut Hop_Obj_t,
+        ppFan1: *mut *mut Hop_Obj_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Hop_ObjRecognizeMux(
+        pObj: *mut Hop_Obj_t,
+        ppObjT: *mut *mut Hop_Obj_t,
+        ppObjE: *mut *mut Hop_Obj_t,
+    ) -> *mut Hop_Obj_t;
+}
+extern "C" {
+    pub fn Hop_ObjPrintEqn(
+        pFile: *mut FILE,
+        pObj: *mut Hop_Obj_t,
+        vLevels: *mut Vec_Vec_t,
+        Level: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Hop_ObjPrintVerilog(
+        pFile: *mut FILE,
+        pObj: *mut Hop_Obj_t,
+        vLevels: *mut Vec_Vec_t,
+        Level: ::std::os::raw::c_int,
+        fOnlyAnds: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Hop_ObjPrintVerbose(pObj: *mut Hop_Obj_t, fHaig: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Hop_ManPrintVerbose(p: *mut Hop_Man_t, fHaig: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Hop_ManDumpBlif(p: *mut Hop_Man_t, pFileName: *mut ::std::os::raw::c_char);
+}
+pub type st__compare_func_type = ::std::option::Option<
+    unsafe extern "C" fn(
+        arg1: *const ::std::os::raw::c_char,
+        arg2: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int,
+>;
+pub type st__hash_func_type = ::std::option::Option<
+    unsafe extern "C" fn(
+        arg1: *const ::std::os::raw::c_char,
+        arg2: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int,
+>;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct st__table_entry {
+    pub key: *mut ::std::os::raw::c_char,
+    pub record: *mut ::std::os::raw::c_char,
+    pub next: *mut st__table_entry,
+}
+#[test]
+fn bindgen_test_layout_st__table_entry() {
+    const UNINIT: ::std::mem::MaybeUninit<st__table_entry> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<st__table_entry>(),
+        24usize,
+        concat!("Size of: ", stringify!(st__table_entry))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<st__table_entry>(),
+        8usize,
+        concat!("Alignment of ", stringify!(st__table_entry))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).key) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(st__table_entry),
+            "::",
+            stringify!(key)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).record) as usize - ptr as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(st__table_entry),
+            "::",
+            stringify!(record)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).next) as usize - ptr as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(st__table_entry),
+            "::",
+            stringify!(next)
+        )
+    );
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct st__table {
+    pub compare: st__compare_func_type,
+    pub hash: st__hash_func_type,
+    pub num_bins: ::std::os::raw::c_int,
+    pub num_entries: ::std::os::raw::c_int,
+    pub max_density: ::std::os::raw::c_int,
+    pub reorder_flag: ::std::os::raw::c_int,
+    pub grow_factor: f64,
+    pub bins: *mut *mut st__table_entry,
+}
+#[test]
+fn bindgen_test_layout_st__table() {
+    const UNINIT: ::std::mem::MaybeUninit<st__table> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<st__table>(),
+        48usize,
+        concat!("Size of: ", stringify!(st__table))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<st__table>(),
+        8usize,
+        concat!("Alignment of ", stringify!(st__table))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).compare) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(st__table),
+            "::",
+            stringify!(compare)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).hash) as usize - ptr as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(st__table),
+            "::",
+            stringify!(hash)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).num_bins) as usize - ptr as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(st__table),
+            "::",
+            stringify!(num_bins)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).num_entries) as usize - ptr as usize },
+        20usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(st__table),
+            "::",
+            stringify!(num_entries)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).max_density) as usize - ptr as usize },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(st__table),
+            "::",
+            stringify!(max_density)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).reorder_flag) as usize - ptr as usize },
+        28usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(st__table),
+            "::",
+            stringify!(reorder_flag)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).grow_factor) as usize - ptr as usize },
+        32usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(st__table),
+            "::",
+            stringify!(grow_factor)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).bins) as usize - ptr as usize },
+        40usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(st__table),
+            "::",
+            stringify!(bins)
+        )
+    );
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct st__generator {
+    pub table: *mut st__table,
+    pub entry: *mut st__table_entry,
+    pub index: ::std::os::raw::c_int,
+}
+#[test]
+fn bindgen_test_layout_st__generator() {
+    const UNINIT: ::std::mem::MaybeUninit<st__generator> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<st__generator>(),
+        24usize,
+        concat!("Size of: ", stringify!(st__generator))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<st__generator>(),
+        8usize,
+        concat!("Alignment of ", stringify!(st__generator))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).table) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(st__generator),
+            "::",
+            stringify!(table)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).entry) as usize - ptr as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(st__generator),
+            "::",
+            stringify!(entry)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).index) as usize - ptr as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(st__generator),
+            "::",
+            stringify!(index)
+        )
+    );
+}
+pub const st__retval_st__CONTINUE: st__retval = 0;
+pub const st__retval_st__STOP: st__retval = 1;
+pub const st__retval_st__DELETE: st__retval = 2;
+pub type st__retval = ::std::os::raw::c_uint;
+pub type st__PFSR = ::std::option::Option<
+    unsafe extern "C" fn(
+        arg1: *mut ::std::os::raw::c_char,
+        arg2: *mut ::std::os::raw::c_char,
+        arg3: *mut ::std::os::raw::c_char,
+    ) -> st__retval,
+>;
+pub type st__PFI = ::std::option::Option<unsafe extern "C" fn() -> ::std::os::raw::c_int>;
+extern "C" {
+    pub fn st__init_table_with_params(
+        compare: st__compare_func_type,
+        hash: st__hash_func_type,
+        size: ::std::os::raw::c_int,
+        density: ::std::os::raw::c_int,
+        grow_factor: f64,
+        reorder_flag: ::std::os::raw::c_int,
+    ) -> *mut st__table;
+}
+extern "C" {
+    pub fn st__init_table(arg1: st__compare_func_type, arg2: st__hash_func_type) -> *mut st__table;
+}
+extern "C" {
+    pub fn st__free_table(arg1: *mut st__table);
+}
+extern "C" {
+    pub fn st__lookup(
+        arg1: *mut st__table,
+        arg2: *const ::std::os::raw::c_char,
+        arg3: *mut *mut ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn st__lookup_int(
+        arg1: *mut st__table,
+        arg2: *mut ::std::os::raw::c_char,
+        arg3: *mut ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn st__insert(
+        arg1: *mut st__table,
+        arg2: *const ::std::os::raw::c_char,
+        arg3: *mut ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn st__add_direct(
+        arg1: *mut st__table,
+        arg2: *mut ::std::os::raw::c_char,
+        arg3: *mut ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn st__find_or_add(
+        arg1: *mut st__table,
+        arg2: *mut ::std::os::raw::c_char,
+        arg3: *mut *mut *mut ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn st__find(
+        arg1: *mut st__table,
+        arg2: *mut ::std::os::raw::c_char,
+        arg3: *mut *mut *mut ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn st__copy(arg1: *mut st__table) -> *mut st__table;
+}
+extern "C" {
+    pub fn st__delete(
+        arg1: *mut st__table,
+        arg2: *mut *const ::std::os::raw::c_char,
+        arg3: *mut *mut ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn st__delete_int(
+        arg1: *mut st__table,
+        arg2: *mut ::std::os::raw::c_long,
+        arg3: *mut *mut ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn st__foreach(
+        arg1: *mut st__table,
+        arg2: st__PFSR,
+        arg3: *mut ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn st__strhash(
+        arg1: *const ::std::os::raw::c_char,
+        arg2: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn st__numhash(
+        arg1: *const ::std::os::raw::c_char,
+        arg2: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn st__ptrhash(
+        arg1: *const ::std::os::raw::c_char,
+        arg2: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn st__numcmp(
+        arg1: *const ::std::os::raw::c_char,
+        arg2: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn st__ptrcmp(
+        arg1: *const ::std::os::raw::c_char,
+        arg2: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn st__init_gen(arg1: *mut st__table) -> *mut st__generator;
+}
+extern "C" {
+    pub fn st__gen(
+        arg1: *mut st__generator,
+        arg2: *mut *const ::std::os::raw::c_char,
+        arg3: *mut *mut ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn st__gen_int(
+        arg1: *mut st__generator,
+        arg2: *mut *const ::std::os::raw::c_char,
+        arg3: *mut ::std::os::raw::c_long,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn st__free_gen(arg1: *mut st__generator);
+}
+pub type stmm_compare_func_type = ::std::option::Option<
+    unsafe extern "C" fn(
+        arg1: *const ::std::os::raw::c_char,
+        arg2: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int,
+>;
+pub type stmm_hash_func_type = ::std::option::Option<
+    unsafe extern "C" fn(
+        arg1: *const ::std::os::raw::c_char,
+        arg2: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int,
+>;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct stmm_table_entry {
+    pub key: *mut ::std::os::raw::c_char,
+    pub record: *mut ::std::os::raw::c_char,
+    pub next: *mut stmm_table_entry,
+}
+#[test]
+fn bindgen_test_layout_stmm_table_entry() {
+    const UNINIT: ::std::mem::MaybeUninit<stmm_table_entry> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<stmm_table_entry>(),
+        24usize,
+        concat!("Size of: ", stringify!(stmm_table_entry))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<stmm_table_entry>(),
+        8usize,
+        concat!("Alignment of ", stringify!(stmm_table_entry))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).key) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(stmm_table_entry),
+            "::",
+            stringify!(key)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).record) as usize - ptr as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(stmm_table_entry),
+            "::",
+            stringify!(record)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).next) as usize - ptr as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(stmm_table_entry),
+            "::",
+            stringify!(next)
+        )
+    );
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct stmm_table {
+    pub compare: stmm_compare_func_type,
+    pub hash: stmm_hash_func_type,
+    pub num_bins: ::std::os::raw::c_int,
+    pub num_entries: ::std::os::raw::c_int,
+    pub max_density: ::std::os::raw::c_int,
+    pub reorder_flag: ::std::os::raw::c_int,
+    pub grow_factor: f64,
+    pub bins: *mut *mut stmm_table_entry,
+    pub pMemMan: *mut ::std::os::raw::c_void,
+}
+#[test]
+fn bindgen_test_layout_stmm_table() {
+    const UNINIT: ::std::mem::MaybeUninit<stmm_table> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<stmm_table>(),
+        56usize,
+        concat!("Size of: ", stringify!(stmm_table))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<stmm_table>(),
+        8usize,
+        concat!("Alignment of ", stringify!(stmm_table))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).compare) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(stmm_table),
+            "::",
+            stringify!(compare)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).hash) as usize - ptr as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(stmm_table),
+            "::",
+            stringify!(hash)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).num_bins) as usize - ptr as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(stmm_table),
+            "::",
+            stringify!(num_bins)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).num_entries) as usize - ptr as usize },
+        20usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(stmm_table),
+            "::",
+            stringify!(num_entries)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).max_density) as usize - ptr as usize },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(stmm_table),
+            "::",
+            stringify!(max_density)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).reorder_flag) as usize - ptr as usize },
+        28usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(stmm_table),
+            "::",
+            stringify!(reorder_flag)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).grow_factor) as usize - ptr as usize },
+        32usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(stmm_table),
+            "::",
+            stringify!(grow_factor)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).bins) as usize - ptr as usize },
+        40usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(stmm_table),
+            "::",
+            stringify!(bins)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pMemMan) as usize - ptr as usize },
+        48usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(stmm_table),
+            "::",
+            stringify!(pMemMan)
+        )
+    );
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct stmm_generator {
+    pub table: *mut stmm_table,
+    pub entry: *mut stmm_table_entry,
+    pub index: ::std::os::raw::c_int,
+}
+#[test]
+fn bindgen_test_layout_stmm_generator() {
+    const UNINIT: ::std::mem::MaybeUninit<stmm_generator> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<stmm_generator>(),
+        24usize,
+        concat!("Size of: ", stringify!(stmm_generator))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<stmm_generator>(),
+        8usize,
+        concat!("Alignment of ", stringify!(stmm_generator))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).table) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(stmm_generator),
+            "::",
+            stringify!(table)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).entry) as usize - ptr as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(stmm_generator),
+            "::",
+            stringify!(entry)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).index) as usize - ptr as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(stmm_generator),
+            "::",
+            stringify!(index)
+        )
+    );
+}
+pub const stmm_retval_STMM_CONTINUE: stmm_retval = 0;
+pub const stmm_retval_STMM_STOP: stmm_retval = 1;
+pub const stmm_retval_STMM_DELETE: stmm_retval = 2;
+pub type stmm_retval = ::std::os::raw::c_uint;
+pub type STMM_PFSR = ::std::option::Option<
+    unsafe extern "C" fn(
+        arg1: *mut ::std::os::raw::c_char,
+        arg2: *mut ::std::os::raw::c_char,
+        arg3: *mut ::std::os::raw::c_char,
+    ) -> stmm_retval,
+>;
+extern "C" {
+    pub fn stmm_init_table_with_params(
+        compare: stmm_compare_func_type,
+        hash: stmm_hash_func_type,
+        size: ::std::os::raw::c_int,
+        density: ::std::os::raw::c_int,
+        grow_factor: f64,
+        reorder_flag: ::std::os::raw::c_int,
+    ) -> *mut stmm_table;
+}
+extern "C" {
+    pub fn stmm_init_table(
+        arg1: stmm_compare_func_type,
+        arg2: stmm_hash_func_type,
+    ) -> *mut stmm_table;
+}
+extern "C" {
+    pub fn stmm_free_table(arg1: *mut stmm_table);
+}
+extern "C" {
+    pub fn stmm_lookup(
+        arg1: *mut stmm_table,
+        arg2: *mut ::std::os::raw::c_char,
+        arg3: *mut *mut ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn stmm_lookup_int(
+        arg1: *mut stmm_table,
+        arg2: *mut ::std::os::raw::c_char,
+        arg3: *mut ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn stmm_insert(
+        arg1: *mut stmm_table,
+        arg2: *mut ::std::os::raw::c_char,
+        arg3: *mut ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn stmm_add_direct(
+        arg1: *mut stmm_table,
+        arg2: *mut ::std::os::raw::c_char,
+        arg3: *mut ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn stmm_find_or_add(
+        arg1: *mut stmm_table,
+        arg2: *mut ::std::os::raw::c_char,
+        arg3: *mut *mut *mut ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn stmm_find(
+        arg1: *mut stmm_table,
+        arg2: *mut ::std::os::raw::c_char,
+        arg3: *mut *mut *mut ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn stmm_copy(arg1: *mut stmm_table) -> *mut stmm_table;
+}
+extern "C" {
+    pub fn stmm_delete(
+        arg1: *mut stmm_table,
+        arg2: *mut *mut ::std::os::raw::c_char,
+        arg3: *mut *mut ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn stmm_delete_int(
+        arg1: *mut stmm_table,
+        arg2: *mut ::std::os::raw::c_long,
+        arg3: *mut *mut ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn stmm_foreach(
+        arg1: *mut stmm_table,
+        arg2: STMM_PFSR,
+        arg3: *mut ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn stmm_strhash(
+        arg1: *const ::std::os::raw::c_char,
+        arg2: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn stmm_numhash(
+        arg1: *const ::std::os::raw::c_char,
+        arg2: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn stmm_ptrhash(
+        arg1: *const ::std::os::raw::c_char,
+        arg2: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn stmm_numcmp(
+        arg1: *const ::std::os::raw::c_char,
+        arg2: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn stmm_ptrcmp(
+        arg1: *const ::std::os::raw::c_char,
+        arg2: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn stmm_init_gen(arg1: *mut stmm_table) -> *mut stmm_generator;
+}
+extern "C" {
+    pub fn stmm_gen(
+        arg1: *mut stmm_generator,
+        arg2: *mut *mut ::std::os::raw::c_char,
+        arg3: *mut *mut ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn stmm_gen_int(
+        arg1: *mut stmm_generator,
+        arg2: *mut *mut ::std::os::raw::c_char,
+        arg3: *mut ::std::os::raw::c_long,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn stmm_free_gen(arg1: *mut stmm_generator);
+}
+extern "C" {
+    pub fn stmm_clean(arg1: *mut stmm_table);
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Nm_Man_t_ {
+    _unused: [u8; 0],
+}
+pub type Nm_Man_t = Nm_Man_t_;
+extern "C" {
+    pub fn Nm_ManCreate(nSize: ::std::os::raw::c_int) -> *mut Nm_Man_t;
+}
+extern "C" {
+    pub fn Nm_ManFree(p: *mut Nm_Man_t);
+}
+extern "C" {
+    pub fn Nm_ManNumEntries(p: *mut Nm_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Nm_ManStoreIdName(
+        p: *mut Nm_Man_t,
+        ObjId: ::std::os::raw::c_int,
+        Type: ::std::os::raw::c_int,
+        pName: *mut ::std::os::raw::c_char,
+        pSuffix: *mut ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Nm_ManDeleteIdName(p: *mut Nm_Man_t, ObjId: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Nm_ManCreateUniqueName(
+        p: *mut Nm_Man_t,
+        ObjId: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Nm_ManFindNameById(
+        p: *mut Nm_Man_t,
+        ObjId: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Nm_ManFindIdByName(
+        p: *mut Nm_Man_t,
+        pName: *mut ::std::os::raw::c_char,
+        Type: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Nm_ManFindIdByNameTwoTypes(
+        p: *mut Nm_Man_t,
+        pName: *mut ::std::os::raw::c_char,
+        Type1: ::std::os::raw::c_int,
+        Type2: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Nm_ManReturnNameIds(p: *mut Nm_Man_t) -> *mut Vec_Int_t;
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Mem_Fixed_t_ {
+    _unused: [u8; 0],
+}
+pub type Mem_Fixed_t = Mem_Fixed_t_;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Mem_Flex_t_ {
+    _unused: [u8; 0],
+}
+pub type Mem_Flex_t = Mem_Flex_t_;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Mem_Step_t_ {
+    _unused: [u8; 0],
+}
+pub type Mem_Step_t = Mem_Step_t_;
+extern "C" {
+    pub fn Mem_FixedStart(nEntrySize: ::std::os::raw::c_int) -> *mut Mem_Fixed_t;
+}
+extern "C" {
+    pub fn Mem_FixedStop(p: *mut Mem_Fixed_t, fVerbose: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Mem_FixedEntryFetch(p: *mut Mem_Fixed_t) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Mem_FixedEntryRecycle(p: *mut Mem_Fixed_t, pEntry: *mut ::std::os::raw::c_char);
+}
+extern "C" {
+    pub fn Mem_FixedRestart(p: *mut Mem_Fixed_t);
+}
+extern "C" {
+    pub fn Mem_FixedReadMemUsage(p: *mut Mem_Fixed_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Mem_FixedReadMaxEntriesUsed(p: *mut Mem_Fixed_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Mem_FlexStart() -> *mut Mem_Flex_t;
+}
+extern "C" {
+    pub fn Mem_FlexStop(p: *mut Mem_Flex_t, fVerbose: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Mem_FlexStop2(p: *mut Mem_Flex_t);
+}
+extern "C" {
+    pub fn Mem_FlexEntryFetch(
+        p: *mut Mem_Flex_t,
+        nBytes: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Mem_FlexRestart(p: *mut Mem_Flex_t);
+}
+extern "C" {
+    pub fn Mem_FlexReadMemUsage(p: *mut Mem_Flex_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Mem_StepStart(nSteps: ::std::os::raw::c_int) -> *mut Mem_Step_t;
+}
+extern "C" {
+    pub fn Mem_StepStop(p: *mut Mem_Step_t, fVerbose: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Mem_StepEntryFetch(
+        p: *mut Mem_Step_t,
+        nBytes: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Mem_StepEntryRecycle(
+        p: *mut Mem_Step_t,
+        pEntry: *mut ::std::os::raw::c_char,
+        nBytes: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Mem_StepReadMemUsage(p: *mut Mem_Step_t) -> ::std::os::raw::c_int;
+}
+pub type uint8 = ::std::os::raw::c_uchar;
+pub type uint16 = ::std::os::raw::c_ushort;
+pub type uint32 = ::std::os::raw::c_uint;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Extra_BitMat_t_ {
+    _unused: [u8; 0],
+}
+pub type Extra_BitMat_t = Extra_BitMat_t_;
+extern "C" {
+    pub fn Extra_BitMatrixStart(nSize: ::std::os::raw::c_int) -> *mut Extra_BitMat_t;
+}
+extern "C" {
+    pub fn Extra_BitMatrixClean(p: *mut Extra_BitMat_t);
+}
+extern "C" {
+    pub fn Extra_BitMatrixStop(p: *mut Extra_BitMat_t);
+}
+extern "C" {
+    pub fn Extra_BitMatrixPrint(p: *mut Extra_BitMat_t);
+}
+extern "C" {
+    pub fn Extra_BitMatrixReadSize(p: *mut Extra_BitMat_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Extra_BitMatrixInsert1(
+        p: *mut Extra_BitMat_t,
+        i: ::std::os::raw::c_int,
+        k: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Extra_BitMatrixLookup1(
+        p: *mut Extra_BitMat_t,
+        i: ::std::os::raw::c_int,
+        k: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Extra_BitMatrixDelete1(
+        p: *mut Extra_BitMat_t,
+        i: ::std::os::raw::c_int,
+        k: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Extra_BitMatrixInsert2(
+        p: *mut Extra_BitMat_t,
+        i: ::std::os::raw::c_int,
+        k: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Extra_BitMatrixLookup2(
+        p: *mut Extra_BitMat_t,
+        i: ::std::os::raw::c_int,
+        k: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Extra_BitMatrixDelete2(
+        p: *mut Extra_BitMat_t,
+        i: ::std::os::raw::c_int,
+        k: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Extra_BitMatrixOr(
+        p: *mut Extra_BitMat_t,
+        i: ::std::os::raw::c_int,
+        pInfo: *mut ::std::os::raw::c_uint,
+    );
+}
+extern "C" {
+    pub fn Extra_BitMatrixOrTwo(
+        p: *mut Extra_BitMat_t,
+        i: ::std::os::raw::c_int,
+        j: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Extra_BitMatrixCountOnesUpper(p: *mut Extra_BitMat_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Extra_BitMatrixIsDisjoint(
+        p1: *mut Extra_BitMat_t,
+        p2: *mut Extra_BitMat_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Extra_BitMatrixIsClique(p: *mut Extra_BitMat_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Extra_FileGetSimilarName(
+        pFileNameWrong: *mut ::std::os::raw::c_char,
+        pS1: *mut ::std::os::raw::c_char,
+        pS2: *mut ::std::os::raw::c_char,
+        pS3: *mut ::std::os::raw::c_char,
+        pS4: *mut ::std::os::raw::c_char,
+        pS5: *mut ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Extra_FileNameExtension(
+        FileName: *mut ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Extra_FileNameAppend(
+        pBase: *mut ::std::os::raw::c_char,
+        pSuffix: *mut ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Extra_FileNameGeneric(
+        FileName: *mut ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Extra_FileNameGenericAppend(
+        pBase: *mut ::std::os::raw::c_char,
+        pSuffix: *mut ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Extra_FileNameCorrectPath(FileName: *mut ::std::os::raw::c_char);
+}
+extern "C" {
+    pub fn Extra_FileNameWithoutPath(
+        FileName: *mut ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Extra_FilePathWithoutName(
+        FileName: *mut ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Extra_FileInTheSameDir(
+        pPathFile: *mut ::std::os::raw::c_char,
+        pFileName: *mut ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Extra_FileDesignName(
+        pFileName: *mut ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Extra_FileCheck(pFileName: *mut ::std::os::raw::c_char) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Extra_FileSize(pFileName: *mut ::std::os::raw::c_char) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Extra_FileRead(pFile: *mut FILE) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Extra_FileRead2(pFile: *mut FILE, pFile2: *mut FILE) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Extra_FileReadContents(
+        pFileName: *mut ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Extra_FileReadContents2(
+        pFileName: *mut ::std::os::raw::c_char,
+        pFileName2: *mut ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Extra_FileIsType(
+        pFileName: *mut ::std::os::raw::c_char,
+        pS1: *mut ::std::os::raw::c_char,
+        pS2: *mut ::std::os::raw::c_char,
+        pS3: *mut ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Extra_TimeStamp() -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Extra_StringAppend(
+        pStrGiven: *mut ::std::os::raw::c_char,
+        pStrAdd: *mut ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Extra_StringClean(
+        pStrGiven: *mut ::std::os::raw::c_char,
+        pCharKeep: *mut ::std::os::raw::c_char,
+    );
+}
+extern "C" {
+    pub fn Extra_ReadBinary(Buffer: *mut ::std::os::raw::c_char) -> ::std::os::raw::c_uint;
+}
+extern "C" {
+    pub fn Extra_PrintBinary(
+        pFile: *mut FILE,
+        Sign: *mut ::std::os::raw::c_uint,
+        nBits: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Extra_PrintBinary2(
+        pFile: *mut FILE,
+        Sign: *mut ::std::os::raw::c_uint,
+        nBits: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Extra_ReadHex(
+        Sign: *mut ::std::os::raw::c_uint,
+        pString: *mut ::std::os::raw::c_char,
+        nDigits: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Extra_ReadHexadecimal(
+        Sign: *mut ::std::os::raw::c_uint,
+        pString: *mut ::std::os::raw::c_char,
+        nVars: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Extra_PrintHexadecimal(
+        pFile: *mut FILE,
+        Sign: *mut ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Extra_PrintHexadecimalString(
+        pString: *mut ::std::os::raw::c_char,
+        Sign: *mut ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Extra_PrintHex(
+        pFile: *mut FILE,
+        pTruth: *mut ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Extra_PrintHex2(
+        pFile: *mut FILE,
+        pTruth: *mut ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Extra_PrintHexReverse(
+        pFile: *mut FILE,
+        pTruth: *mut ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Extra_PrintSymbols(
+        pFile: *mut FILE,
+        Char: ::std::os::raw::c_char,
+        nTimes: ::std::os::raw::c_int,
+        fPrintNewLine: ::std::os::raw::c_int,
+    );
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Extra_FileReader_t_ {
+    _unused: [u8; 0],
+}
+pub type Extra_FileReader_t = Extra_FileReader_t_;
+extern "C" {
+    pub fn Extra_FileReaderAlloc(
+        pFileName: *mut ::std::os::raw::c_char,
+        pCharsComment: *mut ::std::os::raw::c_char,
+        pCharsStop: *mut ::std::os::raw::c_char,
+        pCharsClean: *mut ::std::os::raw::c_char,
+    ) -> *mut Extra_FileReader_t;
+}
+extern "C" {
+    pub fn Extra_FileReaderFree(p: *mut Extra_FileReader_t);
+}
+extern "C" {
+    pub fn Extra_FileReaderGetFileName(p: *mut Extra_FileReader_t) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Extra_FileReaderGetFileSize(p: *mut Extra_FileReader_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Extra_FileReaderGetCurPosition(p: *mut Extra_FileReader_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Extra_FileReaderGetTokens(p: *mut Extra_FileReader_t) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    pub fn Extra_FileReaderGetLineNumber(
+        p: *mut Extra_FileReader_t,
+        iToken: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Extra_MmFixed_t_ {
+    _unused: [u8; 0],
+}
+pub type Extra_MmFixed_t = Extra_MmFixed_t_;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Extra_MmFlex_t_ {
+    _unused: [u8; 0],
+}
+pub type Extra_MmFlex_t = Extra_MmFlex_t_;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Extra_MmStep_t_ {
+    _unused: [u8; 0],
+}
+pub type Extra_MmStep_t = Extra_MmStep_t_;
+extern "C" {
+    pub fn Extra_MmFixedStart(nEntrySize: ::std::os::raw::c_int) -> *mut Extra_MmFixed_t;
+}
+extern "C" {
+    pub fn Extra_MmFixedStop(p: *mut Extra_MmFixed_t);
+}
+extern "C" {
+    pub fn Extra_MmFixedEntryFetch(p: *mut Extra_MmFixed_t) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Extra_MmFixedEntryRecycle(p: *mut Extra_MmFixed_t, pEntry: *mut ::std::os::raw::c_char);
+}
+extern "C" {
+    pub fn Extra_MmFixedRestart(p: *mut Extra_MmFixed_t);
+}
+extern "C" {
+    pub fn Extra_MmFixedReadMemUsage(p: *mut Extra_MmFixed_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Extra_MmFixedReadMaxEntriesUsed(p: *mut Extra_MmFixed_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Extra_MmFlexStart() -> *mut Extra_MmFlex_t;
+}
+extern "C" {
+    pub fn Extra_MmFlexStop(p: *mut Extra_MmFlex_t);
+}
+extern "C" {
+    pub fn Extra_MmFlexPrint(p: *mut Extra_MmFlex_t);
+}
+extern "C" {
+    pub fn Extra_MmFlexEntryFetch(
+        p: *mut Extra_MmFlex_t,
+        nBytes: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Extra_MmFlexReadMemUsage(p: *mut Extra_MmFlex_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Extra_MmStepStart(nSteps: ::std::os::raw::c_int) -> *mut Extra_MmStep_t;
+}
+extern "C" {
+    pub fn Extra_MmStepStop(p: *mut Extra_MmStep_t);
+}
+extern "C" {
+    pub fn Extra_MmStepEntryFetch(
+        p: *mut Extra_MmStep_t,
+        nBytes: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Extra_MmStepEntryRecycle(
+        p: *mut Extra_MmStep_t,
+        pEntry: *mut ::std::os::raw::c_char,
+        nBytes: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Extra_MmStepReadMemUsage(p: *mut Extra_MmStep_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Extra_Base2LogDouble(Num: f64) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Extra_Power2(Num: ::std::os::raw::c_int) -> f64;
+}
+extern "C" {
+    pub fn Extra_Power3(Num: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Extra_NumCombinations(
+        k: ::std::os::raw::c_int,
+        n: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Extra_DeriveRadixCode(
+        Number: ::std::os::raw::c_int,
+        Radix: ::std::os::raw::c_int,
+        nDigits: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Extra_CountOnes(
+        pBytes: *mut ::std::os::raw::c_uchar,
+        nBytes: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Extra_Factorial(n: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Extra_Permutations(n: ::std::os::raw::c_int) -> *mut *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Extra_TruthPermute(
+        Truth: ::std::os::raw::c_uint,
+        pPerms: *mut ::std::os::raw::c_char,
+        nVars: ::std::os::raw::c_int,
+        fReverse: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_uint;
+}
+extern "C" {
+    pub fn Extra_TruthPolarize(
+        uTruth: ::std::os::raw::c_uint,
+        Polarity: ::std::os::raw::c_int,
+        nVars: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_uint;
+}
+extern "C" {
+    pub fn Extra_TruthCanonN(
+        uTruth: ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_uint;
+}
+extern "C" {
+    pub fn Extra_TruthCanonNN(
+        uTruth: ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_uint;
+}
+extern "C" {
+    pub fn Extra_TruthCanonP(
+        uTruth: ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_uint;
+}
+extern "C" {
+    pub fn Extra_TruthCanonNP(
+        uTruth: ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_uint;
+}
+extern "C" {
+    pub fn Extra_TruthCanonNPN(
+        uTruth: ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_uint;
+}
+extern "C" {
+    pub fn Extra_Truth4VarNPN(
+        puCanons: *mut *mut ::std::os::raw::c_ushort,
+        puPhases: *mut *mut ::std::os::raw::c_char,
+        puPerms: *mut *mut ::std::os::raw::c_char,
+        puMap: *mut *mut ::std::os::raw::c_uchar,
+    );
+}
+extern "C" {
+    pub fn Extra_Truth4VarN(
+        puCanons: *mut *mut ::std::os::raw::c_ushort,
+        puPhases: *mut *mut *mut ::std::os::raw::c_char,
+        ppCounters: *mut *mut ::std::os::raw::c_char,
+        nPhasesMax: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Extra_TruthPerm4One(
+        uTruth: ::std::os::raw::c_uint,
+        Phase: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_ushort;
+}
+extern "C" {
+    pub fn Extra_TruthPerm5One(
+        uTruth: ::std::os::raw::c_uint,
+        Phase: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_uint;
+}
+extern "C" {
+    pub fn Extra_TruthPerm6One(
+        uTruth: *mut ::std::os::raw::c_uint,
+        Phase: ::std::os::raw::c_int,
+        uTruthRes: *mut ::std::os::raw::c_uint,
+    );
+}
+extern "C" {
+    pub fn Extra_TruthExpand(
+        nVars: ::std::os::raw::c_int,
+        nWords: ::std::os::raw::c_int,
+        puTruth: *mut ::std::os::raw::c_uint,
+        uPhase: ::std::os::raw::c_uint,
+        puTruthR: *mut ::std::os::raw::c_uint,
+    );
+}
+extern "C" {
+    pub fn Extra_ArrayAlloc(
+        nCols: ::std::os::raw::c_int,
+        nRows: ::std::os::raw::c_int,
+        Size: ::std::os::raw::c_int,
+    ) -> *mut *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    pub fn Extra_TruthPerm43() -> *mut *mut ::std::os::raw::c_ushort;
+}
+extern "C" {
+    pub fn Extra_TruthPerm53() -> *mut *mut ::std::os::raw::c_uint;
+}
+extern "C" {
+    pub fn Extra_TruthPerm54() -> *mut *mut ::std::os::raw::c_uint;
+}
+extern "C" {
+    pub fn Extra_BubbleSort(
+        Order: *mut ::std::os::raw::c_int,
+        Costs: *mut ::std::os::raw::c_int,
+        nSize: ::std::os::raw::c_int,
+        fIncreasing: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Extra_GreyCodeSchedule(n: ::std::os::raw::c_int) -> *mut ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Extra_PermSchedule(n: ::std::os::raw::c_int) -> *mut ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Extra_Truth6MinimumExact(
+        t: word,
+        pComp: *mut ::std::os::raw::c_int,
+        pPerm: *mut ::std::os::raw::c_int,
+    ) -> word;
+}
+extern "C" {
+    pub fn Extra_Truth6MinimumHeuristic(t: word) -> word;
+}
+extern "C" {
+    pub fn Extra_TruthCanonFastN(
+        nVarsMax: ::std::os::raw::c_int,
+        nVarsReal: ::std::os::raw::c_int,
+        pt: *mut ::std::os::raw::c_uint,
+        pptRes: *mut *mut ::std::os::raw::c_uint,
+        ppfRes: *mut *mut ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Sdm_Man_t_ {
+    _unused: [u8; 0],
+}
+pub type Sdm_Man_t = Sdm_Man_t_;
+extern "C" {
+    pub fn Sdm_ManCanRead() -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Sdm_ManRead() -> *mut Sdm_Man_t;
+}
+extern "C" {
+    pub fn Sdm_ManQuit();
+}
+extern "C" {
+    pub fn Sdm_ManComputeFunc(
+        p: *mut Sdm_Man_t,
+        iDsdLit0: ::std::os::raw::c_int,
+        iDsdLit1: ::std::os::raw::c_int,
+        pCut: *mut ::std::os::raw::c_int,
+        uMask: ::std::os::raw::c_int,
+        fXor: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Sdm_ManPrintDsdStats(p: *mut Sdm_Man_t, fVerbose: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Sdm_ManReadDsdVarNum(
+        p: *mut Sdm_Man_t,
+        iDsd: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Sdm_ManReadDsdAndNum(
+        p: *mut Sdm_Man_t,
+        iDsd: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Sdm_ManReadDsdClauseNum(
+        p: *mut Sdm_Man_t,
+        iDsd: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Sdm_ManReadDsdTruth(p: *mut Sdm_Man_t, iDsd: ::std::os::raw::c_int) -> word;
+}
+extern "C" {
+    pub fn Sdm_ManReadDsdStr(
+        p: *mut Sdm_Man_t,
+        iDsd: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Sdm_ManReadCnfCosts(
+        p: *mut Sdm_Man_t,
+        pCosts: *mut ::std::os::raw::c_int,
+        nCosts: ::std::os::raw::c_int,
+    );
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct ProgressBarStruct {
+    _unused: [u8; 0],
+}
+pub type ProgressBar = ProgressBarStruct;
+extern "C" {
+    pub fn Extra_ProgressBarStart(
+        pFile: *mut FILE,
+        nItemsTotal: ::std::os::raw::c_int,
+    ) -> *mut ProgressBar;
+}
+extern "C" {
+    pub fn Extra_ProgressBarStop(p: *mut ProgressBar);
+}
+extern "C" {
+    pub fn Extra_ProgressBarUpdate_int(
+        p: *mut ProgressBar,
+        nItemsCur: ::std::os::raw::c_int,
+        pString: *mut ::std::os::raw::c_char,
+    );
+}
+extern "C" {
+    #[link_name = "Extra_ProgressBarUpdate_imctk_abc_sys"]
+    pub fn Extra_ProgressBarUpdate(
+        p: *mut ProgressBar,
+        nItemsCur: ::std::os::raw::c_int,
+        pString: *mut ::std::os::raw::c_char,
+    );
+}
+extern "C" {
+    #[link_name = "Extra_BitWordNum_imctk_abc_sys"]
+    pub fn Extra_BitWordNum(nBits: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Extra_TruthWordNum_imctk_abc_sys"]
+    pub fn Extra_TruthWordNum(nVars: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Extra_TruthSetBit_imctk_abc_sys"]
+    pub fn Extra_TruthSetBit(p: *mut ::std::os::raw::c_uint, Bit: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[link_name = "Extra_TruthXorBit_imctk_abc_sys"]
+    pub fn Extra_TruthXorBit(p: *mut ::std::os::raw::c_uint, Bit: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[link_name = "Extra_TruthHasBit_imctk_abc_sys"]
+    pub fn Extra_TruthHasBit(
+        p: *mut ::std::os::raw::c_uint,
+        Bit: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Extra_WordCountOnes_imctk_abc_sys"]
+    pub fn Extra_WordCountOnes(uWord: ::std::os::raw::c_uint) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Extra_TruthCountOnes_imctk_abc_sys"]
+    pub fn Extra_TruthCountOnes(
+        pIn: *mut ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Extra_TruthIsEqual_imctk_abc_sys"]
+    pub fn Extra_TruthIsEqual(
+        pIn0: *mut ::std::os::raw::c_uint,
+        pIn1: *mut ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Extra_TruthIsConst0_imctk_abc_sys"]
+    pub fn Extra_TruthIsConst0(
+        pIn: *mut ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Extra_TruthIsConst1_imctk_abc_sys"]
+    pub fn Extra_TruthIsConst1(
+        pIn: *mut ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Extra_TruthIsImply_imctk_abc_sys"]
+    pub fn Extra_TruthIsImply(
+        pIn1: *mut ::std::os::raw::c_uint,
+        pIn2: *mut ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Extra_TruthCopy_imctk_abc_sys"]
+    pub fn Extra_TruthCopy(
+        pOut: *mut ::std::os::raw::c_uint,
+        pIn: *mut ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    #[link_name = "Extra_TruthClear_imctk_abc_sys"]
+    pub fn Extra_TruthClear(pOut: *mut ::std::os::raw::c_uint, nVars: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[link_name = "Extra_TruthFill_imctk_abc_sys"]
+    pub fn Extra_TruthFill(pOut: *mut ::std::os::raw::c_uint, nVars: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[link_name = "Extra_TruthNot_imctk_abc_sys"]
+    pub fn Extra_TruthNot(
+        pOut: *mut ::std::os::raw::c_uint,
+        pIn: *mut ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    #[link_name = "Extra_TruthAnd_imctk_abc_sys"]
+    pub fn Extra_TruthAnd(
+        pOut: *mut ::std::os::raw::c_uint,
+        pIn0: *mut ::std::os::raw::c_uint,
+        pIn1: *mut ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    #[link_name = "Extra_TruthOr_imctk_abc_sys"]
+    pub fn Extra_TruthOr(
+        pOut: *mut ::std::os::raw::c_uint,
+        pIn0: *mut ::std::os::raw::c_uint,
+        pIn1: *mut ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    #[link_name = "Extra_TruthSharp_imctk_abc_sys"]
+    pub fn Extra_TruthSharp(
+        pOut: *mut ::std::os::raw::c_uint,
+        pIn0: *mut ::std::os::raw::c_uint,
+        pIn1: *mut ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    #[link_name = "Extra_TruthNand_imctk_abc_sys"]
+    pub fn Extra_TruthNand(
+        pOut: *mut ::std::os::raw::c_uint,
+        pIn0: *mut ::std::os::raw::c_uint,
+        pIn1: *mut ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    #[link_name = "Extra_TruthAndPhase_imctk_abc_sys"]
+    pub fn Extra_TruthAndPhase(
+        pOut: *mut ::std::os::raw::c_uint,
+        pIn0: *mut ::std::os::raw::c_uint,
+        pIn1: *mut ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+        fCompl0: ::std::os::raw::c_int,
+        fCompl1: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Extra_TruthElementary(nVars: ::std::os::raw::c_int) -> *mut *mut ::std::os::raw::c_uint;
+}
+extern "C" {
+    pub fn Extra_TruthSwapAdjacentVars(
+        pOut: *mut ::std::os::raw::c_uint,
+        pIn: *mut ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+        Start: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Extra_TruthStretch(
+        pOut: *mut ::std::os::raw::c_uint,
+        pIn: *mut ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+        nVarsAll: ::std::os::raw::c_int,
+        Phase: ::std::os::raw::c_uint,
+    );
+}
+extern "C" {
+    pub fn Extra_TruthShrink(
+        pOut: *mut ::std::os::raw::c_uint,
+        pIn: *mut ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+        nVarsAll: ::std::os::raw::c_int,
+        Phase: ::std::os::raw::c_uint,
+    );
+}
+extern "C" {
+    pub fn Extra_TruthVarInSupport(
+        pTruth: *mut ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+        iVar: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Extra_TruthSupportSize(
+        pTruth: *mut ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Extra_TruthSupport(
+        pTruth: *mut ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Extra_TruthCofactor0(
+        pTruth: *mut ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+        iVar: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Extra_TruthCofactor1(
+        pTruth: *mut ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+        iVar: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Extra_TruthExist(
+        pTruth: *mut ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+        iVar: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Extra_TruthForall(
+        pTruth: *mut ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+        iVar: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Extra_TruthMux(
+        pOut: *mut ::std::os::raw::c_uint,
+        pCof0: *mut ::std::os::raw::c_uint,
+        pCof1: *mut ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+        iVar: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Extra_TruthChangePhase(
+        pTruth: *mut ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+        iVar: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Extra_TruthMinCofSuppOverlap(
+        pTruth: *mut ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+        pVarMin: *mut ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Extra_TruthCountOnesInCofs(
+        pTruth: *mut ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+        pStore: *mut ::std::os::raw::c_short,
+    );
+}
+extern "C" {
+    pub fn Extra_TruthHash(
+        pIn: *mut ::std::os::raw::c_uint,
+        nWords: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_uint;
+}
+extern "C" {
+    pub fn Extra_TruthSemiCanonicize(
+        pInOut: *mut ::std::os::raw::c_uint,
+        pAux: *mut ::std::os::raw::c_uint,
+        nVars: ::std::os::raw::c_int,
+        pCanonPerm: *mut ::std::os::raw::c_char,
+        pStore: *mut ::std::os::raw::c_short,
+    ) -> ::std::os::raw::c_uint;
+}
+extern "C" {
+    pub fn Extra_CpuTime() -> abctime;
+}
+extern "C" {
+    pub fn Extra_CpuTimeDouble() -> f64;
+}
+extern "C" {
+    pub fn Extra_GetSoftDataLimit() -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Extra_UtilGetoptReset();
+}
+extern "C" {
+    pub fn Extra_UtilGetopt(
+        argc: ::std::os::raw::c_int,
+        argv: *mut *mut ::std::os::raw::c_char,
+        optstring: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Extra_UtilPrintTime(t: ::std::os::raw::c_long) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Extra_UtilStrsav(s: *const ::std::os::raw::c_char) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Extra_UtilTildeExpand(fname: *mut ::std::os::raw::c_char)
+        -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Extra_UtilFileSearch(
+        file: *mut ::std::os::raw::c_char,
+        path: *mut ::std::os::raw::c_char,
+        mode: *mut ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub static mut Extra_UtilMMoutOfMemory:
+        ::std::option::Option<unsafe extern "C" fn(size: ::std::os::raw::c_long)>;
+}
+extern "C" {
+    pub static mut globalUtilOptarg: *const ::std::os::raw::c_char;
+}
+extern "C" {
+    pub static mut globalUtilOptind: ::std::os::raw::c_int;
+}
+pub const Abc_NtkType_t_ABC_NTK_NONE: Abc_NtkType_t = 0;
+pub const Abc_NtkType_t_ABC_NTK_NETLIST: Abc_NtkType_t = 1;
+pub const Abc_NtkType_t_ABC_NTK_LOGIC: Abc_NtkType_t = 2;
+pub const Abc_NtkType_t_ABC_NTK_STRASH: Abc_NtkType_t = 3;
+pub const Abc_NtkType_t_ABC_NTK_OTHER: Abc_NtkType_t = 4;
+pub type Abc_NtkType_t = ::std::os::raw::c_uint;
+pub const Abc_NtkFunc_t_ABC_FUNC_NONE: Abc_NtkFunc_t = 0;
+pub const Abc_NtkFunc_t_ABC_FUNC_SOP: Abc_NtkFunc_t = 1;
+pub const Abc_NtkFunc_t_ABC_FUNC_BDD: Abc_NtkFunc_t = 2;
+pub const Abc_NtkFunc_t_ABC_FUNC_AIG: Abc_NtkFunc_t = 3;
+pub const Abc_NtkFunc_t_ABC_FUNC_MAP: Abc_NtkFunc_t = 4;
+pub const Abc_NtkFunc_t_ABC_FUNC_BLIFMV: Abc_NtkFunc_t = 5;
+pub const Abc_NtkFunc_t_ABC_FUNC_BLACKBOX: Abc_NtkFunc_t = 6;
+pub const Abc_NtkFunc_t_ABC_FUNC_OTHER: Abc_NtkFunc_t = 7;
+pub type Abc_NtkFunc_t = ::std::os::raw::c_uint;
+pub const Abc_ObjType_t_ABC_OBJ_NONE: Abc_ObjType_t = 0;
+pub const Abc_ObjType_t_ABC_OBJ_CONST1: Abc_ObjType_t = 1;
+pub const Abc_ObjType_t_ABC_OBJ_PI: Abc_ObjType_t = 2;
+pub const Abc_ObjType_t_ABC_OBJ_PO: Abc_ObjType_t = 3;
+pub const Abc_ObjType_t_ABC_OBJ_BI: Abc_ObjType_t = 4;
+pub const Abc_ObjType_t_ABC_OBJ_BO: Abc_ObjType_t = 5;
+pub const Abc_ObjType_t_ABC_OBJ_NET: Abc_ObjType_t = 6;
+pub const Abc_ObjType_t_ABC_OBJ_NODE: Abc_ObjType_t = 7;
+pub const Abc_ObjType_t_ABC_OBJ_LATCH: Abc_ObjType_t = 8;
+pub const Abc_ObjType_t_ABC_OBJ_WHITEBOX: Abc_ObjType_t = 9;
+pub const Abc_ObjType_t_ABC_OBJ_BLACKBOX: Abc_ObjType_t = 10;
+pub const Abc_ObjType_t_ABC_OBJ_NUMBER: Abc_ObjType_t = 11;
+pub type Abc_ObjType_t = ::std::os::raw::c_uint;
+pub const Abc_InitType_t_ABC_INIT_NONE: Abc_InitType_t = 0;
+pub const Abc_InitType_t_ABC_INIT_ZERO: Abc_InitType_t = 1;
+pub const Abc_InitType_t_ABC_INIT_ONE: Abc_InitType_t = 2;
+pub const Abc_InitType_t_ABC_INIT_DC: Abc_InitType_t = 3;
+pub const Abc_InitType_t_ABC_INIT_OTHER: Abc_InitType_t = 4;
+pub type Abc_InitType_t = ::std::os::raw::c_uint;
+pub type Abc_Des_t = Abc_Des_t_;
+pub type Abc_Ntk_t = Abc_Ntk_t_;
+pub type Abc_Obj_t = Abc_Obj_t_;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Abc_Aig_t_ {
+    _unused: [u8; 0],
+}
+pub type Abc_Aig_t = Abc_Aig_t_;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Abc_ManTime_t_ {
+    _unused: [u8; 0],
+}
+pub type Abc_ManTime_t = Abc_ManTime_t_;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Abc_ManCut_t_ {
+    _unused: [u8; 0],
+}
+pub type Abc_ManCut_t = Abc_ManCut_t_;
+pub type Abc_Time_t = Abc_Time_t_;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Abc_Time_t_ {
+    pub Rise: f32,
+    pub Fall: f32,
+}
+#[test]
+fn bindgen_test_layout_Abc_Time_t_() {
+    const UNINIT: ::std::mem::MaybeUninit<Abc_Time_t_> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<Abc_Time_t_>(),
+        8usize,
+        concat!("Size of: ", stringify!(Abc_Time_t_))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<Abc_Time_t_>(),
+        4usize,
+        concat!("Alignment of ", stringify!(Abc_Time_t_))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).Rise) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Time_t_),
+            "::",
+            stringify!(Rise)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).Fall) as usize - ptr as usize },
+        4usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Time_t_),
+            "::",
+            stringify!(Fall)
+        )
+    );
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct Abc_Obj_t_ {
+    pub pNtk: *mut Abc_Ntk_t,
+    pub pNext: *mut Abc_Obj_t,
+    pub Id: ::std::os::raw::c_int,
+    pub _bitfield_align_1: [u32; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 4usize]>,
+    pub vFanins: Vec_Int_t,
+    pub vFanouts: Vec_Int_t,
+    pub __bindgen_anon_1: Abc_Obj_t___bindgen_ty_1,
+    pub __bindgen_anon_2: Abc_Obj_t___bindgen_ty_2,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union Abc_Obj_t___bindgen_ty_1 {
+    pub pData: *mut ::std::os::raw::c_void,
+    pub iData: ::std::os::raw::c_int,
+}
+#[test]
+fn bindgen_test_layout_Abc_Obj_t___bindgen_ty_1() {
+    const UNINIT: ::std::mem::MaybeUninit<Abc_Obj_t___bindgen_ty_1> =
+        ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<Abc_Obj_t___bindgen_ty_1>(),
+        8usize,
+        concat!("Size of: ", stringify!(Abc_Obj_t___bindgen_ty_1))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<Abc_Obj_t___bindgen_ty_1>(),
+        8usize,
+        concat!("Alignment of ", stringify!(Abc_Obj_t___bindgen_ty_1))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pData) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Obj_t___bindgen_ty_1),
+            "::",
+            stringify!(pData)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).iData) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Obj_t___bindgen_ty_1),
+            "::",
+            stringify!(iData)
+        )
+    );
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union Abc_Obj_t___bindgen_ty_2 {
+    pub pTemp: *mut ::std::os::raw::c_void,
+    pub pCopy: *mut Abc_Obj_t,
+    pub iTemp: ::std::os::raw::c_int,
+    pub dTemp: f32,
+}
+#[test]
+fn bindgen_test_layout_Abc_Obj_t___bindgen_ty_2() {
+    const UNINIT: ::std::mem::MaybeUninit<Abc_Obj_t___bindgen_ty_2> =
+        ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<Abc_Obj_t___bindgen_ty_2>(),
+        8usize,
+        concat!("Size of: ", stringify!(Abc_Obj_t___bindgen_ty_2))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<Abc_Obj_t___bindgen_ty_2>(),
+        8usize,
+        concat!("Alignment of ", stringify!(Abc_Obj_t___bindgen_ty_2))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pTemp) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Obj_t___bindgen_ty_2),
+            "::",
+            stringify!(pTemp)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pCopy) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Obj_t___bindgen_ty_2),
+            "::",
+            stringify!(pCopy)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).iTemp) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Obj_t___bindgen_ty_2),
+            "::",
+            stringify!(iTemp)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).dTemp) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Obj_t___bindgen_ty_2),
+            "::",
+            stringify!(dTemp)
+        )
+    );
+}
+#[test]
+fn bindgen_test_layout_Abc_Obj_t_() {
+    const UNINIT: ::std::mem::MaybeUninit<Abc_Obj_t_> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<Abc_Obj_t_>(),
+        72usize,
+        concat!("Size of: ", stringify!(Abc_Obj_t_))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<Abc_Obj_t_>(),
+        8usize,
+        concat!("Alignment of ", stringify!(Abc_Obj_t_))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pNtk) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Obj_t_),
+            "::",
+            stringify!(pNtk)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pNext) as usize - ptr as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Obj_t_),
+            "::",
+            stringify!(pNext)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).Id) as usize - ptr as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Obj_t_),
+            "::",
+            stringify!(Id)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vFanins) as usize - ptr as usize },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Obj_t_),
+            "::",
+            stringify!(vFanins)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vFanouts) as usize - ptr as usize },
+        40usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Obj_t_),
+            "::",
+            stringify!(vFanouts)
+        )
+    );
+}
+impl Abc_Obj_t_ {
+    #[inline]
+    pub fn Type(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(0usize, 4u8) as u32) }
+    }
+    #[inline]
+    pub fn set_Type(&mut self, val: ::std::os::raw::c_uint) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(0usize, 4u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn fMarkA(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_fMarkA(&mut self, val: ::std::os::raw::c_uint) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(4usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn fMarkB(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(5usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_fMarkB(&mut self, val: ::std::os::raw::c_uint) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(5usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn fMarkC(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(6usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_fMarkC(&mut self, val: ::std::os::raw::c_uint) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(6usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn fPhase(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_fPhase(&mut self, val: ::std::os::raw::c_uint) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(7usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn fExor(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(8usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_fExor(&mut self, val: ::std::os::raw::c_uint) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(8usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn fPersist(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(9usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_fPersist(&mut self, val: ::std::os::raw::c_uint) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(9usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn fCompl0(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(10usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_fCompl0(&mut self, val: ::std::os::raw::c_uint) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(10usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn fCompl1(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(11usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_fCompl1(&mut self, val: ::std::os::raw::c_uint) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(11usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn Level(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(12usize, 20u8) as u32) }
+    }
+    #[inline]
+    pub fn set_Level(&mut self, val: ::std::os::raw::c_uint) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(12usize, 20u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(
+        Type: ::std::os::raw::c_uint,
+        fMarkA: ::std::os::raw::c_uint,
+        fMarkB: ::std::os::raw::c_uint,
+        fMarkC: ::std::os::raw::c_uint,
+        fPhase: ::std::os::raw::c_uint,
+        fExor: ::std::os::raw::c_uint,
+        fPersist: ::std::os::raw::c_uint,
+        fCompl0: ::std::os::raw::c_uint,
+        fCompl1: ::std::os::raw::c_uint,
+        Level: ::std::os::raw::c_uint,
+    ) -> __BindgenBitfieldUnit<[u8; 4usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 4usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 4u8, {
+            let Type: u32 = unsafe { ::std::mem::transmute(Type) };
+            Type as u64
+        });
+        __bindgen_bitfield_unit.set(4usize, 1u8, {
+            let fMarkA: u32 = unsafe { ::std::mem::transmute(fMarkA) };
+            fMarkA as u64
+        });
+        __bindgen_bitfield_unit.set(5usize, 1u8, {
+            let fMarkB: u32 = unsafe { ::std::mem::transmute(fMarkB) };
+            fMarkB as u64
+        });
+        __bindgen_bitfield_unit.set(6usize, 1u8, {
+            let fMarkC: u32 = unsafe { ::std::mem::transmute(fMarkC) };
+            fMarkC as u64
+        });
+        __bindgen_bitfield_unit.set(7usize, 1u8, {
+            let fPhase: u32 = unsafe { ::std::mem::transmute(fPhase) };
+            fPhase as u64
+        });
+        __bindgen_bitfield_unit.set(8usize, 1u8, {
+            let fExor: u32 = unsafe { ::std::mem::transmute(fExor) };
+            fExor as u64
+        });
+        __bindgen_bitfield_unit.set(9usize, 1u8, {
+            let fPersist: u32 = unsafe { ::std::mem::transmute(fPersist) };
+            fPersist as u64
+        });
+        __bindgen_bitfield_unit.set(10usize, 1u8, {
+            let fCompl0: u32 = unsafe { ::std::mem::transmute(fCompl0) };
+            fCompl0 as u64
+        });
+        __bindgen_bitfield_unit.set(11usize, 1u8, {
+            let fCompl1: u32 = unsafe { ::std::mem::transmute(fCompl1) };
+            fCompl1 as u64
+        });
+        __bindgen_bitfield_unit.set(12usize, 20u8, {
+            let Level: u32 = unsafe { ::std::mem::transmute(Level) };
+            Level as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Abc_Ntk_t_ {
+    pub ntkType: Abc_NtkType_t,
+    pub ntkFunc: Abc_NtkFunc_t,
+    pub pName: *mut ::std::os::raw::c_char,
+    pub pSpec: *mut ::std::os::raw::c_char,
+    pub pManName: *mut Nm_Man_t,
+    pub vObjs: *mut Vec_Ptr_t,
+    pub vPis: *mut Vec_Ptr_t,
+    pub vPos: *mut Vec_Ptr_t,
+    pub vCis: *mut Vec_Ptr_t,
+    pub vCos: *mut Vec_Ptr_t,
+    pub vPios: *mut Vec_Ptr_t,
+    pub vBoxes: *mut Vec_Ptr_t,
+    pub vLtlProperties: *mut Vec_Ptr_t,
+    pub nObjCounts: [::std::os::raw::c_int; 11usize],
+    pub nObjs: ::std::os::raw::c_int,
+    pub nConstrs: ::std::os::raw::c_int,
+    pub nBarBufs: ::std::os::raw::c_int,
+    pub nBarBufs2: ::std::os::raw::c_int,
+    pub pNetBackup: *mut Abc_Ntk_t,
+    pub iStep: ::std::os::raw::c_int,
+    pub pDesign: *mut Abc_Des_t,
+    pub pAltView: *mut Abc_Ntk_t,
+    pub fHieVisited: ::std::os::raw::c_int,
+    pub fHiePath: ::std::os::raw::c_int,
+    pub Id: ::std::os::raw::c_int,
+    pub dTemp: f64,
+    pub nTravIds: ::std::os::raw::c_int,
+    pub vTravIds: Vec_Int_t,
+    pub pMmObj: *mut Mem_Fixed_t,
+    pub pMmStep: *mut Mem_Step_t,
+    pub pManFunc: *mut ::std::os::raw::c_void,
+    pub pManTime: *mut Abc_ManTime_t,
+    pub pManCut: *mut ::std::os::raw::c_void,
+    pub AndGateDelay: f32,
+    pub LevelMax: ::std::os::raw::c_int,
+    pub vLevelsR: *mut Vec_Int_t,
+    pub vSupps: *mut Vec_Ptr_t,
+    pub pModel: *mut ::std::os::raw::c_int,
+    pub pSeqModel: *mut Abc_Cex_t,
+    pub vSeqModelVec: *mut Vec_Ptr_t,
+    pub pExdc: *mut Abc_Ntk_t,
+    pub pExcare: *mut ::std::os::raw::c_void,
+    pub pData: *mut ::std::os::raw::c_void,
+    pub pCopy: *mut Abc_Ntk_t,
+    pub pBSMan: *mut ::std::os::raw::c_void,
+    pub pSCLib: *mut ::std::os::raw::c_void,
+    pub vGates: *mut Vec_Int_t,
+    pub vPhases: *mut Vec_Int_t,
+    pub pWLoadUsed: *mut ::std::os::raw::c_char,
+    pub pLutTimes: *mut f32,
+    pub vOnehots: *mut Vec_Ptr_t,
+    pub vObjPerm: *mut Vec_Int_t,
+    pub vTopo: *mut Vec_Int_t,
+    pub vAttrs: *mut Vec_Ptr_t,
+    pub vNameIds: *mut Vec_Int_t,
+    pub vFins: *mut Vec_Int_t,
+}
+#[test]
+fn bindgen_test_layout_Abc_Ntk_t_() {
+    const UNINIT: ::std::mem::MaybeUninit<Abc_Ntk_t_> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<Abc_Ntk_t_>(),
+        456usize,
+        concat!("Size of: ", stringify!(Abc_Ntk_t_))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<Abc_Ntk_t_>(),
+        8usize,
+        concat!("Alignment of ", stringify!(Abc_Ntk_t_))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).ntkType) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(ntkType)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).ntkFunc) as usize - ptr as usize },
+        4usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(ntkFunc)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pName) as usize - ptr as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(pName)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pSpec) as usize - ptr as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(pSpec)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pManName) as usize - ptr as usize },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(pManName)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vObjs) as usize - ptr as usize },
+        32usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(vObjs)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vPis) as usize - ptr as usize },
+        40usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(vPis)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vPos) as usize - ptr as usize },
+        48usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(vPos)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vCis) as usize - ptr as usize },
+        56usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(vCis)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vCos) as usize - ptr as usize },
+        64usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(vCos)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vPios) as usize - ptr as usize },
+        72usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(vPios)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vBoxes) as usize - ptr as usize },
+        80usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(vBoxes)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vLtlProperties) as usize - ptr as usize },
+        88usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(vLtlProperties)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nObjCounts) as usize - ptr as usize },
+        96usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(nObjCounts)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nObjs) as usize - ptr as usize },
+        140usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(nObjs)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nConstrs) as usize - ptr as usize },
+        144usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(nConstrs)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nBarBufs) as usize - ptr as usize },
+        148usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(nBarBufs)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nBarBufs2) as usize - ptr as usize },
+        152usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(nBarBufs2)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pNetBackup) as usize - ptr as usize },
+        160usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(pNetBackup)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).iStep) as usize - ptr as usize },
+        168usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(iStep)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pDesign) as usize - ptr as usize },
+        176usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(pDesign)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pAltView) as usize - ptr as usize },
+        184usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(pAltView)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fHieVisited) as usize - ptr as usize },
+        192usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(fHieVisited)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fHiePath) as usize - ptr as usize },
+        196usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(fHiePath)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).Id) as usize - ptr as usize },
+        200usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(Id)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).dTemp) as usize - ptr as usize },
+        208usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(dTemp)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nTravIds) as usize - ptr as usize },
+        216usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(nTravIds)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vTravIds) as usize - ptr as usize },
+        224usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(vTravIds)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pMmObj) as usize - ptr as usize },
+        240usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(pMmObj)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pMmStep) as usize - ptr as usize },
+        248usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(pMmStep)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pManFunc) as usize - ptr as usize },
+        256usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(pManFunc)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pManTime) as usize - ptr as usize },
+        264usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(pManTime)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pManCut) as usize - ptr as usize },
+        272usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(pManCut)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).AndGateDelay) as usize - ptr as usize },
+        280usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(AndGateDelay)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).LevelMax) as usize - ptr as usize },
+        284usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(LevelMax)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vLevelsR) as usize - ptr as usize },
+        288usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(vLevelsR)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vSupps) as usize - ptr as usize },
+        296usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(vSupps)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pModel) as usize - ptr as usize },
+        304usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(pModel)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pSeqModel) as usize - ptr as usize },
+        312usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(pSeqModel)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vSeqModelVec) as usize - ptr as usize },
+        320usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(vSeqModelVec)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pExdc) as usize - ptr as usize },
+        328usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(pExdc)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pExcare) as usize - ptr as usize },
+        336usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(pExcare)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pData) as usize - ptr as usize },
+        344usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(pData)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pCopy) as usize - ptr as usize },
+        352usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(pCopy)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pBSMan) as usize - ptr as usize },
+        360usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(pBSMan)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pSCLib) as usize - ptr as usize },
+        368usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(pSCLib)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vGates) as usize - ptr as usize },
+        376usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(vGates)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vPhases) as usize - ptr as usize },
+        384usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(vPhases)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pWLoadUsed) as usize - ptr as usize },
+        392usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(pWLoadUsed)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pLutTimes) as usize - ptr as usize },
+        400usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(pLutTimes)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vOnehots) as usize - ptr as usize },
+        408usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(vOnehots)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vObjPerm) as usize - ptr as usize },
+        416usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(vObjPerm)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vTopo) as usize - ptr as usize },
+        424usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(vTopo)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vAttrs) as usize - ptr as usize },
+        432usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(vAttrs)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vNameIds) as usize - ptr as usize },
+        440usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(vNameIds)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vFins) as usize - ptr as usize },
+        448usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Ntk_t_),
+            "::",
+            stringify!(vFins)
+        )
+    );
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Abc_Des_t_ {
+    pub pName: *mut ::std::os::raw::c_char,
+    pub pManFunc: *mut ::std::os::raw::c_void,
+    pub vTops: *mut Vec_Ptr_t,
+    pub vModules: *mut Vec_Ptr_t,
+    pub tModules: *mut st__table,
+    pub pLibrary: *mut Abc_Des_t,
+    pub pGenlib: *mut ::std::os::raw::c_void,
+}
+#[test]
+fn bindgen_test_layout_Abc_Des_t_() {
+    const UNINIT: ::std::mem::MaybeUninit<Abc_Des_t_> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<Abc_Des_t_>(),
+        56usize,
+        concat!("Size of: ", stringify!(Abc_Des_t_))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<Abc_Des_t_>(),
+        8usize,
+        concat!("Alignment of ", stringify!(Abc_Des_t_))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pName) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Des_t_),
+            "::",
+            stringify!(pName)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pManFunc) as usize - ptr as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Des_t_),
+            "::",
+            stringify!(pManFunc)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vTops) as usize - ptr as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Des_t_),
+            "::",
+            stringify!(vTops)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vModules) as usize - ptr as usize },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Des_t_),
+            "::",
+            stringify!(vModules)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).tModules) as usize - ptr as usize },
+        32usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Des_t_),
+            "::",
+            stringify!(tModules)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pLibrary) as usize - ptr as usize },
+        40usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Des_t_),
+            "::",
+            stringify!(pLibrary)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pGenlib) as usize - ptr as usize },
+        48usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Abc_Des_t_),
+            "::",
+            stringify!(pGenlib)
+        )
+    );
+}
+extern "C" {
+    #[link_name = "Abc_InfoRandomWord_imctk_abc_sys"]
+    pub fn Abc_InfoRandomWord() -> ::std::os::raw::c_uint;
+}
+extern "C" {
+    #[link_name = "Abc_InfoRandom_imctk_abc_sys"]
+    pub fn Abc_InfoRandom(p: *mut ::std::os::raw::c_uint, nWords: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[link_name = "Abc_InfoClear_imctk_abc_sys"]
+    pub fn Abc_InfoClear(p: *mut ::std::os::raw::c_uint, nWords: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[link_name = "Abc_InfoFill_imctk_abc_sys"]
+    pub fn Abc_InfoFill(p: *mut ::std::os::raw::c_uint, nWords: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[link_name = "Abc_InfoNot_imctk_abc_sys"]
+    pub fn Abc_InfoNot(p: *mut ::std::os::raw::c_uint, nWords: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[link_name = "Abc_InfoIsZero_imctk_abc_sys"]
+    pub fn Abc_InfoIsZero(
+        p: *mut ::std::os::raw::c_uint,
+        nWords: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_InfoIsOne_imctk_abc_sys"]
+    pub fn Abc_InfoIsOne(
+        p: *mut ::std::os::raw::c_uint,
+        nWords: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_InfoCopy_imctk_abc_sys"]
+    pub fn Abc_InfoCopy(
+        p: *mut ::std::os::raw::c_uint,
+        q: *mut ::std::os::raw::c_uint,
+        nWords: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    #[link_name = "Abc_InfoAnd_imctk_abc_sys"]
+    pub fn Abc_InfoAnd(
+        p: *mut ::std::os::raw::c_uint,
+        q: *mut ::std::os::raw::c_uint,
+        nWords: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    #[link_name = "Abc_InfoOr_imctk_abc_sys"]
+    pub fn Abc_InfoOr(
+        p: *mut ::std::os::raw::c_uint,
+        q: *mut ::std::os::raw::c_uint,
+        nWords: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    #[link_name = "Abc_InfoXor_imctk_abc_sys"]
+    pub fn Abc_InfoXor(
+        p: *mut ::std::os::raw::c_uint,
+        q: *mut ::std::os::raw::c_uint,
+        nWords: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    #[link_name = "Abc_InfoIsOrOne_imctk_abc_sys"]
+    pub fn Abc_InfoIsOrOne(
+        p: *mut ::std::os::raw::c_uint,
+        q: *mut ::std::os::raw::c_uint,
+        nWords: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_InfoIsOrOne3_imctk_abc_sys"]
+    pub fn Abc_InfoIsOrOne3(
+        p: *mut ::std::os::raw::c_uint,
+        q: *mut ::std::os::raw::c_uint,
+        r: *mut ::std::os::raw::c_uint,
+        nWords: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkIsNetlist_imctk_abc_sys"]
+    pub fn Abc_NtkIsNetlist(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkIsLogic_imctk_abc_sys"]
+    pub fn Abc_NtkIsLogic(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkIsStrash_imctk_abc_sys"]
+    pub fn Abc_NtkIsStrash(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkHasSop_imctk_abc_sys"]
+    pub fn Abc_NtkHasSop(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkHasBdd_imctk_abc_sys"]
+    pub fn Abc_NtkHasBdd(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkHasAig_imctk_abc_sys"]
+    pub fn Abc_NtkHasAig(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkHasMapping_imctk_abc_sys"]
+    pub fn Abc_NtkHasMapping(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkHasBlifMv_imctk_abc_sys"]
+    pub fn Abc_NtkHasBlifMv(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkHasBlackbox_imctk_abc_sys"]
+    pub fn Abc_NtkHasBlackbox(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkIsSopNetlist_imctk_abc_sys"]
+    pub fn Abc_NtkIsSopNetlist(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkIsBddNetlist_imctk_abc_sys"]
+    pub fn Abc_NtkIsBddNetlist(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkIsAigNetlist_imctk_abc_sys"]
+    pub fn Abc_NtkIsAigNetlist(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkIsMappedNetlist_imctk_abc_sys"]
+    pub fn Abc_NtkIsMappedNetlist(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkIsBlifMvNetlist_imctk_abc_sys"]
+    pub fn Abc_NtkIsBlifMvNetlist(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkIsSopLogic_imctk_abc_sys"]
+    pub fn Abc_NtkIsSopLogic(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkIsBddLogic_imctk_abc_sys"]
+    pub fn Abc_NtkIsBddLogic(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkIsAigLogic_imctk_abc_sys"]
+    pub fn Abc_NtkIsAigLogic(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkIsMappedLogic_imctk_abc_sys"]
+    pub fn Abc_NtkIsMappedLogic(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkName_imctk_abc_sys"]
+    pub fn Abc_NtkName(pNtk: *mut Abc_Ntk_t) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    #[link_name = "Abc_NtkSpec_imctk_abc_sys"]
+    pub fn Abc_NtkSpec(pNtk: *mut Abc_Ntk_t) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    #[link_name = "Abc_NtkExdc_imctk_abc_sys"]
+    pub fn Abc_NtkExdc(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    #[link_name = "Abc_NtkBackup_imctk_abc_sys"]
+    pub fn Abc_NtkBackup(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    #[link_name = "Abc_NtkStep_imctk_abc_sys"]
+    pub fn Abc_NtkStep(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkSetName_imctk_abc_sys"]
+    pub fn Abc_NtkSetName(pNtk: *mut Abc_Ntk_t, pName: *mut ::std::os::raw::c_char);
+}
+extern "C" {
+    #[link_name = "Abc_NtkSetSpec_imctk_abc_sys"]
+    pub fn Abc_NtkSetSpec(pNtk: *mut Abc_Ntk_t, pName: *mut ::std::os::raw::c_char);
+}
+extern "C" {
+    #[link_name = "Abc_NtkSetBackup_imctk_abc_sys"]
+    pub fn Abc_NtkSetBackup(pNtk: *mut Abc_Ntk_t, pNetBackup: *mut Abc_Ntk_t);
+}
+extern "C" {
+    #[link_name = "Abc_NtkSetStep_imctk_abc_sys"]
+    pub fn Abc_NtkSetStep(pNtk: *mut Abc_Ntk_t, iStep: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[link_name = "Abc_NtkObjNum_imctk_abc_sys"]
+    pub fn Abc_NtkObjNum(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkObjNumMax_imctk_abc_sys"]
+    pub fn Abc_NtkObjNumMax(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkPiNum_imctk_abc_sys"]
+    pub fn Abc_NtkPiNum(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkPoNum_imctk_abc_sys"]
+    pub fn Abc_NtkPoNum(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkCiNum_imctk_abc_sys"]
+    pub fn Abc_NtkCiNum(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkCoNum_imctk_abc_sys"]
+    pub fn Abc_NtkCoNum(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkBoxNum_imctk_abc_sys"]
+    pub fn Abc_NtkBoxNum(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkBiNum_imctk_abc_sys"]
+    pub fn Abc_NtkBiNum(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkBoNum_imctk_abc_sys"]
+    pub fn Abc_NtkBoNum(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkNetNum_imctk_abc_sys"]
+    pub fn Abc_NtkNetNum(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkNodeNum_imctk_abc_sys"]
+    pub fn Abc_NtkNodeNum(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkLatchNum_imctk_abc_sys"]
+    pub fn Abc_NtkLatchNum(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkWhiteboxNum_imctk_abc_sys"]
+    pub fn Abc_NtkWhiteboxNum(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkBlackboxNum_imctk_abc_sys"]
+    pub fn Abc_NtkBlackboxNum(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkIsComb_imctk_abc_sys"]
+    pub fn Abc_NtkIsComb(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkHasOnlyLatchBoxes_imctk_abc_sys"]
+    pub fn Abc_NtkHasOnlyLatchBoxes(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkConstrNum_imctk_abc_sys"]
+    pub fn Abc_NtkConstrNum(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkCreateObj(pNtk: *mut Abc_Ntk_t, Type: Abc_ObjType_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_NtkCreatePi_imctk_abc_sys"]
+    pub fn Abc_NtkCreatePi(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_NtkCreatePo_imctk_abc_sys"]
+    pub fn Abc_NtkCreatePo(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_NtkCreateBi_imctk_abc_sys"]
+    pub fn Abc_NtkCreateBi(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_NtkCreateBo_imctk_abc_sys"]
+    pub fn Abc_NtkCreateBo(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_NtkCreateNet_imctk_abc_sys"]
+    pub fn Abc_NtkCreateNet(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_NtkCreateNode_imctk_abc_sys"]
+    pub fn Abc_NtkCreateNode(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_NtkCreateLatch_imctk_abc_sys"]
+    pub fn Abc_NtkCreateLatch(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_NtkCreateWhitebox_imctk_abc_sys"]
+    pub fn Abc_NtkCreateWhitebox(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_NtkCreateBlackbox_imctk_abc_sys"]
+    pub fn Abc_NtkCreateBlackbox(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_NtkObj_imctk_abc_sys"]
+    pub fn Abc_NtkObj(pNtk: *mut Abc_Ntk_t, i: ::std::os::raw::c_int) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_NtkPi_imctk_abc_sys"]
+    pub fn Abc_NtkPi(pNtk: *mut Abc_Ntk_t, i: ::std::os::raw::c_int) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_NtkPo_imctk_abc_sys"]
+    pub fn Abc_NtkPo(pNtk: *mut Abc_Ntk_t, i: ::std::os::raw::c_int) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_NtkCi_imctk_abc_sys"]
+    pub fn Abc_NtkCi(pNtk: *mut Abc_Ntk_t, i: ::std::os::raw::c_int) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_NtkCo_imctk_abc_sys"]
+    pub fn Abc_NtkCo(pNtk: *mut Abc_Ntk_t, i: ::std::os::raw::c_int) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_NtkBox_imctk_abc_sys"]
+    pub fn Abc_NtkBox(pNtk: *mut Abc_Ntk_t, i: ::std::os::raw::c_int) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_ObjIsComplement_imctk_abc_sys"]
+    pub fn Abc_ObjIsComplement(p: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_ObjRegular_imctk_abc_sys"]
+    pub fn Abc_ObjRegular(p: *mut Abc_Obj_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_ObjNot_imctk_abc_sys"]
+    pub fn Abc_ObjNot(p: *mut Abc_Obj_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_ObjNotCond_imctk_abc_sys"]
+    pub fn Abc_ObjNotCond(p: *mut Abc_Obj_t, c: ::std::os::raw::c_int) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_ObjType_imctk_abc_sys"]
+    pub fn Abc_ObjType(pObj: *mut Abc_Obj_t) -> ::std::os::raw::c_uint;
+}
+extern "C" {
+    #[link_name = "Abc_ObjId_imctk_abc_sys"]
+    pub fn Abc_ObjId(pObj: *mut Abc_Obj_t) -> ::std::os::raw::c_uint;
+}
+extern "C" {
+    #[link_name = "Abc_ObjLevel_imctk_abc_sys"]
+    pub fn Abc_ObjLevel(pObj: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_ObjFaninVec_imctk_abc_sys"]
+    pub fn Abc_ObjFaninVec(pObj: *mut Abc_Obj_t) -> *mut Vec_Int_t;
+}
+extern "C" {
+    #[link_name = "Abc_ObjFanoutVec_imctk_abc_sys"]
+    pub fn Abc_ObjFanoutVec(pObj: *mut Abc_Obj_t) -> *mut Vec_Int_t;
+}
+extern "C" {
+    #[link_name = "Abc_ObjCopy_imctk_abc_sys"]
+    pub fn Abc_ObjCopy(pObj: *mut Abc_Obj_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_ObjNtk_imctk_abc_sys"]
+    pub fn Abc_ObjNtk(pObj: *mut Abc_Obj_t) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    #[link_name = "Abc_ObjModel_imctk_abc_sys"]
+    pub fn Abc_ObjModel(pObj: *mut Abc_Obj_t) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    #[link_name = "Abc_ObjData_imctk_abc_sys"]
+    pub fn Abc_ObjData(pObj: *mut Abc_Obj_t) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    #[link_name = "Abc_ObjEquiv_imctk_abc_sys"]
+    pub fn Abc_ObjEquiv(pObj: *mut Abc_Obj_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_ObjCopyCond_imctk_abc_sys"]
+    pub fn Abc_ObjCopyCond(pObj: *mut Abc_Obj_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_ObjSetLevel_imctk_abc_sys"]
+    pub fn Abc_ObjSetLevel(pObj: *mut Abc_Obj_t, Level: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[link_name = "Abc_ObjSetCopy_imctk_abc_sys"]
+    pub fn Abc_ObjSetCopy(pObj: *mut Abc_Obj_t, pCopy: *mut Abc_Obj_t);
+}
+extern "C" {
+    #[link_name = "Abc_ObjSetData_imctk_abc_sys"]
+    pub fn Abc_ObjSetData(pObj: *mut Abc_Obj_t, pData: *mut ::std::os::raw::c_void);
+}
+extern "C" {
+    #[link_name = "Abc_ObjIsNone_imctk_abc_sys"]
+    pub fn Abc_ObjIsNone(pObj: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_ObjIsPi_imctk_abc_sys"]
+    pub fn Abc_ObjIsPi(pObj: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_ObjIsPo_imctk_abc_sys"]
+    pub fn Abc_ObjIsPo(pObj: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_ObjIsBi_imctk_abc_sys"]
+    pub fn Abc_ObjIsBi(pObj: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_ObjIsBo_imctk_abc_sys"]
+    pub fn Abc_ObjIsBo(pObj: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_ObjIsCi_imctk_abc_sys"]
+    pub fn Abc_ObjIsCi(pObj: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_ObjIsCo_imctk_abc_sys"]
+    pub fn Abc_ObjIsCo(pObj: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_ObjIsTerm_imctk_abc_sys"]
+    pub fn Abc_ObjIsTerm(pObj: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_ObjIsNet_imctk_abc_sys"]
+    pub fn Abc_ObjIsNet(pObj: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_ObjIsNode_imctk_abc_sys"]
+    pub fn Abc_ObjIsNode(pObj: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_ObjIsLatch_imctk_abc_sys"]
+    pub fn Abc_ObjIsLatch(pObj: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_ObjIsBox_imctk_abc_sys"]
+    pub fn Abc_ObjIsBox(pObj: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_ObjIsWhitebox_imctk_abc_sys"]
+    pub fn Abc_ObjIsWhitebox(pObj: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_ObjIsBlackbox_imctk_abc_sys"]
+    pub fn Abc_ObjIsBlackbox(pObj: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_ObjIsBarBuf_imctk_abc_sys"]
+    pub fn Abc_ObjIsBarBuf(pObj: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_ObjBlackboxToWhitebox_imctk_abc_sys"]
+    pub fn Abc_ObjBlackboxToWhitebox(pObj: *mut Abc_Obj_t);
+}
+extern "C" {
+    #[link_name = "Abc_ObjFaninNum_imctk_abc_sys"]
+    pub fn Abc_ObjFaninNum(pObj: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_ObjFanoutNum_imctk_abc_sys"]
+    pub fn Abc_ObjFanoutNum(pObj: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_ObjFaninId_imctk_abc_sys"]
+    pub fn Abc_ObjFaninId(pObj: *mut Abc_Obj_t, i: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_ObjFaninId0_imctk_abc_sys"]
+    pub fn Abc_ObjFaninId0(pObj: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_ObjFaninId1_imctk_abc_sys"]
+    pub fn Abc_ObjFaninId1(pObj: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_ObjFanoutEdgeNum_imctk_abc_sys"]
+    pub fn Abc_ObjFanoutEdgeNum(
+        pObj: *mut Abc_Obj_t,
+        pFanout: *mut Abc_Obj_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_ObjFanout_imctk_abc_sys"]
+    pub fn Abc_ObjFanout(pObj: *mut Abc_Obj_t, i: ::std::os::raw::c_int) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_ObjFanout0_imctk_abc_sys"]
+    pub fn Abc_ObjFanout0(pObj: *mut Abc_Obj_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_ObjFanin_imctk_abc_sys"]
+    pub fn Abc_ObjFanin(pObj: *mut Abc_Obj_t, i: ::std::os::raw::c_int) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_ObjFanin0_imctk_abc_sys"]
+    pub fn Abc_ObjFanin0(pObj: *mut Abc_Obj_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_ObjFanin1_imctk_abc_sys"]
+    pub fn Abc_ObjFanin1(pObj: *mut Abc_Obj_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_ObjFanin0Ntk_imctk_abc_sys"]
+    pub fn Abc_ObjFanin0Ntk(pObj: *mut Abc_Obj_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_ObjFanout0Ntk_imctk_abc_sys"]
+    pub fn Abc_ObjFanout0Ntk(pObj: *mut Abc_Obj_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_ObjFaninC0_imctk_abc_sys"]
+    pub fn Abc_ObjFaninC0(pObj: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_ObjFaninC1_imctk_abc_sys"]
+    pub fn Abc_ObjFaninC1(pObj: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_ObjFaninC_imctk_abc_sys"]
+    pub fn Abc_ObjFaninC(pObj: *mut Abc_Obj_t, i: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_ObjSetFaninC_imctk_abc_sys"]
+    pub fn Abc_ObjSetFaninC(pObj: *mut Abc_Obj_t, i: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[link_name = "Abc_ObjXorFaninC_imctk_abc_sys"]
+    pub fn Abc_ObjXorFaninC(pObj: *mut Abc_Obj_t, i: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[link_name = "Abc_ObjChild_imctk_abc_sys"]
+    pub fn Abc_ObjChild(pObj: *mut Abc_Obj_t, i: ::std::os::raw::c_int) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_ObjChild0_imctk_abc_sys"]
+    pub fn Abc_ObjChild0(pObj: *mut Abc_Obj_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_ObjChild1_imctk_abc_sys"]
+    pub fn Abc_ObjChild1(pObj: *mut Abc_Obj_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_ObjChildCopy_imctk_abc_sys"]
+    pub fn Abc_ObjChildCopy(pObj: *mut Abc_Obj_t, i: ::std::os::raw::c_int) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_ObjChild0Copy_imctk_abc_sys"]
+    pub fn Abc_ObjChild0Copy(pObj: *mut Abc_Obj_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_ObjChild1Copy_imctk_abc_sys"]
+    pub fn Abc_ObjChild1Copy(pObj: *mut Abc_Obj_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_ObjChild0Data_imctk_abc_sys"]
+    pub fn Abc_ObjChild0Data(pObj: *mut Abc_Obj_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_ObjChild1Data_imctk_abc_sys"]
+    pub fn Abc_ObjChild1Data(pObj: *mut Abc_Obj_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_ObjFromLit_imctk_abc_sys"]
+    pub fn Abc_ObjFromLit(p: *mut Abc_Ntk_t, iLit: ::std::os::raw::c_int) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    #[link_name = "Abc_ObjToLit_imctk_abc_sys"]
+    pub fn Abc_ObjToLit(p: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_ObjFaninPhase_imctk_abc_sys"]
+    pub fn Abc_ObjFaninPhase(p: *mut Abc_Obj_t, i: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_ObjFaninFlipPhase_imctk_abc_sys"]
+    pub fn Abc_ObjFaninFlipPhase(p: *mut Abc_Obj_t, i: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[link_name = "Abc_AigNodeIsConst_imctk_abc_sys"]
+    pub fn Abc_AigNodeIsConst(pNode: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_AigNodeIsAnd_imctk_abc_sys"]
+    pub fn Abc_AigNodeIsAnd(pNode: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_AigNodeIsChoice_imctk_abc_sys"]
+    pub fn Abc_AigNodeIsChoice(pNode: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NodeIsPersistant_imctk_abc_sys"]
+    pub fn Abc_NodeIsPersistant(pNode: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NodeSetPersistant_imctk_abc_sys"]
+    pub fn Abc_NodeSetPersistant(pNode: *mut Abc_Obj_t);
+}
+extern "C" {
+    #[link_name = "Abc_NodeClearPersistant_imctk_abc_sys"]
+    pub fn Abc_NodeClearPersistant(pNode: *mut Abc_Obj_t);
+}
+extern "C" {
+    #[link_name = "Abc_NtkIncrementTravId_imctk_abc_sys"]
+    pub fn Abc_NtkIncrementTravId(p: *mut Abc_Ntk_t);
+}
+extern "C" {
+    #[link_name = "Abc_NodeTravId_imctk_abc_sys"]
+    pub fn Abc_NodeTravId(p: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NodeSetTravId_imctk_abc_sys"]
+    pub fn Abc_NodeSetTravId(p: *mut Abc_Obj_t, TravId: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[link_name = "Abc_NodeSetTravIdCurrent_imctk_abc_sys"]
+    pub fn Abc_NodeSetTravIdCurrent(p: *mut Abc_Obj_t);
+}
+extern "C" {
+    #[link_name = "Abc_NodeSetTravIdPrevious_imctk_abc_sys"]
+    pub fn Abc_NodeSetTravIdPrevious(p: *mut Abc_Obj_t);
+}
+extern "C" {
+    #[link_name = "Abc_NodeIsTravIdCurrent_imctk_abc_sys"]
+    pub fn Abc_NodeIsTravIdCurrent(p: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NodeIsTravIdPrevious_imctk_abc_sys"]
+    pub fn Abc_NodeIsTravIdPrevious(p: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NodeSetTravIdCurrentId_imctk_abc_sys"]
+    pub fn Abc_NodeSetTravIdCurrentId(p: *mut Abc_Ntk_t, i: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[link_name = "Abc_NodeIsTravIdCurrentId_imctk_abc_sys"]
+    pub fn Abc_NodeIsTravIdCurrentId(
+        p: *mut Abc_Ntk_t,
+        i: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_LatchSetInitNone_imctk_abc_sys"]
+    pub fn Abc_LatchSetInitNone(pLatch: *mut Abc_Obj_t);
+}
+extern "C" {
+    #[link_name = "Abc_LatchSetInit0_imctk_abc_sys"]
+    pub fn Abc_LatchSetInit0(pLatch: *mut Abc_Obj_t);
+}
+extern "C" {
+    #[link_name = "Abc_LatchSetInit1_imctk_abc_sys"]
+    pub fn Abc_LatchSetInit1(pLatch: *mut Abc_Obj_t);
+}
+extern "C" {
+    #[link_name = "Abc_LatchSetInitDc_imctk_abc_sys"]
+    pub fn Abc_LatchSetInitDc(pLatch: *mut Abc_Obj_t);
+}
+extern "C" {
+    #[link_name = "Abc_LatchIsInitNone_imctk_abc_sys"]
+    pub fn Abc_LatchIsInitNone(pLatch: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_LatchIsInit0_imctk_abc_sys"]
+    pub fn Abc_LatchIsInit0(pLatch: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_LatchIsInit1_imctk_abc_sys"]
+    pub fn Abc_LatchIsInit1(pLatch: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_LatchIsInitDc_imctk_abc_sys"]
+    pub fn Abc_LatchIsInitDc(pLatch: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_LatchInit_imctk_abc_sys"]
+    pub fn Abc_LatchInit(pLatch: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_NtkGlobalBdd_imctk_abc_sys"]
+    pub fn Abc_NtkGlobalBdd(pNtk: *mut Abc_Ntk_t) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    #[link_name = "Abc_NtkGlobalBddMan_imctk_abc_sys"]
+    pub fn Abc_NtkGlobalBddMan(pNtk: *mut Abc_Ntk_t) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    #[link_name = "Abc_NtkGlobalBddArray_imctk_abc_sys"]
+    pub fn Abc_NtkGlobalBddArray(pNtk: *mut Abc_Ntk_t) -> *mut *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    #[link_name = "Abc_ObjGlobalBdd_imctk_abc_sys"]
+    pub fn Abc_ObjGlobalBdd(pObj: *mut Abc_Obj_t) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    #[link_name = "Abc_ObjSetGlobalBdd_imctk_abc_sys"]
+    pub fn Abc_ObjSetGlobalBdd(pObj: *mut Abc_Obj_t, bF: *mut ::std::os::raw::c_void);
+}
+extern "C" {
+    #[link_name = "Abc_NtkMvVar_imctk_abc_sys"]
+    pub fn Abc_NtkMvVar(pNtk: *mut Abc_Ntk_t) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    #[link_name = "Abc_NtkMvVarMan_imctk_abc_sys"]
+    pub fn Abc_NtkMvVarMan(pNtk: *mut Abc_Ntk_t) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    #[link_name = "Abc_ObjMvVar_imctk_abc_sys"]
+    pub fn Abc_ObjMvVar(pObj: *mut Abc_Obj_t) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    #[link_name = "Abc_ObjMvVarNum_imctk_abc_sys"]
+    pub fn Abc_ObjMvVarNum(pObj: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Abc_ObjSetMvVar_imctk_abc_sys"]
+    pub fn Abc_ObjSetMvVar(pObj: *mut Abc_Obj_t, pV: *mut ::std::os::raw::c_void);
+}
+extern "C" {
+    pub fn Abc_AigAlloc(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Aig_t;
+}
+extern "C" {
+    pub fn Abc_AigFree(pMan: *mut Abc_Aig_t);
+}
+extern "C" {
+    pub fn Abc_AigCleanup(pMan: *mut Abc_Aig_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_AigCheck(pMan: *mut Abc_Aig_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_AigLevel(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_AigConst1(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Abc_AigAnd(
+        pMan: *mut Abc_Aig_t,
+        p0: *mut Abc_Obj_t,
+        p1: *mut Abc_Obj_t,
+    ) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Abc_AigAndLookup(
+        pMan: *mut Abc_Aig_t,
+        p0: *mut Abc_Obj_t,
+        p1: *mut Abc_Obj_t,
+    ) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Abc_AigXorLookup(
+        pMan: *mut Abc_Aig_t,
+        p0: *mut Abc_Obj_t,
+        p1: *mut Abc_Obj_t,
+        pType: *mut ::std::os::raw::c_int,
+    ) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Abc_AigMuxLookup(
+        pMan: *mut Abc_Aig_t,
+        pC: *mut Abc_Obj_t,
+        pT: *mut Abc_Obj_t,
+        pE: *mut Abc_Obj_t,
+        pType: *mut ::std::os::raw::c_int,
+    ) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Abc_AigOr(
+        pMan: *mut Abc_Aig_t,
+        p0: *mut Abc_Obj_t,
+        p1: *mut Abc_Obj_t,
+    ) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Abc_AigXor(
+        pMan: *mut Abc_Aig_t,
+        p0: *mut Abc_Obj_t,
+        p1: *mut Abc_Obj_t,
+    ) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Abc_AigMux(
+        pMan: *mut Abc_Aig_t,
+        pC: *mut Abc_Obj_t,
+        p1: *mut Abc_Obj_t,
+        p0: *mut Abc_Obj_t,
+    ) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Abc_AigMiter(
+        pMan: *mut Abc_Aig_t,
+        vPairs: *mut Vec_Ptr_t,
+        fImplic: ::std::os::raw::c_int,
+    ) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Abc_AigReplace(
+        pMan: *mut Abc_Aig_t,
+        pOld: *mut Abc_Obj_t,
+        pNew: *mut Abc_Obj_t,
+        fUpdateLevel: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_AigDeleteNode(pMan: *mut Abc_Aig_t, pOld: *mut Abc_Obj_t);
+}
+extern "C" {
+    pub fn Abc_AigRehash(pMan: *mut Abc_Aig_t);
+}
+extern "C" {
+    pub fn Abc_AigNodeHasComplFanoutEdge(pNode: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_AigNodeHasComplFanoutEdgeTrav(pNode: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_AigPrintNode(pNode: *mut Abc_Obj_t);
+}
+extern "C" {
+    pub fn Abc_AigNodeIsAcyclic(
+        pNode: *mut Abc_Obj_t,
+        pRoot: *mut Abc_Obj_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_AigCheckFaninOrder(pMan: *mut Abc_Aig_t);
+}
+extern "C" {
+    pub fn Abc_AigSetNodePhases(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_AigUpdateStart(
+        pMan: *mut Abc_Aig_t,
+        pvUpdatedNets: *mut *mut Vec_Ptr_t,
+    ) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Abc_AigUpdateStop(pMan: *mut Abc_Aig_t);
+}
+extern "C" {
+    pub fn Abc_AigUpdateReset(pMan: *mut Abc_Aig_t);
+}
+extern "C" {
+    pub fn Abc_NtkAttach(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkToBarBufs(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkFromBarBufs(pNtkBase: *mut Abc_Ntk_t, pNtk: *mut Abc_Ntk_t) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkBarBufsToBuffers(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkBarBufsFromBuffers(
+        pNtkBase: *mut Abc_Ntk_t,
+        pNtk: *mut Abc_Ntk_t,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkStartMvVars(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkFreeMvVars(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkSetMvVarValues(pObj: *mut Abc_Obj_t, nValues: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Abc_NtkStrashBlifMv(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkInsertBlifMv(
+        pNtkBase: *mut Abc_Ntk_t,
+        pNtkLogic: *mut Abc_Ntk_t,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkConvertToBlifMv(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NodeConvertSopToMvSop(
+        nVars: ::std::os::raw::c_int,
+        vSop0: *mut Vec_Int_t,
+        vSop1: *mut Vec_Int_t,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_NodeEvalMvCost(
+        nVars: ::std::os::raw::c_int,
+        vSop0: *mut Vec_Int_t,
+        vSop1: *mut Vec_Int_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkBalance(
+        pNtk: *mut Abc_Ntk_t,
+        fDuplicate: ::std::os::raw::c_int,
+        fSelective: ::std::os::raw::c_int,
+        fUpdateLevel: ::std::os::raw::c_int,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkCheck(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkCheckRead(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkDoCheck(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkCheckObj(pNtk: *mut Abc_Ntk_t, pObj: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkCompareSignals(
+        pNtk1: *mut Abc_Ntk_t,
+        pNtk2: *mut Abc_Ntk_t,
+        fOnlyPis: ::std::os::raw::c_int,
+        fComb: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkIsAcyclicHierarchy(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkCheckUniqueCiNames(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkCheckUniqueCoNames(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkCheckUniqueCioNames(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkCollapse(
+        pNtk: *mut Abc_Ntk_t,
+        fBddSizeMax: ::std::os::raw::c_int,
+        fDualRail: ::std::os::raw::c_int,
+        fReorder: ::std::os::raw::c_int,
+        fReverse: ::std::os::raw::c_int,
+        fDumpOrder: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkCollapseSat(
+        pNtk: *mut Abc_Ntk_t,
+        nCubeLim: ::std::os::raw::c_int,
+        nBTLimit: ::std::os::raw::c_int,
+        nCostMax: ::std::os::raw::c_int,
+        fCanon: ::std::os::raw::c_int,
+        fReverse: ::std::os::raw::c_int,
+        fCnfShared: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkClpGia(pNtk: *mut Abc_Ntk_t) -> *mut Gia_Man_t;
+}
+extern "C" {
+    pub fn Abc_NodeGetCutsRecursive(
+        p: *mut ::std::os::raw::c_void,
+        pObj: *mut Abc_Obj_t,
+        fDag: ::std::os::raw::c_int,
+        fTree: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    pub fn Abc_NodeGetCuts(
+        p: *mut ::std::os::raw::c_void,
+        pObj: *mut Abc_Obj_t,
+        fDag: ::std::os::raw::c_int,
+        fTree: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    pub fn Abc_NodeGetCutsSeq(
+        p: *mut ::std::os::raw::c_void,
+        pObj: *mut Abc_Obj_t,
+        fFirst: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Abc_NodeReadCuts(
+        p: *mut ::std::os::raw::c_void,
+        pObj: *mut Abc_Obj_t,
+    ) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    pub fn Abc_NodeFreeCuts(p: *mut ::std::os::raw::c_void, pObj: *mut Abc_Obj_t);
+}
+extern "C" {
+    pub fn Abc_NtkPhaseFrameNum(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkDarPrintCone(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkBalanceExor(
+        pNtk: *mut Abc_Ntk_t,
+        fUpdateLevel: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkDarLatchSweep(
+        pNtk: *mut Abc_Ntk_t,
+        fLatchConst: ::std::os::raw::c_int,
+        fLatchEqual: ::std::os::raw::c_int,
+        fSaveNames: ::std::os::raw::c_int,
+        fUseMvSweep: ::std::os::raw::c_int,
+        nFramesSymb: ::std::os::raw::c_int,
+        nFramesSatur: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+        fVeryVerbose: ::std::os::raw::c_int,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkDelayTraceLut(pNtk: *mut Abc_Ntk_t, fUseLutLib: ::std::os::raw::c_int) -> f32;
+}
+extern "C" {
+    pub fn Abc_NtkDfs(pNtk: *mut Abc_Ntk_t, fCollectAll: ::std::os::raw::c_int) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Abc_NtkDfs2(pNtk: *mut Abc_Ntk_t) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Abc_NtkDfsNodes(
+        pNtk: *mut Abc_Ntk_t,
+        ppNodes: *mut *mut Abc_Obj_t,
+        nNodes: ::std::os::raw::c_int,
+    ) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Abc_NtkDfsReverse(pNtk: *mut Abc_Ntk_t) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Abc_NtkDfsReverseNodes(
+        pNtk: *mut Abc_Ntk_t,
+        ppNodes: *mut *mut Abc_Obj_t,
+        nNodes: ::std::os::raw::c_int,
+    ) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Abc_NtkDfsReverseNodesContained(
+        pNtk: *mut Abc_Ntk_t,
+        ppNodes: *mut *mut Abc_Obj_t,
+        nNodes: ::std::os::raw::c_int,
+    ) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Abc_NtkDfsSeq(pNtk: *mut Abc_Ntk_t) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Abc_NtkDfsSeqReverse(pNtk: *mut Abc_Ntk_t) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Abc_NtkDfsIter(
+        pNtk: *mut Abc_Ntk_t,
+        fCollectAll: ::std::os::raw::c_int,
+    ) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Abc_NtkDfsIterNodes(pNtk: *mut Abc_Ntk_t, vRoots: *mut Vec_Ptr_t) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Abc_NtkDfsHie(
+        pNtk: *mut Abc_Ntk_t,
+        fCollectAll: ::std::os::raw::c_int,
+    ) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Abc_NtkIsDfsOrdered(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkDfsWithBoxes(pNtk: *mut Abc_Ntk_t) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Abc_NtkSupport(pNtk: *mut Abc_Ntk_t) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Abc_NtkNodeSupport(
+        pNtk: *mut Abc_Ntk_t,
+        ppNodes: *mut *mut Abc_Obj_t,
+        nNodes: ::std::os::raw::c_int,
+    ) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Abc_NtkNodeSupportInt(
+        pNtk: *mut Abc_Ntk_t,
+        iCo: ::std::os::raw::c_int,
+    ) -> *mut Vec_Int_t;
+}
+extern "C" {
+    pub fn Abc_NtkFunctionalIso(
+        pNtk: *mut Abc_Ntk_t,
+        iCo1: ::std::os::raw::c_int,
+        iCo2: ::std::os::raw::c_int,
+        fCommon: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_AigDfs(
+        pNtk: *mut Abc_Ntk_t,
+        fCollectAll: ::std::os::raw::c_int,
+        fCollectCos: ::std::os::raw::c_int,
+    ) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Abc_AigDfsMap(pNtk: *mut Abc_Ntk_t) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Abc_DfsLevelized(pNode: *mut Abc_Obj_t, fTfi: ::std::os::raw::c_int) -> *mut Vec_Vec_t;
+}
+extern "C" {
+    pub fn Abc_NtkLevelize(pNtk: *mut Abc_Ntk_t) -> *mut Vec_Vec_t;
+}
+extern "C" {
+    pub fn Abc_NtkLevel(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkLevelReverse(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkIsAcyclic(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkIsAcyclicWithBoxes(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_AigGetLevelizedOrder(
+        pNtk: *mut Abc_Ntk_t,
+        fCollectCis: ::std::os::raw::c_int,
+    ) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Abc_ExactInputNum() -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_ExactIsRunning() -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_ExactBuildNode(
+        pTruth: *mut word,
+        nVars: ::std::os::raw::c_int,
+        pArrTimeProfile: *mut ::std::os::raw::c_int,
+        pFanins: *mut *mut Abc_Obj_t,
+        pNtk: *mut Abc_Ntk_t,
+    ) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Abc_NtkFindExact(
+        pTruth: *mut word,
+        nVars: ::std::os::raw::c_int,
+        nFunc: ::std::os::raw::c_int,
+        nMaxDepth: ::std::os::raw::c_int,
+        pArrivalTimes: *mut ::std::os::raw::c_int,
+        nBTLimit: ::std::os::raw::c_int,
+        nStartGates: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_ObjAddFanin(pObj: *mut Abc_Obj_t, pFanin: *mut Abc_Obj_t);
+}
+extern "C" {
+    pub fn Abc_ObjDeleteFanin(pObj: *mut Abc_Obj_t, pFanin: *mut Abc_Obj_t);
+}
+extern "C" {
+    pub fn Abc_ObjRemoveFanins(pObj: *mut Abc_Obj_t);
+}
+extern "C" {
+    pub fn Abc_ObjPatchFanin(
+        pObj: *mut Abc_Obj_t,
+        pFaninOld: *mut Abc_Obj_t,
+        pFaninNew: *mut Abc_Obj_t,
+    );
+}
+extern "C" {
+    pub fn Abc_ObjPatchFanoutFanin(pObj: *mut Abc_Obj_t, iObjNew: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Abc_ObjInsertBetween(
+        pNodeIn: *mut Abc_Obj_t,
+        pNodeOut: *mut Abc_Obj_t,
+        Type: Abc_ObjType_t,
+    ) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Abc_ObjTransferFanout(pObjOld: *mut Abc_Obj_t, pObjNew: *mut Abc_Obj_t);
+}
+extern "C" {
+    pub fn Abc_ObjReplace(pObjOld: *mut Abc_Obj_t, pObjNew: *mut Abc_Obj_t);
+}
+extern "C" {
+    pub fn Abc_ObjReplaceByConstant(pNode: *mut Abc_Obj_t, fConst1: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Abc_ObjFanoutFaninNum(
+        pFanout: *mut Abc_Obj_t,
+        pFanin: *mut Abc_Obj_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkMakeLegit(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkSortSops(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkFraig(
+        pNtk: *mut Abc_Ntk_t,
+        pParams: *mut ::std::os::raw::c_void,
+        fAllNodes: ::std::os::raw::c_int,
+        fExdc: ::std::os::raw::c_int,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkToFraig(
+        pNtk: *mut Abc_Ntk_t,
+        pParams: *mut ::std::os::raw::c_void,
+        fAllNodes: ::std::os::raw::c_int,
+        fExdc: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    pub fn Abc_NtkFraigTrust(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkFraigStore(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkFraigRestore(
+        nPatsRand: ::std::os::raw::c_int,
+        nPatsDyna: ::std::os::raw::c_int,
+        nBTLimit: ::std::os::raw::c_int,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkFraigStoreClean();
+}
+extern "C" {
+    pub fn Abc_NtkSopToBdd(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkBddToSop(
+        pNtk: *mut Abc_Ntk_t,
+        fMode: ::std::os::raw::c_int,
+        nCubeLimit: ::std::os::raw::c_int,
+        fCubeSort: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NodeBddToCnf(
+        pNode: *mut Abc_Obj_t,
+        pMmMan: *mut Mem_Flex_t,
+        vCube: *mut Vec_Str_t,
+        fAllPrimes: ::std::os::raw::c_int,
+        ppSop0: *mut *mut ::std::os::raw::c_char,
+        ppSop1: *mut *mut ::std::os::raw::c_char,
+    );
+}
+extern "C" {
+    pub fn Abc_NtkLogicMakeDirectSops(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkSopToAig(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkAigToBdd(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkAigToGia(p: *mut Abc_Ntk_t, fGiaSimple: ::std::os::raw::c_int) -> *mut Gia_Man_t;
+}
+extern "C" {
+    pub fn Abc_NtkMapToSop(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkToSop(
+        pNtk: *mut Abc_Ntk_t,
+        fMode: ::std::os::raw::c_int,
+        nCubeLimit: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkToBdd(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkToAig(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkHaigStart(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkHaigStop(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkHaigUse(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkFlattenLogicHierarchy(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkConvertBlackboxes(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkInsertNewLogic(pNtkH: *mut Abc_Ntk_t, pNtkL: *mut Abc_Ntk_t) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkPrintBoxInfo(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkFlattenHierarchyGia(
+        pNtk: *mut Abc_Ntk_t,
+        pvBuffers: *mut *mut Vec_Ptr_t,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> *mut Gia_Man_t;
+}
+extern "C" {
+    pub fn Abc_NtkInsertHierarchyGia(
+        pNtk: *mut Abc_Ntk_t,
+        pNew: *mut Abc_Ntk_t,
+        fVerbose: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Abc_NtkLatchIsSelfFeed(pLatch: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkCountSelfFeedLatches(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkRemoveSelfFeedLatches(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkCollectLatchValues(pNtk: *mut Abc_Ntk_t) -> *mut Vec_Int_t;
+}
+extern "C" {
+    pub fn Abc_NtkCollectLatchValuesStr(pNtk: *mut Abc_Ntk_t) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_NtkInsertLatchValues(pNtk: *mut Abc_Ntk_t, vValues: *mut Vec_Int_t);
+}
+extern "C" {
+    pub fn Abc_NtkAddLatch(
+        pNtk: *mut Abc_Ntk_t,
+        pDriver: *mut Abc_Obj_t,
+        Init: Abc_InitType_t,
+    ) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Abc_NtkConvertDcLatches(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkConverLatchNamesIntoNumbers(pNtk: *mut Abc_Ntk_t) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Abc_DesCreate(pName: *mut ::std::os::raw::c_char) -> *mut Abc_Des_t;
+}
+extern "C" {
+    pub fn Abc_DesCleanManPointer(p: *mut Abc_Des_t, pMan: *mut ::std::os::raw::c_void);
+}
+extern "C" {
+    pub fn Abc_DesFree(p: *mut Abc_Des_t, pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_DesDup(p: *mut Abc_Des_t) -> *mut Abc_Des_t;
+}
+extern "C" {
+    pub fn Abc_DesPrint(p: *mut Abc_Des_t);
+}
+extern "C" {
+    pub fn Abc_DesAddModel(p: *mut Abc_Des_t, pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_DesFindModelByName(
+        p: *mut Abc_Des_t,
+        pName: *mut ::std::os::raw::c_char,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_DesFindTopLevelModels(p: *mut Abc_Des_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_DesDeriveRoot(p: *mut Abc_Des_t) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkWriteLogFile(
+        pFileName: *mut ::std::os::raw::c_char,
+        pSeqCex: *mut Abc_Cex_t,
+        Status: ::std::os::raw::c_int,
+        nFrames: ::std::os::raw::c_int,
+        pCommand: *mut ::std::os::raw::c_char,
+    );
+}
+extern "C" {
+    pub fn Abc_NtkFetchTwinNode(pNode: *mut Abc_Obj_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Abc_NtkMinimumBase(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NodeMinimumBase(pNode: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkRemoveDupFanins(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NodeRemoveDupFanins(pNode: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkMiter(
+        pNtk1: *mut Abc_Ntk_t,
+        pNtk2: *mut Abc_Ntk_t,
+        fComb: ::std::os::raw::c_int,
+        nPartSize: ::std::os::raw::c_int,
+        fImplic: ::std::os::raw::c_int,
+        fMulti: ::std::os::raw::c_int,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkMiterAddCone(
+        pNtk: *mut Abc_Ntk_t,
+        pNtkMiter: *mut Abc_Ntk_t,
+        pNode: *mut Abc_Obj_t,
+    );
+}
+extern "C" {
+    pub fn Abc_NtkMiterAnd(
+        pNtk1: *mut Abc_Ntk_t,
+        pNtk2: *mut Abc_Ntk_t,
+        fOr: ::std::os::raw::c_int,
+        fCompl2: ::std::os::raw::c_int,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkMiterCofactor(pNtk: *mut Abc_Ntk_t, vPiValues: *mut Vec_Int_t) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkMiterForCofactors(
+        pNtk: *mut Abc_Ntk_t,
+        Out: ::std::os::raw::c_int,
+        In1: ::std::os::raw::c_int,
+        In2: ::std::os::raw::c_int,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkMiterQuantify(
+        pNtk: *mut Abc_Ntk_t,
+        In: ::std::os::raw::c_int,
+        fExist: ::std::os::raw::c_int,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkMiterQuantifyPis(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkMiterIsConstant(pMiter: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkMiterReport(pMiter: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkFrames(
+        pNtk: *mut Abc_Ntk_t,
+        nFrames: ::std::os::raw::c_int,
+        fInitial: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkCombinePos(
+        pNtk: *mut Abc_Ntk_t,
+        fAnd: ::std::os::raw::c_int,
+        fXor: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_ObjName(pNode: *mut Abc_Obj_t) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_ObjAssignName(
+        pObj: *mut Abc_Obj_t,
+        pName: *mut ::std::os::raw::c_char,
+        pSuffix: *mut ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_ObjNamePrefix(
+        pObj: *mut Abc_Obj_t,
+        pPrefix: *mut ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_ObjNameSuffix(
+        pObj: *mut Abc_Obj_t,
+        pSuffix: *mut ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_ObjNameDummy(
+        pPrefix: *mut ::std::os::raw::c_char,
+        Num: ::std::os::raw::c_int,
+        nDigits: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_NtkTrasferNames(pNtk: *mut Abc_Ntk_t, pNtkNew: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkTrasferNamesNoLatches(pNtk: *mut Abc_Ntk_t, pNtkNew: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NodeGetFaninNames(pNode: *mut Abc_Obj_t) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Abc_NodeGetFakeNames(nNames: ::std::os::raw::c_int) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Abc_NodeFreeNames(vNames: *mut Vec_Ptr_t);
+}
+extern "C" {
+    pub fn Abc_NtkCollectCioNames(
+        pNtk: *mut Abc_Ntk_t,
+        fCollectCos: ::std::os::raw::c_int,
+    ) -> *mut *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_NodeCompareNames(
+        pp1: *mut *mut Abc_Obj_t,
+        pp2: *mut *mut Abc_Obj_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkOrderObjsByName(pNtk: *mut Abc_Ntk_t, fComb: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Abc_NtkAddDummyPiNames(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkAddDummyPoNames(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkAddDummyBoxNames(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkShortNames(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkCleanNames(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkStartNameIds(p: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkTransferNameIds(p: *mut Abc_Ntk_t, pNew: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkUpdateNameIds(p: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkToLogic(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkToNetlist(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkToNetlistBench(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkDeriveFromBdd(
+        dd: *mut ::std::os::raw::c_void,
+        bFunc: *mut ::std::os::raw::c_void,
+        pNamePo: *mut ::std::os::raw::c_char,
+        vNamesPi: *mut Vec_Ptr_t,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkBddToMuxes(
+        pNtk: *mut Abc_Ntk_t,
+        fGlobal: ::std::os::raw::c_int,
+        Limit: ::std::os::raw::c_int,
+        fUseAdd: ::std::os::raw::c_int,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkBuildGlobalBdds(
+        pNtk: *mut Abc_Ntk_t,
+        fBddSizeMax: ::std::os::raw::c_int,
+        fDropInternal: ::std::os::raw::c_int,
+        fReorder: ::std::os::raw::c_int,
+        fReverse: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    pub fn Abc_NtkFreeGlobalBdds(
+        pNtk: *mut Abc_Ntk_t,
+        fFreeMan: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    pub fn Abc_NtkSizeOfGlobalBdds(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkAlloc(
+        Type: Abc_NtkType_t,
+        Func: Abc_NtkFunc_t,
+        fUseMemMan: ::std::os::raw::c_int,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkStartFrom(
+        pNtk: *mut Abc_Ntk_t,
+        Type: Abc_NtkType_t,
+        Func: Abc_NtkFunc_t,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkStartFromNoLatches(
+        pNtk: *mut Abc_Ntk_t,
+        Type: Abc_NtkType_t,
+        Func: Abc_NtkFunc_t,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkFinalize(pNtk: *mut Abc_Ntk_t, pNtkNew: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkStartRead(pName: *mut ::std::os::raw::c_char) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkFinalizeRead(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkDup(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkDupDfs(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkDupDfsNoBarBufs(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkDupTransformMiter(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkCreateCone(
+        pNtk: *mut Abc_Ntk_t,
+        pNode: *mut Abc_Obj_t,
+        pNodeName: *mut ::std::os::raw::c_char,
+        fUseAllCis: ::std::os::raw::c_int,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkCreateConeArray(
+        pNtk: *mut Abc_Ntk_t,
+        vRoots: *mut Vec_Ptr_t,
+        fUseAllCis: ::std::os::raw::c_int,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkAppendToCone(
+        pNtkNew: *mut Abc_Ntk_t,
+        pNtk: *mut Abc_Ntk_t,
+        vRoots: *mut Vec_Ptr_t,
+    );
+}
+extern "C" {
+    pub fn Abc_NtkCreateMffc(
+        pNtk: *mut Abc_Ntk_t,
+        pNode: *mut Abc_Obj_t,
+        pNodeName: *mut ::std::os::raw::c_char,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkCreateTarget(
+        pNtk: *mut Abc_Ntk_t,
+        vRoots: *mut Vec_Ptr_t,
+        vValues: *mut Vec_Int_t,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkCreateFromNode(pNtk: *mut Abc_Ntk_t, pNode: *mut Abc_Obj_t) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkCreateFromRange(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkCreateWithNode(pSop: *mut ::std::os::raw::c_char) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkCreateWithNodes(vSops: *mut Vec_Ptr_t) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkDelete(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkFixNonDrivenNets(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkMakeComb(pNtk: *mut Abc_Ntk_t, fRemoveLatches: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Abc_NtkPermute(
+        pNtk: *mut Abc_Ntk_t,
+        fInputs: ::std::os::raw::c_int,
+        fOutputs: ::std::os::raw::c_int,
+        fFlops: ::std::os::raw::c_int,
+        pFlopPermFile: *mut ::std::os::raw::c_char,
+    );
+}
+extern "C" {
+    pub fn Abc_NtkUnpermute(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkCreateFromSops(
+        pName: *mut ::std::os::raw::c_char,
+        vSops: *mut Vec_Ptr_t,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkCreateFromGias(
+        pName: *mut ::std::os::raw::c_char,
+        vGias: *mut Vec_Ptr_t,
+        pMulti: *mut Gia_Man_t,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_ObjAlloc(pNtk: *mut Abc_Ntk_t, Type: Abc_ObjType_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Abc_ObjRecycle(pObj: *mut Abc_Obj_t);
+}
+extern "C" {
+    pub fn Abc_NtkDeleteObj(pObj: *mut Abc_Obj_t);
+}
+extern "C" {
+    pub fn Abc_NtkDeleteObjPo(pObj: *mut Abc_Obj_t);
+}
+extern "C" {
+    pub fn Abc_NtkDeleteObj_rec(pObj: *mut Abc_Obj_t, fOnlyNodes: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Abc_NtkDeleteAll_rec(pObj: *mut Abc_Obj_t);
+}
+extern "C" {
+    pub fn Abc_NtkDupObj(
+        pNtkNew: *mut Abc_Ntk_t,
+        pObj: *mut Abc_Obj_t,
+        fCopyName: ::std::os::raw::c_int,
+    ) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Abc_NtkDupBox(
+        pNtkNew: *mut Abc_Ntk_t,
+        pBox: *mut Abc_Obj_t,
+        fCopyName: ::std::os::raw::c_int,
+    ) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Abc_NtkCloneObj(pNode: *mut Abc_Obj_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Abc_NtkFindNode(
+        pNtk: *mut Abc_Ntk_t,
+        pName: *mut ::std::os::raw::c_char,
+    ) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Abc_NtkFindNet(
+        pNtk: *mut Abc_Ntk_t,
+        pName: *mut ::std::os::raw::c_char,
+    ) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Abc_NtkFindCi(
+        pNtk: *mut Abc_Ntk_t,
+        pName: *mut ::std::os::raw::c_char,
+    ) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Abc_NtkFindCo(
+        pNtk: *mut Abc_Ntk_t,
+        pName: *mut ::std::os::raw::c_char,
+    ) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Abc_NtkFindOrCreateNet(
+        pNtk: *mut Abc_Ntk_t,
+        pName: *mut ::std::os::raw::c_char,
+    ) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Abc_NtkCreateNodeConst0(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Abc_NtkCreateNodeConst1(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Abc_NtkCreateNodeInv(pNtk: *mut Abc_Ntk_t, pFanin: *mut Abc_Obj_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Abc_NtkCreateNodeBuf(pNtk: *mut Abc_Ntk_t, pFanin: *mut Abc_Obj_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Abc_NtkCreateNodeAnd(pNtk: *mut Abc_Ntk_t, vFanins: *mut Vec_Ptr_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Abc_NtkCreateNodeOr(pNtk: *mut Abc_Ntk_t, vFanins: *mut Vec_Ptr_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Abc_NtkCreateNodeExor(pNtk: *mut Abc_Ntk_t, vFanins: *mut Vec_Ptr_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Abc_NtkCreateNodeMux(
+        pNtk: *mut Abc_Ntk_t,
+        pNodeC: *mut Abc_Obj_t,
+        pNode1: *mut Abc_Obj_t,
+        pNode0: *mut Abc_Obj_t,
+    ) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Abc_NodeIsConst(pNode: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NodeIsConst0(pNode: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NodeIsConst1(pNode: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NodeIsBuf(pNode: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NodeIsInv(pNode: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NodeComplement(pNode: *mut Abc_Obj_t);
+}
+extern "C" {
+    pub fn Abc_NodeComplementInput(pNode: *mut Abc_Obj_t, pFanin: *mut Abc_Obj_t);
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Odc_Man_t_ {
+    _unused: [u8; 0],
+}
+pub type Odc_Man_t = Odc_Man_t_;
+extern "C" {
+    pub fn Abc_NtkDontCareAlloc(
+        nVarsMax: ::std::os::raw::c_int,
+        nLevels: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+        fVeryVerbose: ::std::os::raw::c_int,
+    ) -> *mut Odc_Man_t;
+}
+extern "C" {
+    pub fn Abc_NtkDontCareClear(p: *mut Odc_Man_t);
+}
+extern "C" {
+    pub fn Abc_NtkDontCareFree(p: *mut Odc_Man_t);
+}
+extern "C" {
+    pub fn Abc_NtkDontCareCompute(
+        p: *mut Odc_Man_t,
+        pNode: *mut Abc_Obj_t,
+        vLeaves: *mut Vec_Ptr_t,
+        puTruth: *mut ::std::os::raw::c_uint,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkMfsTotalSwitching(pNtk: *mut Abc_Ntk_t) -> f32;
+}
+extern "C" {
+    pub fn Abc_NtkMfsTotalGlitching(
+        pNtk: *mut Abc_Ntk_t,
+        nPats: ::std::os::raw::c_int,
+        Prob: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> f32;
+}
+extern "C" {
+    pub fn Abc_NtkPrintStats(
+        pNtk: *mut Abc_Ntk_t,
+        fFactored: ::std::os::raw::c_int,
+        fSaveBest: ::std::os::raw::c_int,
+        fDumpResult: ::std::os::raw::c_int,
+        fUseLutLib: ::std::os::raw::c_int,
+        fPrintMuxes: ::std::os::raw::c_int,
+        fPower: ::std::os::raw::c_int,
+        fGlitch: ::std::os::raw::c_int,
+        fSkipBuf: ::std::os::raw::c_int,
+        fSkipSmall: ::std::os::raw::c_int,
+        fPrintMem: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Abc_NtkPrintIo(
+        pFile: *mut FILE,
+        pNtk: *mut Abc_Ntk_t,
+        fPrintFlops: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Abc_NtkPrintLatch(pFile: *mut FILE, pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkPrintFanio(
+        pFile: *mut FILE,
+        pNtk: *mut Abc_Ntk_t,
+        fUseFanio: ::std::os::raw::c_int,
+        fUsePio: ::std::os::raw::c_int,
+        fUseSupp: ::std::os::raw::c_int,
+        fUseCone: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Abc_NtkPrintFanioNew(
+        pFile: *mut FILE,
+        pNtk: *mut Abc_Ntk_t,
+        fMffc: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Abc_NodePrintFanio(pFile: *mut FILE, pNode: *mut Abc_Obj_t);
+}
+extern "C" {
+    pub fn Abc_NtkPrintFactor(
+        pFile: *mut FILE,
+        pNtk: *mut Abc_Ntk_t,
+        fUseRealNames: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Abc_NodePrintFactor(
+        pFile: *mut FILE,
+        pNode: *mut Abc_Obj_t,
+        fUseRealNames: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Abc_NtkPrintLevel(
+        pFile: *mut FILE,
+        pNtk: *mut Abc_Ntk_t,
+        fProfile: ::std::os::raw::c_int,
+        fListNodes: ::std::os::raw::c_int,
+        fOutputs: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Abc_NodePrintLevel(pFile: *mut FILE, pNode: *mut Abc_Obj_t);
+}
+extern "C" {
+    pub fn Abc_NtkPrintSkews(
+        pFile: *mut FILE,
+        pNtk: *mut Abc_Ntk_t,
+        fPrintAll: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Abc_ObjPrint(pFile: *mut FILE, pObj: *mut Abc_Obj_t);
+}
+extern "C" {
+    pub fn Abc_NtkShow6VarFunc(pF0: *mut ::std::os::raw::c_char, pF1: *mut ::std::os::raw::c_char);
+}
+extern "C" {
+    pub fn Abc_NtkMiterProve(
+        ppNtk: *mut *mut Abc_Ntk_t,
+        pParams: *mut ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkIvyProve(
+        ppNtk: *mut *mut Abc_Ntk_t,
+        pPars: *mut ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkRecStart3(
+        p: *mut Gia_Man_t,
+        nVars: ::std::os::raw::c_int,
+        nCuts: ::std::os::raw::c_int,
+        fFuncOnly: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Abc_NtkRecStop3();
+}
+extern "C" {
+    pub fn Abc_NtkRecAdd3(pNtk: *mut Abc_Ntk_t, fUseSOPB: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Abc_NtkRecPs3(fPrintLib: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Abc_NtkRecGetGia3() -> *mut Gia_Man_t;
+}
+extern "C" {
+    pub fn Abc_NtkRecIsRunning3() -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkRecLibMerge3(pGia: *mut Gia_Man_t);
+}
+extern "C" {
+    pub fn Abc_NtkRecInputNum3() -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkManCutStart(
+        nNodeSizeMax: ::std::os::raw::c_int,
+        nConeSizeMax: ::std::os::raw::c_int,
+        nNodeFanStop: ::std::os::raw::c_int,
+        nConeFanStop: ::std::os::raw::c_int,
+    ) -> *mut Abc_ManCut_t;
+}
+extern "C" {
+    pub fn Abc_NtkManCutStop(p: *mut Abc_ManCut_t);
+}
+extern "C" {
+    pub fn Abc_NtkManCutReadCutLarge(p: *mut Abc_ManCut_t) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Abc_NtkManCutReadCutSmall(p: *mut Abc_ManCut_t) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Abc_NtkManCutReadVisited(p: *mut Abc_ManCut_t) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Abc_NodeFindCut(
+        p: *mut Abc_ManCut_t,
+        pRoot: *mut Abc_Obj_t,
+        fContain: ::std::os::raw::c_int,
+    ) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Abc_NodeConeCollect(
+        ppRoots: *mut *mut Abc_Obj_t,
+        nRoots: ::std::os::raw::c_int,
+        vFanins: *mut Vec_Ptr_t,
+        vVisited: *mut Vec_Ptr_t,
+        fIncludeFanins: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Abc_NodeCollectTfoCands(
+        p: *mut Abc_ManCut_t,
+        pRoot: *mut Abc_Obj_t,
+        vFanins: *mut Vec_Ptr_t,
+        LevelMax: ::std::os::raw::c_int,
+    ) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Abc_NodeMffcSize(pNode: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NodeMffcSizeSupp(pNode: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NodeMffcSizeStop(pNode: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NodeMffcLabelAig(pNode: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NodeMffcLabel(
+        pNode: *mut Abc_Obj_t,
+        vNodes: *mut Vec_Ptr_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NodeMffcConeSupp(
+        pNode: *mut Abc_Obj_t,
+        vCone: *mut Vec_Ptr_t,
+        vSupp: *mut Vec_Ptr_t,
+    );
+}
+extern "C" {
+    pub fn Abc_NodeDeref_rec(pNode: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NodeRef_rec(pNode: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkRefactor(
+        pNtk: *mut Abc_Ntk_t,
+        nNodeSizeMax: ::std::os::raw::c_int,
+        nMinSaved: ::std::os::raw::c_int,
+        nConeSizeMax: ::std::os::raw::c_int,
+        fUpdateLevel: ::std::os::raw::c_int,
+        fUseZeros: ::std::os::raw::c_int,
+        fUseDcs: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkRewrite(
+        pNtk: *mut Abc_Ntk_t,
+        fUpdateLevel: ::std::os::raw::c_int,
+        fUseZeros: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+        fVeryVerbose: ::std::os::raw::c_int,
+        fPlaceEnable: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkMiterSat(
+        pNtk: *mut Abc_Ntk_t,
+        nConfLimit: ABC_INT64_T,
+        nInsLimit: ABC_INT64_T,
+        fVerbose: ::std::os::raw::c_int,
+        pNumConfs: *mut ABC_INT64_T,
+        pNumInspects: *mut ABC_INT64_T,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkMiterSatCreate(
+        pNtk: *mut Abc_Ntk_t,
+        fAllPrimes: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    pub fn Abc_SopRegister(
+        pMan: *mut Mem_Flex_t,
+        pName: *const ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_SopStart(
+        pMan: *mut Mem_Flex_t,
+        nCubes: ::std::os::raw::c_int,
+        nVars: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_SopCreateConst0(pMan: *mut Mem_Flex_t) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_SopCreateConst1(pMan: *mut Mem_Flex_t) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_SopCreateAnd2(
+        pMan: *mut Mem_Flex_t,
+        fCompl0: ::std::os::raw::c_int,
+        fCompl1: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_SopCreateAnd(
+        pMan: *mut Mem_Flex_t,
+        nVars: ::std::os::raw::c_int,
+        pfCompl: *mut ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_SopCreateNand(
+        pMan: *mut Mem_Flex_t,
+        nVars: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_SopCreateOr(
+        pMan: *mut Mem_Flex_t,
+        nVars: ::std::os::raw::c_int,
+        pfCompl: *mut ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_SopCreateOrMultiCube(
+        pMan: *mut Mem_Flex_t,
+        nVars: ::std::os::raw::c_int,
+        pfCompl: *mut ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_SopCreateNor(
+        pMan: *mut Mem_Flex_t,
+        nVars: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_SopCreateXor(
+        pMan: *mut Mem_Flex_t,
+        nVars: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_SopCreateXorSpecial(
+        pMan: *mut Mem_Flex_t,
+        nVars: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_SopCreateNxor(
+        pMan: *mut Mem_Flex_t,
+        nVars: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_SopCreateMux(pMan: *mut Mem_Flex_t) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_SopCreateInv(pMan: *mut Mem_Flex_t) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_SopCreateBuf(pMan: *mut Mem_Flex_t) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_SopCreateFromTruth(
+        pMan: *mut Mem_Flex_t,
+        nVars: ::std::os::raw::c_int,
+        pTruth: *mut ::std::os::raw::c_uint,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_SopCreateFromIsop(
+        pMan: *mut Mem_Flex_t,
+        nVars: ::std::os::raw::c_int,
+        vCover: *mut Vec_Int_t,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_SopCreateFromTruthIsop(
+        pMan: *mut Mem_Flex_t,
+        nVars: ::std::os::raw::c_int,
+        pTruth: *mut word,
+        vCover: *mut Vec_Int_t,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_SopGetCubeNum(pSop: *mut ::std::os::raw::c_char) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_SopGetLitNum(pSop: *mut ::std::os::raw::c_char) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_SopGetVarNum(pSop: *mut ::std::os::raw::c_char) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_SopGetPhase(pSop: *mut ::std::os::raw::c_char) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_SopGetIthCareLit(
+        pSop: *mut ::std::os::raw::c_char,
+        i: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_SopComplement(pSop: *mut ::std::os::raw::c_char);
+}
+extern "C" {
+    pub fn Abc_SopComplementVar(pSop: *mut ::std::os::raw::c_char, iVar: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Abc_SopIsComplement(pSop: *mut ::std::os::raw::c_char) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_SopIsConst0(pSop: *mut ::std::os::raw::c_char) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_SopIsConst1(pSop: *mut ::std::os::raw::c_char) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_SopIsBuf(pSop: *mut ::std::os::raw::c_char) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_SopIsInv(pSop: *mut ::std::os::raw::c_char) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_SopIsAndType(pSop: *mut ::std::os::raw::c_char) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_SopIsOrType(pSop: *mut ::std::os::raw::c_char) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_SopIsExorType(pSop: *mut ::std::os::raw::c_char) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_SopCheck(
+        pSop: *mut ::std::os::raw::c_char,
+        nFanins: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_SopFromTruthBin(pTruth: *mut ::std::os::raw::c_char) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_SopFromTruthHex(pTruth: *mut ::std::os::raw::c_char) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_SopFromTruthsBin(pTruth: *mut ::std::os::raw::c_char) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Abc_SopFromTruthsHex(pTruth: *mut ::std::os::raw::c_char) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Abc_SopEncoderPos(
+        pMan: *mut Mem_Flex_t,
+        iValue: ::std::os::raw::c_int,
+        nValues: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_SopEncoderLog(
+        pMan: *mut Mem_Flex_t,
+        iBit: ::std::os::raw::c_int,
+        nValues: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_SopDecoderPos(
+        pMan: *mut Mem_Flex_t,
+        nValues: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_SopDecoderLog(
+        pMan: *mut Mem_Flex_t,
+        nValues: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_SopToTruth(
+        pSop: *mut ::std::os::raw::c_char,
+        nInputs: ::std::os::raw::c_int,
+    ) -> word;
+}
+extern "C" {
+    pub fn Abc_SopToTruth7(
+        pSop: *mut ::std::os::raw::c_char,
+        nInputs: ::std::os::raw::c_int,
+        r: *mut word,
+    );
+}
+extern "C" {
+    pub fn Abc_SopToTruthBig(
+        pSop: *mut ::std::os::raw::c_char,
+        nInputs: ::std::os::raw::c_int,
+        pVars: *mut *mut word,
+        pCube: *mut word,
+        pRes: *mut word,
+    );
+}
+extern "C" {
+    pub fn Abc_NtkRestrash(pNtk: *mut Abc_Ntk_t, fCleanup: ::std::os::raw::c_int)
+        -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkRestrashZero(
+        pNtk: *mut Abc_Ntk_t,
+        fCleanup: ::std::os::raw::c_int,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkStrash(
+        pNtk: *mut Abc_Ntk_t,
+        fAllNodes: ::std::os::raw::c_int,
+        fCleanup: ::std::os::raw::c_int,
+        fRecord: ::std::os::raw::c_int,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NodeStrash(
+        pNtkNew: *mut Abc_Ntk_t,
+        pNode: *mut Abc_Obj_t,
+        fRecord: ::std::os::raw::c_int,
+    ) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Abc_NtkAppend(
+        pNtk1: *mut Abc_Ntk_t,
+        pNtk2: *mut Abc_Ntk_t,
+        fAddPos: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkTopmost(pNtk: *mut Abc_Ntk_t, nLevels: ::std::os::raw::c_int) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkSweep(
+        pNtk: *mut Abc_Ntk_t,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkCleanup(
+        pNtk: *mut Abc_Ntk_t,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkCleanupNodes(
+        pNtk: *mut Abc_Ntk_t,
+        vNodes: *mut Vec_Ptr_t,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkCleanupSeq(
+        pNtk: *mut Abc_Ntk_t,
+        fLatchSweep: ::std::os::raw::c_int,
+        fAutoSweep: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkSweepBufsInvs(
+        pNtk: *mut Abc_Ntk_t,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkReadDefaultArrival(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Time_t;
+}
+extern "C" {
+    pub fn Abc_NtkReadDefaultRequired(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Time_t;
+}
+extern "C" {
+    pub fn Abc_NodeReadArrival(pNode: *mut Abc_Obj_t) -> *mut Abc_Time_t;
+}
+extern "C" {
+    pub fn Abc_NodeReadRequired(pNode: *mut Abc_Obj_t) -> *mut Abc_Time_t;
+}
+extern "C" {
+    pub fn Abc_NtkReadDefaultArrivalWorst(pNtk: *mut Abc_Ntk_t) -> f32;
+}
+extern "C" {
+    pub fn Abc_NtkReadDefaultRequiredWorst(pNtk: *mut Abc_Ntk_t) -> f32;
+}
+extern "C" {
+    pub fn Abc_NodeReadArrivalAve(pNode: *mut Abc_Obj_t) -> f32;
+}
+extern "C" {
+    pub fn Abc_NodeReadRequiredAve(pNode: *mut Abc_Obj_t) -> f32;
+}
+extern "C" {
+    pub fn Abc_NodeReadArrivalWorst(pNode: *mut Abc_Obj_t) -> f32;
+}
+extern "C" {
+    pub fn Abc_NodeReadRequiredWorst(pNode: *mut Abc_Obj_t) -> f32;
+}
+extern "C" {
+    pub fn Abc_NtkReadDefaultInputDrive(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Time_t;
+}
+extern "C" {
+    pub fn Abc_NtkReadDefaultOutputLoad(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Time_t;
+}
+extern "C" {
+    pub fn Abc_NodeReadInputDrive(
+        pNtk: *mut Abc_Ntk_t,
+        iPi: ::std::os::raw::c_int,
+    ) -> *mut Abc_Time_t;
+}
+extern "C" {
+    pub fn Abc_NodeReadOutputLoad(
+        pNtk: *mut Abc_Ntk_t,
+        iPo: ::std::os::raw::c_int,
+    ) -> *mut Abc_Time_t;
+}
+extern "C" {
+    pub fn Abc_NodeReadInputDriveWorst(pNtk: *mut Abc_Ntk_t, iPi: ::std::os::raw::c_int) -> f32;
+}
+extern "C" {
+    pub fn Abc_NodeReadOutputLoadWorst(pNtk: *mut Abc_Ntk_t, iPo: ::std::os::raw::c_int) -> f32;
+}
+extern "C" {
+    pub fn Abc_NtkTimeSetDefaultArrival(pNtk: *mut Abc_Ntk_t, Rise: f32, Fall: f32);
+}
+extern "C" {
+    pub fn Abc_NtkTimeSetDefaultRequired(pNtk: *mut Abc_Ntk_t, Rise: f32, Fall: f32);
+}
+extern "C" {
+    pub fn Abc_NtkTimeSetArrival(
+        pNtk: *mut Abc_Ntk_t,
+        ObjId: ::std::os::raw::c_int,
+        Rise: f32,
+        Fall: f32,
+    );
+}
+extern "C" {
+    pub fn Abc_NtkTimeSetRequired(
+        pNtk: *mut Abc_Ntk_t,
+        ObjId: ::std::os::raw::c_int,
+        Rise: f32,
+        Fall: f32,
+    );
+}
+extern "C" {
+    pub fn Abc_NtkTimeSetDefaultInputDrive(pNtk: *mut Abc_Ntk_t, Rise: f32, Fall: f32);
+}
+extern "C" {
+    pub fn Abc_NtkTimeSetDefaultOutputLoad(pNtk: *mut Abc_Ntk_t, Rise: f32, Fall: f32);
+}
+extern "C" {
+    pub fn Abc_NtkTimeSetInputDrive(
+        pNtk: *mut Abc_Ntk_t,
+        PiNum: ::std::os::raw::c_int,
+        Rise: f32,
+        Fall: f32,
+    );
+}
+extern "C" {
+    pub fn Abc_NtkTimeSetOutputLoad(
+        pNtk: *mut Abc_Ntk_t,
+        PoNum: ::std::os::raw::c_int,
+        Rise: f32,
+        Fall: f32,
+    );
+}
+extern "C" {
+    pub fn Abc_NtkTimeInitialize(pNtk: *mut Abc_Ntk_t, pNtkOld: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_ManTimeStop(p: *mut Abc_ManTime_t);
+}
+extern "C" {
+    pub fn Abc_ManTimeDup(pNtkOld: *mut Abc_Ntk_t, pNtkNew: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkSetNodeLevelsArrival(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkGetCiArrivalFloats(pNtk: *mut Abc_Ntk_t) -> *mut f32;
+}
+extern "C" {
+    pub fn Abc_NtkGetCoRequiredFloats(pNtk: *mut Abc_Ntk_t) -> *mut f32;
+}
+extern "C" {
+    pub fn Abc_NtkGetCiArrivalTimes(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Time_t;
+}
+extern "C" {
+    pub fn Abc_NtkGetCoRequiredTimes(pNtk: *mut Abc_Ntk_t) -> *mut Abc_Time_t;
+}
+extern "C" {
+    pub fn Abc_NtkDelayTrace(
+        pNtk: *mut Abc_Ntk_t,
+        pOut: *mut Abc_Obj_t,
+        pIn: *mut Abc_Obj_t,
+        fPrint: ::std::os::raw::c_int,
+    ) -> f32;
+}
+extern "C" {
+    pub fn Abc_ObjLevelNew(pObj: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_ObjReverseLevelNew(pObj: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_ObjRequiredLevel(pObj: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_ObjReverseLevel(pObj: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_ObjSetReverseLevel(pObj: *mut Abc_Obj_t, LevelR: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Abc_NtkStartReverseLevels(
+        pNtk: *mut Abc_Ntk_t,
+        nMaxLevelIncrease: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Abc_NtkStopReverseLevels(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkUpdateLevel(pObjNew: *mut Abc_Obj_t, vLevels: *mut Vec_Vec_t);
+}
+extern "C" {
+    pub fn Abc_NtkUpdateReverseLevel(pObjNew: *mut Abc_Obj_t, vLevels: *mut Vec_Vec_t);
+}
+extern "C" {
+    pub fn Abc_NtkUpdate(pObj: *mut Abc_Obj_t, pObjNew: *mut Abc_Obj_t, vLevels: *mut Vec_Vec_t);
+}
+extern "C" {
+    pub fn Abc_NtkAttrFree(
+        pNtk: *mut Abc_Ntk_t,
+        Attr: ::std::os::raw::c_int,
+        fFreeMan: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    pub fn Abc_NtkOrderCisCos(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkGetCubeNum(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkGetCubePairNum(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkGetLitNum(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkGetLitFactNum(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkGetBddNodeNum(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkGetAigNodeNum(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkGetClauseNum(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkGetMappedArea(pNtk: *mut Abc_Ntk_t) -> f64;
+}
+extern "C" {
+    pub fn Abc_NtkGetExorNum(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkGetMuxNum(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkGetBufNum(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkGetLargeNodeNum(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkGetChoiceNum(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkGetFaninMax(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkGetFanoutMax(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkGetTotalFanins(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkCleanCopy(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkCleanCopy_rec(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkCleanData(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkFillTemp(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkCountCopy(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkSaveCopy(pNtk: *mut Abc_Ntk_t) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Abc_NtkLoadCopy(pNtk: *mut Abc_Ntk_t, vCopies: *mut Vec_Ptr_t);
+}
+extern "C" {
+    pub fn Abc_NtkCleanNext(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkCleanNext_rec(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkCleanMarkA(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkCleanMarkB(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkCleanMarkC(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkCleanMarkAB(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkCleanMarkABC(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NodeFindFanin(
+        pNode: *mut Abc_Obj_t,
+        pFanin: *mut Abc_Obj_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NodeFindCoFanout(pNode: *mut Abc_Obj_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Abc_NodeFindNonCoFanout(pNode: *mut Abc_Obj_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Abc_NodeHasUniqueCoFanout(pNode: *mut Abc_Obj_t) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Abc_NtkLogicHasSimpleCos(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkLogicMakeSimpleCos(
+        pNtk: *mut Abc_Ntk_t,
+        fDuplicate: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_VecObjPushUniqueOrderByLevel(p: *mut Vec_Ptr_t, pNode: *mut Abc_Obj_t);
+}
+extern "C" {
+    pub fn Abc_NodeIsExorType(pNode: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NodeIsMuxType(pNode: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NodeIsMuxControlType(pNode: *mut Abc_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NodeRecognizeMux(
+        pNode: *mut Abc_Obj_t,
+        ppNodeT: *mut *mut Abc_Obj_t,
+        ppNodeE: *mut *mut Abc_Obj_t,
+    ) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Abc_NtkPrepareTwoNtks(
+        pErr: *mut FILE,
+        pNtk: *mut Abc_Ntk_t,
+        argv: *mut *mut ::std::os::raw::c_char,
+        argc: ::std::os::raw::c_int,
+        ppNtk1: *mut *mut Abc_Ntk_t,
+        ppNtk2: *mut *mut Abc_Ntk_t,
+        pfDelete1: *mut ::std::os::raw::c_int,
+        pfDelete2: *mut ::std::os::raw::c_int,
+        fCheck: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NodeCollectFanins(pNode: *mut Abc_Obj_t, vNodes: *mut Vec_Ptr_t);
+}
+extern "C" {
+    pub fn Abc_NodeCollectFanouts(pNode: *mut Abc_Obj_t, vNodes: *mut Vec_Ptr_t);
+}
+extern "C" {
+    pub fn Abc_NtkCollectLatches(pNtk: *mut Abc_Ntk_t) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Abc_NodeCompareLevelsIncrease(
+        pp1: *mut *mut Abc_Obj_t,
+        pp2: *mut *mut Abc_Obj_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NodeCompareLevelsDecrease(
+        pp1: *mut *mut Abc_Obj_t,
+        pp2: *mut *mut Abc_Obj_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkFanoutCounts(pNtk: *mut Abc_Ntk_t) -> *mut Vec_Int_t;
+}
+extern "C" {
+    pub fn Abc_NtkCollectObjects(pNtk: *mut Abc_Ntk_t) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Abc_NtkGetCiIds(pNtk: *mut Abc_Ntk_t) -> *mut Vec_Int_t;
+}
+extern "C" {
+    pub fn Abc_NtkReassignIds(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_ObjPointerCompare(
+        pp1: *mut *mut ::std::os::raw::c_void,
+        pp2: *mut *mut ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkTransferCopy(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkInvertConstraints(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkPrintCiLevels(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkReverseTopoOrder(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_NtkIsTopo(pNtk: *mut Abc_Ntk_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkTransferPhases(pNtkNew: *mut Abc_Ntk_t, pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_SopSynthesizeOne(
+        pSop: *mut ::std::os::raw::c_char,
+        fClp: ::std::os::raw::c_int,
+    ) -> *mut Gia_Man_t;
+}
+extern "C" {
+    pub fn Abc_NtkVerifyGetCleanModel(
+        pNtk: *mut Abc_Ntk_t,
+        nFrames: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkVerifySimulatePattern(
+        pNtk: *mut Abc_Ntk_t,
+        pModel: *mut ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkIsTrueCex(pNtk: *mut Abc_Ntk_t, pCex: *mut Abc_Cex_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkIsValidCex(pNtk: *mut Abc_Ntk_t, pCex: *mut Abc_Cex_t) -> ::std::os::raw::c_int;
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Abc_Frame_t_ {
+    _unused: [u8; 0],
+}
+pub type Abc_Frame_t = Abc_Frame_t_;
+extern "C" {
+    pub fn Abc_Start();
+}
+extern "C" {
+    pub fn Abc_Stop();
+}
+extern "C" {
+    pub fn Abc_FrameGetGlobalFrame() -> *mut Abc_Frame_t;
+}
+extern "C" {
+    pub fn Cmd_CommandExecute(
+        pAbc: *mut Abc_Frame_t,
+        pCommandLine: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkInputMiniAig(pAbc: *mut Abc_Frame_t, pMiniAig: *mut ::std::os::raw::c_void);
+}
+extern "C" {
+    pub fn Abc_NtkOutputMiniAig(pAbc: *mut Abc_Frame_t) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    pub fn Abc_FrameGiaInputMiniAig(pAbc: *mut Abc_Frame_t, p: *mut ::std::os::raw::c_void);
+}
+extern "C" {
+    pub fn Abc_FrameGiaOutputMiniAig(pAbc: *mut Abc_Frame_t) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    pub fn Abc_NtkSetFlopNum(pAbc: *mut Abc_Frame_t, nFlops: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Abc_FrameGiaInputMiniLut(pAbc: *mut Abc_Frame_t, pMiniLut: *mut ::std::os::raw::c_void);
+}
+extern "C" {
+    pub fn Abc_FrameGiaInputMiniLut2(pAbc: *mut Abc_Frame_t, pMiniLut: *mut ::std::os::raw::c_void);
+}
+extern "C" {
+    pub fn Abc_FrameGiaOutputMiniLut(pAbc: *mut Abc_Frame_t) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    pub fn Abc_FrameGiaOutputMiniLutAttr(
+        pAbc: *mut Abc_Frame_t,
+        pMiniLut: *mut ::std::os::raw::c_void,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_FrameReadMiniLutSwitching(pAbc: *mut Abc_Frame_t) -> *mut ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_FrameReadMiniLutSwitchingPo(pAbc: *mut Abc_Frame_t) -> *mut ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_FrameInputNdr(pAbc: *mut Abc_Frame_t, pData: *mut ::std::os::raw::c_void);
+}
+extern "C" {
+    pub fn Abc_FrameOutputNdr(pAbc: *mut Abc_Frame_t) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    pub fn Abc_FrameOutputNdrArray(pAbc: *mut Abc_Frame_t) -> *mut ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkSetCiArrivalTime(
+        pAbc: *mut Abc_Frame_t,
+        iCi: ::std::os::raw::c_int,
+        Rise: f32,
+        Fall: f32,
+    );
+}
+extern "C" {
+    pub fn Abc_NtkSetCoRequiredTime(
+        pAbc: *mut Abc_Frame_t,
+        iCo: ::std::os::raw::c_int,
+        Rise: f32,
+        Fall: f32,
+    );
+}
+extern "C" {
+    pub fn Abc_NtkSetAndGateDelay(pAbc: *mut Abc_Frame_t, Delay: f32);
+}
+extern "C" {
+    pub fn Abc_NtkOutputMiniMapping(pAbc: *mut Abc_Frame_t) -> *mut ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NtkPrintMiniMapping(pArray: *mut ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Abc_FrameReadArrayMapping(pAbc: *mut Abc_Frame_t) -> *mut ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_FrameReadBoxes(pAbc: *mut Abc_Frame_t) -> *mut ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_FrameReadProbStatus(pAbc: *mut Abc_Frame_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_FrameReadCex(pAbc: *mut Abc_Frame_t) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    pub fn Abc_FrameSetRetimingData(
+        pAbc: *mut Abc_Frame_t,
+        pRst: *mut ::std::os::raw::c_int,
+        pSet: *mut ::std::os::raw::c_int,
+        pEna: *mut ::std::os::raw::c_int,
+        nRegs: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Abc_FrameReadMiniAigEquivClasses(pAbc: *mut Abc_Frame_t) -> *mut ::std::os::raw::c_int;
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct MvCommand {
+    _unused: [u8; 0],
+}
+pub type Abc_Command = MvCommand;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct MvAlias {
+    _unused: [u8; 0],
+}
+pub type Abc_Alias = MvAlias;
+extern "C" {
+    pub fn Cmd_Init(pAbc: *mut Abc_Frame_t);
+}
+extern "C" {
+    pub fn Cmd_End(pAbc: *mut Abc_Frame_t);
+}
+pub type Cmd_CommandFuncType = ::std::option::Option<
+    unsafe extern "C" fn(
+        arg1: *mut Abc_Frame_t,
+        arg2: ::std::os::raw::c_int,
+        arg3: *mut *mut ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int,
+>;
+extern "C" {
+    pub fn Cmd_CommandIsDefined(
+        pAbc: *mut Abc_Frame_t,
+        sName: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Cmd_CommandAdd(
+        pAbc: *mut Abc_Frame_t,
+        sGroup: *const ::std::os::raw::c_char,
+        sName: *const ::std::os::raw::c_char,
+        pFunc: Cmd_CommandFuncType,
+        fChanges: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Cmd_FlagReadByName(
+        pAbc: *mut Abc_Frame_t,
+        flag: *mut ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Cmd_FlagDeleteByName(pAbc: *mut Abc_Frame_t, key: *const ::std::os::raw::c_char);
+}
+extern "C" {
+    pub fn Cmd_FlagUpdateValue(
+        pAbc: *mut Abc_Frame_t,
+        key: *const ::std::os::raw::c_char,
+        value: *mut ::std::os::raw::c_char,
+    );
+}
+extern "C" {
+    pub fn Cmd_HistoryAddCommand(pAbc: *mut Abc_Frame_t, command: *const ::std::os::raw::c_char);
+}
+extern "C" {
+    pub fn Cmd_HistoryRead(p: *mut Abc_Frame_t);
+}
+extern "C" {
+    pub fn Cmd_HistoryWrite(p: *mut Abc_Frame_t, Limit: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Cmd_HistoryPrint(p: *mut Abc_Frame_t, Limit: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn CmdCommandLoad(
+        pAbc: *mut Abc_Frame_t,
+        argc: ::std::os::raw::c_int,
+        argv: *mut *mut ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Abc_Nam_t_ {
+    _unused: [u8; 0],
+}
+pub type Abc_Nam_t = Abc_Nam_t_;
+extern "C" {
+    pub fn Abc_NamStart(
+        nObjs: ::std::os::raw::c_int,
+        nAveSize: ::std::os::raw::c_int,
+    ) -> *mut Abc_Nam_t;
+}
+extern "C" {
+    pub fn Abc_NamStop(p: *mut Abc_Nam_t);
+}
+extern "C" {
+    pub fn Abc_NamPrint(p: *mut Abc_Nam_t, pFileName: *mut ::std::os::raw::c_char);
+}
+extern "C" {
+    pub fn Abc_NamSave(p: *mut Abc_Nam_t, pFileName: *mut ::std::os::raw::c_char);
+}
+extern "C" {
+    pub fn Abc_NamLoad(pFileName: *mut ::std::os::raw::c_char) -> *mut Abc_Nam_t;
+}
+extern "C" {
+    pub fn Abc_NamRef(p: *mut Abc_Nam_t) -> *mut Abc_Nam_t;
+}
+extern "C" {
+    pub fn Abc_NamDeref(p: *mut Abc_Nam_t);
+}
+extern "C" {
+    pub fn Abc_NamObjNumMax(p: *mut Abc_Nam_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NamMemUsed(p: *mut Abc_Nam_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NamMemAlloc(p: *mut Abc_Nam_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NamStrFind(
+        p: *mut Abc_Nam_t,
+        pStr: *mut ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NamStrFindLim(
+        p: *mut Abc_Nam_t,
+        pStr: *mut ::std::os::raw::c_char,
+        pLim: *mut ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NamStrFindOrAdd(
+        p: *mut Abc_Nam_t,
+        pStr: *mut ::std::os::raw::c_char,
+        pfFound: *mut ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NamStrFindOrAddLim(
+        p: *mut Abc_Nam_t,
+        pStr: *mut ::std::os::raw::c_char,
+        pLim: *mut ::std::os::raw::c_char,
+        pfFound: *mut ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NamStrFindOrAddF(
+        p: *mut Abc_Nam_t,
+        format: *const ::std::os::raw::c_char,
+        ...
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NamStr(p: *mut Abc_Nam_t, id: ::std::os::raw::c_int) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_NamBuffer(p: *mut Abc_Nam_t) -> *mut Vec_Str_t;
+}
+extern "C" {
+    pub fn Abc_NamComputeIdMap(p1: *mut Abc_Nam_t, p2: *mut Abc_Nam_t) -> *mut Vec_Int_t;
+}
+extern "C" {
+    pub fn Abc_NamReportCommon(
+        vNameIds1: *mut Vec_Int_t,
+        p1: *mut Abc_Nam_t,
+        p2: *mut Abc_Nam_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_NamReportUnique(
+        vNameIds1: *mut Vec_Int_t,
+        p1: *mut Abc_Nam_t,
+        p2: *mut Abc_Nam_t,
+    ) -> *mut ::std::os::raw::c_char;
+}
+pub const Io_FileType_t_IO_FILE_NONE: Io_FileType_t = 0;
+pub const Io_FileType_t_IO_FILE_AIGER: Io_FileType_t = 1;
+pub const Io_FileType_t_IO_FILE_BAF: Io_FileType_t = 2;
+pub const Io_FileType_t_IO_FILE_BBLIF: Io_FileType_t = 3;
+pub const Io_FileType_t_IO_FILE_BLIF: Io_FileType_t = 4;
+pub const Io_FileType_t_IO_FILE_BLIFMV: Io_FileType_t = 5;
+pub const Io_FileType_t_IO_FILE_BENCH: Io_FileType_t = 6;
+pub const Io_FileType_t_IO_FILE_BOOK: Io_FileType_t = 7;
+pub const Io_FileType_t_IO_FILE_CNF: Io_FileType_t = 8;
+pub const Io_FileType_t_IO_FILE_DOT: Io_FileType_t = 9;
+pub const Io_FileType_t_IO_FILE_EDIF: Io_FileType_t = 10;
+pub const Io_FileType_t_IO_FILE_EQN: Io_FileType_t = 11;
+pub const Io_FileType_t_IO_FILE_GML: Io_FileType_t = 12;
+pub const Io_FileType_t_IO_FILE_JSON: Io_FileType_t = 13;
+pub const Io_FileType_t_IO_FILE_LIST: Io_FileType_t = 14;
+pub const Io_FileType_t_IO_FILE_PLA: Io_FileType_t = 15;
+pub const Io_FileType_t_IO_FILE_MOPLA: Io_FileType_t = 16;
+pub const Io_FileType_t_IO_FILE_SMV: Io_FileType_t = 17;
+pub const Io_FileType_t_IO_FILE_VERILOG: Io_FileType_t = 18;
+pub const Io_FileType_t_IO_FILE_UNKNOWN: Io_FileType_t = 19;
+pub type Io_FileType_t = ::std::os::raw::c_uint;
+extern "C" {
+    pub fn Io_ReadAiger(
+        pFileName: *mut ::std::os::raw::c_char,
+        fCheck: ::std::os::raw::c_int,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Io_ReadBaf(
+        pFileName: *mut ::std::os::raw::c_char,
+        fCheck: ::std::os::raw::c_int,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Io_ReadBblif(
+        pFileName: *mut ::std::os::raw::c_char,
+        fCheck: ::std::os::raw::c_int,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Io_ReadBlif(
+        pFileName: *mut ::std::os::raw::c_char,
+        fCheck: ::std::os::raw::c_int,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Io_ReadBlifMv(
+        pFileName: *mut ::std::os::raw::c_char,
+        fBlifMv: ::std::os::raw::c_int,
+        fCheck: ::std::os::raw::c_int,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Io_ReadBench(
+        pFileName: *mut ::std::os::raw::c_char,
+        fCheck: ::std::os::raw::c_int,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Io_ReadBenchInit(pNtk: *mut Abc_Ntk_t, pFileName: *mut ::std::os::raw::c_char);
+}
+extern "C" {
+    pub fn Io_ReadEdif(
+        pFileName: *mut ::std::os::raw::c_char,
+        fCheck: ::std::os::raw::c_int,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Io_ReadEqn(
+        pFileName: *mut ::std::os::raw::c_char,
+        fCheck: ::std::os::raw::c_int,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Io_ReadPla(
+        pFileName: *mut ::std::os::raw::c_char,
+        fZeros: ::std::os::raw::c_int,
+        fBoth: ::std::os::raw::c_int,
+        fOnDc: ::std::os::raw::c_int,
+        fSkipPrepro: ::std::os::raw::c_int,
+        fCheck: ::std::os::raw::c_int,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Io_ReadVerilog(
+        pFileName: *mut ::std::os::raw::c_char,
+        fCheck: ::std::os::raw::c_int,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Io_WriteAiger(
+        pNtk: *mut Abc_Ntk_t,
+        pFileName: *mut ::std::os::raw::c_char,
+        fWriteSymbols: ::std::os::raw::c_int,
+        fCompact: ::std::os::raw::c_int,
+        fUnique: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Io_WriteAigerCex(
+        pCex: *mut Abc_Cex_t,
+        pNtk: *mut Abc_Ntk_t,
+        pG: *mut ::std::os::raw::c_void,
+        pFileName: *mut ::std::os::raw::c_char,
+    );
+}
+extern "C" {
+    pub fn Io_WriteBaf(pNtk: *mut Abc_Ntk_t, pFileName: *mut ::std::os::raw::c_char);
+}
+extern "C" {
+    pub fn Io_WriteBblif(pNtk: *mut Abc_Ntk_t, pFileName: *mut ::std::os::raw::c_char);
+}
+extern "C" {
+    pub fn Io_WriteBlifLogic(
+        pNtk: *mut Abc_Ntk_t,
+        pFileName: *mut ::std::os::raw::c_char,
+        fWriteLatches: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Io_WriteBlif(
+        pNtk: *mut Abc_Ntk_t,
+        pFileName: *mut ::std::os::raw::c_char,
+        fWriteLatches: ::std::os::raw::c_int,
+        fBb2Wb: ::std::os::raw::c_int,
+        fSeq: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Io_WriteTimingInfo(pFile: *mut FILE, pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Io_WriteBlifSpecial(
+        pNtk: *mut Abc_Ntk_t,
+        FileName: *mut ::std::os::raw::c_char,
+        pLutStruct: *mut ::std::os::raw::c_char,
+        fUseHie: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Io_WriteBlifMv(pNtk: *mut Abc_Ntk_t, FileName: *mut ::std::os::raw::c_char);
+}
+extern "C" {
+    pub fn Io_WriteBench(
+        pNtk: *mut Abc_Ntk_t,
+        FileName: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Io_WriteBenchLut(
+        pNtk: *mut Abc_Ntk_t,
+        FileName: *mut ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Io_WriteBook(pNtk: *mut Abc_Ntk_t, FileName: *mut ::std::os::raw::c_char);
+}
+extern "C" {
+    pub fn Io_WriteCnf(
+        pNtk: *mut Abc_Ntk_t,
+        FileName: *mut ::std::os::raw::c_char,
+        fAllPrimes: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Io_WriteDot(pNtk: *mut Abc_Ntk_t, FileName: *mut ::std::os::raw::c_char);
+}
+extern "C" {
+    pub fn Io_WriteDotNtk(
+        pNtk: *mut Abc_Ntk_t,
+        vNodes: *mut Vec_Ptr_t,
+        vNodesShow: *mut Vec_Ptr_t,
+        pFileName: *mut ::std::os::raw::c_char,
+        fGateNames: ::std::os::raw::c_int,
+        fUseReverse: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Io_WriteDotSeq(
+        pNtk: *mut Abc_Ntk_t,
+        vNodes: *mut Vec_Ptr_t,
+        vNodesShow: *mut Vec_Ptr_t,
+        pFileName: *mut ::std::os::raw::c_char,
+        fGateNames: ::std::os::raw::c_int,
+        fUseReverse: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Io_WriteEqn(pNtk: *mut Abc_Ntk_t, pFileName: *mut ::std::os::raw::c_char);
+}
+extern "C" {
+    pub fn Io_WriteEdgelist(
+        pNtk: *mut Abc_Ntk_t,
+        pFileName: *mut ::std::os::raw::c_char,
+        fWriteLatches: ::std::os::raw::c_int,
+        fBb2Wb: ::std::os::raw::c_int,
+        fSeq: ::std::os::raw::c_int,
+        fName: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Io_WriteGml(pNtk: *mut Abc_Ntk_t, pFileName: *mut ::std::os::raw::c_char);
+}
+extern "C" {
+    pub fn Io_WriteList(
+        pNtk: *mut Abc_Ntk_t,
+        pFileName: *mut ::std::os::raw::c_char,
+        fUseHost: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Io_WritePla(
+        pNtk: *mut Abc_Ntk_t,
+        FileName: *mut ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Io_WriteMoPla(
+        pNtk: *mut Abc_Ntk_t,
+        FileName: *mut ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Io_WriteSmv(
+        pNtk: *mut Abc_Ntk_t,
+        FileName: *mut ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Io_WriteVerilog(
+        pNtk: *mut Abc_Ntk_t,
+        FileName: *mut ::std::os::raw::c_char,
+        fOnlyAnds: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Io_ReadFileType(pFileName: *mut ::std::os::raw::c_char) -> Io_FileType_t;
+}
+extern "C" {
+    pub fn Io_ReadLibType(pFileName: *mut ::std::os::raw::c_char) -> Io_FileType_t;
+}
+extern "C" {
+    pub fn Io_ReadNetlist(
+        pFileName: *mut ::std::os::raw::c_char,
+        FileType: Io_FileType_t,
+        fCheck: ::std::os::raw::c_int,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Io_Read(
+        pFileName: *mut ::std::os::raw::c_char,
+        FileType: Io_FileType_t,
+        fCheck: ::std::os::raw::c_int,
+        fBarBufs: ::std::os::raw::c_int,
+    ) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Io_Write(
+        pNtk: *mut Abc_Ntk_t,
+        pFileName: *mut ::std::os::raw::c_char,
+        FileType: Io_FileType_t,
+    );
+}
+extern "C" {
+    pub fn Io_WriteHie(
+        pNtk: *mut Abc_Ntk_t,
+        pBaseName: *mut ::std::os::raw::c_char,
+        pFileName: *mut ::std::os::raw::c_char,
+    );
+}
+extern "C" {
+    pub fn Io_ReadCreatePi(
+        pNtk: *mut Abc_Ntk_t,
+        pName: *mut ::std::os::raw::c_char,
+    ) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Io_ReadCreatePo(
+        pNtk: *mut Abc_Ntk_t,
+        pName: *mut ::std::os::raw::c_char,
+    ) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Io_ReadCreateLatch(
+        pNtk: *mut Abc_Ntk_t,
+        pNetLI: *mut ::std::os::raw::c_char,
+        pNetLO: *mut ::std::os::raw::c_char,
+    ) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Io_ReadCreateResetLatch(
+        pNtk: *mut Abc_Ntk_t,
+        fBlifMv: ::std::os::raw::c_int,
+    ) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Io_ReadCreateResetMux(
+        pNtk: *mut Abc_Ntk_t,
+        pResetLO: *mut ::std::os::raw::c_char,
+        pDataLI: *mut ::std::os::raw::c_char,
+        fBlifMv: ::std::os::raw::c_int,
+    ) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Io_ReadCreateNode(
+        pNtk: *mut Abc_Ntk_t,
+        pNameOut: *mut ::std::os::raw::c_char,
+        pNamesIn: *mut *mut ::std::os::raw::c_char,
+        nInputs: ::std::os::raw::c_int,
+    ) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Io_ReadCreateConst(
+        pNtk: *mut Abc_Ntk_t,
+        pName: *mut ::std::os::raw::c_char,
+        fConst1: ::std::os::raw::c_int,
+    ) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Io_ReadCreateInv(
+        pNtk: *mut Abc_Ntk_t,
+        pNameIn: *mut ::std::os::raw::c_char,
+        pNameOut: *mut ::std::os::raw::c_char,
+    ) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Io_ReadCreateBuf(
+        pNtk: *mut Abc_Ntk_t,
+        pNameIn: *mut ::std::os::raw::c_char,
+        pNameOut: *mut ::std::os::raw::c_char,
+    ) -> *mut Abc_Obj_t;
+}
+extern "C" {
+    pub fn Io_FileOpen(
+        FileName: *const ::std::os::raw::c_char,
+        PathVar: *const ::std::os::raw::c_char,
+        Mode: *const ::std::os::raw::c_char,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> *mut FILE;
+}
+extern "C" {
+    pub fn Io_ReadJson(pFileName: *mut ::std::os::raw::c_char);
+}
+extern "C" {
+    pub fn Io_WriteJson(pFileName: *mut ::std::os::raw::c_char);
+}
+extern "C" {
+    pub fn Abc_FrameReadNtk(p: *mut Abc_Frame_t) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_FrameReadGia(p: *mut Abc_Frame_t) -> *mut Gia_Man_t;
+}
+extern "C" {
+    pub fn Abc_FrameReadOut(p: *mut Abc_Frame_t) -> *mut FILE;
+}
+extern "C" {
+    pub fn Abc_FrameReadErr(p: *mut Abc_Frame_t) -> *mut FILE;
+}
+extern "C" {
+    pub fn Abc_FrameReadMode(p: *mut Abc_Frame_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_FrameSetMode(
+        p: *mut Abc_Frame_t,
+        fNameMode: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_FrameRestart(p: *mut Abc_Frame_t);
+}
+extern "C" {
+    pub fn Abc_FrameShowProgress(p: *mut Abc_Frame_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_FrameClearVerifStatus(p: *mut Abc_Frame_t);
+}
+extern "C" {
+    pub fn Abc_FrameUpdateGia(p: *mut Abc_Frame_t, pNew: *mut Gia_Man_t);
+}
+extern "C" {
+    pub fn Abc_FrameGetGia(p: *mut Abc_Frame_t) -> *mut Gia_Man_t;
+}
+extern "C" {
+    pub fn Abc_FrameSetCurrentNetwork(p: *mut Abc_Frame_t, pNet: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_FrameSwapCurrentAndBackup(p: *mut Abc_Frame_t);
+}
+extern "C" {
+    pub fn Abc_FrameReplaceCurrentNetwork(p: *mut Abc_Frame_t, pNet: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_FrameUnmapAllNetworks(p: *mut Abc_Frame_t);
+}
+extern "C" {
+    pub fn Abc_FrameDeleteAllNetworks(p: *mut Abc_Frame_t);
+}
+extern "C" {
+    pub fn Abc_FrameSetGlobalFrame(p: *mut Abc_Frame_t);
+}
+extern "C" {
+    pub fn Abc_FrameReadGlobalFrame() -> *mut Abc_Frame_t;
+}
+extern "C" {
+    pub fn Abc_FrameReadStore() -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Abc_FrameReadStoreSize() -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_FrameReadLibLut() -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    pub fn Abc_FrameReadLibBox() -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    pub fn Abc_FrameReadLibGen() -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    pub fn Abc_FrameReadLibGen2() -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    pub fn Abc_FrameReadLibSuper() -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    pub fn Abc_FrameReadLibScl() -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    pub fn Abc_FrameReadManDd() -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    pub fn Abc_FrameReadManDec() -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    pub fn Abc_FrameReadManDsd() -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    pub fn Abc_FrameReadManDsd2() -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    pub fn Abc_FrameReadSignalNames() -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Abc_FrameReadSpecName() -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_FrameReadFlag(pFlag: *mut ::std::os::raw::c_char) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_FrameIsFlagEnabled(pFlag: *mut ::std::os::raw::c_char) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_FrameIsBatchMode() -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_FrameSetBatchMode(Mode: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Abc_FrameIsBridgeMode() -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_FrameSetBridgeMode();
+}
+extern "C" {
+    pub fn Abc_FrameReadBmcFrames(p: *mut Abc_Frame_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_FrameReadCexVec(p: *mut Abc_Frame_t) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Abc_FrameReadStatusVec(p: *mut Abc_Frame_t) -> *mut Vec_Int_t;
+}
+extern "C" {
+    pub fn Abc_FrameReadPoEquivs(p: *mut Abc_Frame_t) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Abc_FrameReadPoStatuses(p: *mut Abc_Frame_t) -> *mut Vec_Int_t;
+}
+extern "C" {
+    pub fn Abc_FrameReadObjIds(p: *mut Abc_Frame_t) -> *mut Vec_Int_t;
+}
+extern "C" {
+    pub fn Abc_FrameReadJsonStrs(p: *mut Abc_Frame_t) -> *mut Abc_Nam_t;
+}
+extern "C" {
+    pub fn Abc_FrameReadJsonObjs(p: *mut Abc_Frame_t) -> *mut Vec_Wec_t;
+}
+extern "C" {
+    pub fn Abc_FrameReadCexPiNum(p: *mut Abc_Frame_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_FrameReadCexRegNum(p: *mut Abc_Frame_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_FrameReadCexPo(p: *mut Abc_Frame_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_FrameReadCexFrame(p: *mut Abc_Frame_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_FrameSetNtkStore(pNtk: *mut Abc_Ntk_t);
+}
+extern "C" {
+    pub fn Abc_FrameSetNtkStoreSize(nStored: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Abc_FrameSetLibLut(pLib: *mut ::std::os::raw::c_void);
+}
+extern "C" {
+    pub fn Abc_FrameSetLibBox(pLib: *mut ::std::os::raw::c_void);
+}
+extern "C" {
+    pub fn Abc_FrameSetLibGen(pLib: *mut ::std::os::raw::c_void);
+}
+extern "C" {
+    pub fn Abc_FrameSetLibGen2(pLib: *mut ::std::os::raw::c_void);
+}
+extern "C" {
+    pub fn Abc_FrameSetLibSuper(pLib: *mut ::std::os::raw::c_void);
+}
+extern "C" {
+    pub fn Abc_FrameSetLibVer(pLib: *mut ::std::os::raw::c_void);
+}
+extern "C" {
+    pub fn Abc_FrameSetFlag(
+        pFlag: *mut ::std::os::raw::c_char,
+        pValue: *mut ::std::os::raw::c_char,
+    );
+}
+extern "C" {
+    pub fn Abc_FrameSetCex(pCex: *mut Abc_Cex_t);
+}
+extern "C" {
+    pub fn Abc_FrameSetNFrames(nFrames: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Abc_FrameSetStatus(Status: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Abc_FrameSetManDsd(pMan: *mut ::std::os::raw::c_void);
+}
+extern "C" {
+    pub fn Abc_FrameSetManDsd2(pMan: *mut ::std::os::raw::c_void);
+}
+extern "C" {
+    pub fn Abc_FrameSetInv(vInv: *mut Vec_Int_t);
+}
+extern "C" {
+    pub fn Abc_FrameSetCnf(vInv: *mut Vec_Int_t);
+}
+extern "C" {
+    pub fn Abc_FrameSetStr(vInv: *mut Vec_Str_t);
+}
+extern "C" {
+    pub fn Abc_FrameSetJsonStrs(pStrs: *mut Abc_Nam_t);
+}
+extern "C" {
+    pub fn Abc_FrameSetJsonObjs(vObjs: *mut Vec_Wec_t);
+}
+extern "C" {
+    pub fn Abc_FrameSetSignalNames(vNames: *mut Vec_Ptr_t);
+}
+extern "C" {
+    pub fn Abc_FrameSetSpecName(pFileName: *mut ::std::os::raw::c_char);
+}
+extern "C" {
+    pub fn Abc_FrameCheckPoConst(
+        p: *mut Abc_Frame_t,
+        iPoNum: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Abc_FrameReplaceCex(pAbc: *mut Abc_Frame_t, ppCex: *mut *mut Abc_Cex_t);
+}
+extern "C" {
+    pub fn Abc_FrameReplaceCexVec(pAbc: *mut Abc_Frame_t, pvCexVec: *mut *mut Vec_Ptr_t);
+}
+extern "C" {
+    pub fn Abc_FrameReplacePoEquivs(pAbc: *mut Abc_Frame_t, pvPoEquivs: *mut *mut Vec_Ptr_t);
+}
+extern "C" {
+    pub fn Abc_FrameReplacePoStatuses(pAbc: *mut Abc_Frame_t, pvStatuses: *mut *mut Vec_Int_t);
+}
+extern "C" {
+    pub fn Abc_FrameReadDrivingCell() -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Abc_FrameReadMaxLoad() -> f32;
+}
+extern "C" {
+    pub fn Abc_FrameSetDrivingCell(pName: *mut ::std::os::raw::c_char);
+}
+extern "C" {
+    pub fn Abc_FrameSetMaxLoad(Load: f32);
+}
+extern "C" {
+    pub fn Abc_FrameSetArrayMapping(p: *mut ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Abc_FrameSetBoxes(p: *mut ::std::os::raw::c_int);
+}
 pub type Cec_ParSat_t = Cec_ParSat_t_;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -12661,6 +23121,6243 @@ extern "C" {
         pPars: *mut Cec_ParSeq_t,
     ) -> ::std::os::raw::c_int;
 }
+pub type Pdr_Par_t = Pdr_Par_t_;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Pdr_Par_t_ {
+    pub nRecycle: ::std::os::raw::c_int,
+    pub nFrameMax: ::std::os::raw::c_int,
+    pub nConfLimit: ::std::os::raw::c_int,
+    pub nConfGenLimit: ::std::os::raw::c_int,
+    pub nRestLimit: ::std::os::raw::c_int,
+    pub nTimeOut: ::std::os::raw::c_int,
+    pub nTimeOutGap: ::std::os::raw::c_int,
+    pub nTimeOutOne: ::std::os::raw::c_int,
+    pub nRandomSeed: ::std::os::raw::c_int,
+    pub fTwoRounds: ::std::os::raw::c_int,
+    pub fMonoCnf: ::std::os::raw::c_int,
+    pub fNewXSim: ::std::os::raw::c_int,
+    pub fFlopPrio: ::std::os::raw::c_int,
+    pub fFlopOrder: ::std::os::raw::c_int,
+    pub fDumpInv: ::std::os::raw::c_int,
+    pub fUseSupp: ::std::os::raw::c_int,
+    pub fShortest: ::std::os::raw::c_int,
+    pub fShiftStart: ::std::os::raw::c_int,
+    pub fReuseProofOblig: ::std::os::raw::c_int,
+    pub fSimpleGeneral: ::std::os::raw::c_int,
+    pub fSkipGeneral: ::std::os::raw::c_int,
+    pub fSkipDown: ::std::os::raw::c_int,
+    pub fCtgs: ::std::os::raw::c_int,
+    pub fUseAbs: ::std::os::raw::c_int,
+    pub fUseSimpleRef: ::std::os::raw::c_int,
+    pub fVerbose: ::std::os::raw::c_int,
+    pub fVeryVerbose: ::std::os::raw::c_int,
+    pub fNotVerbose: ::std::os::raw::c_int,
+    pub fSilent: ::std::os::raw::c_int,
+    pub fSolveAll: ::std::os::raw::c_int,
+    pub fStoreCex: ::std::os::raw::c_int,
+    pub fAnytime: ::std::os::raw::c_int,
+    pub fUseBridge: ::std::os::raw::c_int,
+    pub fUsePropOut: ::std::os::raw::c_int,
+    pub nFailOuts: ::std::os::raw::c_int,
+    pub nDropOuts: ::std::os::raw::c_int,
+    pub nProveOuts: ::std::os::raw::c_int,
+    pub iFrame: ::std::os::raw::c_int,
+    pub RunId: ::std::os::raw::c_int,
+    pub pFuncStop: ::std::option::Option<
+        unsafe extern "C" fn(arg1: ::std::os::raw::c_int) -> ::std::os::raw::c_int,
+    >,
+    pub pFuncOnFail: ::std::option::Option<
+        unsafe extern "C" fn(
+            arg1: ::std::os::raw::c_int,
+            arg2: *mut Abc_Cex_t,
+        ) -> ::std::os::raw::c_int,
+    >,
+    pub timeLastSolved: abctime,
+    pub vOutMap: *mut Vec_Int_t,
+    pub pInvFileName: *mut ::std::os::raw::c_char,
+    pub pCexFilePrefix: *mut ::std::os::raw::c_char,
+}
+#[test]
+fn bindgen_test_layout_Pdr_Par_t_() {
+    const UNINIT: ::std::mem::MaybeUninit<Pdr_Par_t_> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<Pdr_Par_t_>(),
+        208usize,
+        concat!("Size of: ", stringify!(Pdr_Par_t_))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<Pdr_Par_t_>(),
+        8usize,
+        concat!("Alignment of ", stringify!(Pdr_Par_t_))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nRecycle) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(nRecycle)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nFrameMax) as usize - ptr as usize },
+        4usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(nFrameMax)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nConfLimit) as usize - ptr as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(nConfLimit)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nConfGenLimit) as usize - ptr as usize },
+        12usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(nConfGenLimit)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nRestLimit) as usize - ptr as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(nRestLimit)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nTimeOut) as usize - ptr as usize },
+        20usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(nTimeOut)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nTimeOutGap) as usize - ptr as usize },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(nTimeOutGap)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nTimeOutOne) as usize - ptr as usize },
+        28usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(nTimeOutOne)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nRandomSeed) as usize - ptr as usize },
+        32usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(nRandomSeed)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fTwoRounds) as usize - ptr as usize },
+        36usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(fTwoRounds)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fMonoCnf) as usize - ptr as usize },
+        40usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(fMonoCnf)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fNewXSim) as usize - ptr as usize },
+        44usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(fNewXSim)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fFlopPrio) as usize - ptr as usize },
+        48usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(fFlopPrio)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fFlopOrder) as usize - ptr as usize },
+        52usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(fFlopOrder)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fDumpInv) as usize - ptr as usize },
+        56usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(fDumpInv)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fUseSupp) as usize - ptr as usize },
+        60usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(fUseSupp)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fShortest) as usize - ptr as usize },
+        64usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(fShortest)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fShiftStart) as usize - ptr as usize },
+        68usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(fShiftStart)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fReuseProofOblig) as usize - ptr as usize },
+        72usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(fReuseProofOblig)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fSimpleGeneral) as usize - ptr as usize },
+        76usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(fSimpleGeneral)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fSkipGeneral) as usize - ptr as usize },
+        80usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(fSkipGeneral)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fSkipDown) as usize - ptr as usize },
+        84usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(fSkipDown)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fCtgs) as usize - ptr as usize },
+        88usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(fCtgs)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fUseAbs) as usize - ptr as usize },
+        92usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(fUseAbs)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fUseSimpleRef) as usize - ptr as usize },
+        96usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(fUseSimpleRef)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fVerbose) as usize - ptr as usize },
+        100usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(fVerbose)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fVeryVerbose) as usize - ptr as usize },
+        104usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(fVeryVerbose)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fNotVerbose) as usize - ptr as usize },
+        108usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(fNotVerbose)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fSilent) as usize - ptr as usize },
+        112usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(fSilent)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fSolveAll) as usize - ptr as usize },
+        116usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(fSolveAll)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fStoreCex) as usize - ptr as usize },
+        120usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(fStoreCex)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fAnytime) as usize - ptr as usize },
+        124usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(fAnytime)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fUseBridge) as usize - ptr as usize },
+        128usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(fUseBridge)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fUsePropOut) as usize - ptr as usize },
+        132usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(fUsePropOut)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nFailOuts) as usize - ptr as usize },
+        136usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(nFailOuts)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nDropOuts) as usize - ptr as usize },
+        140usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(nDropOuts)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nProveOuts) as usize - ptr as usize },
+        144usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(nProveOuts)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).iFrame) as usize - ptr as usize },
+        148usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(iFrame)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).RunId) as usize - ptr as usize },
+        152usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(RunId)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pFuncStop) as usize - ptr as usize },
+        160usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(pFuncStop)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pFuncOnFail) as usize - ptr as usize },
+        168usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(pFuncOnFail)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).timeLastSolved) as usize - ptr as usize },
+        176usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(timeLastSolved)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vOutMap) as usize - ptr as usize },
+        184usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(vOutMap)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pInvFileName) as usize - ptr as usize },
+        192usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(pInvFileName)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pCexFilePrefix) as usize - ptr as usize },
+        200usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Par_t_),
+            "::",
+            stringify!(pCexFilePrefix)
+        )
+    );
+}
+extern "C" {
+    pub fn Pdr_OutputCexToDir(pPars: *mut Pdr_Par_t, pCex: *mut Abc_Cex_t);
+}
+extern "C" {
+    pub fn Pdr_ManSetDefaultParams(pPars: *mut Pdr_Par_t);
+}
+extern "C" {
+    pub fn Pdr_ManSolve(p: *mut Aig_Man_t, pPars: *mut Pdr_Par_t) -> ::std::os::raw::c_int;
+}
+pub type Sec_MtrStatus_t = Sec_MtrStatus_t_;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Sec_MtrStatus_t_ {
+    pub nInputs: ::std::os::raw::c_int,
+    pub nNodes: ::std::os::raw::c_int,
+    pub nOutputs: ::std::os::raw::c_int,
+    pub nUnsat: ::std::os::raw::c_int,
+    pub nSat: ::std::os::raw::c_int,
+    pub nUndec: ::std::os::raw::c_int,
+    pub iOut: ::std::os::raw::c_int,
+}
+#[test]
+fn bindgen_test_layout_Sec_MtrStatus_t_() {
+    const UNINIT: ::std::mem::MaybeUninit<Sec_MtrStatus_t_> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<Sec_MtrStatus_t_>(),
+        28usize,
+        concat!("Size of: ", stringify!(Sec_MtrStatus_t_))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<Sec_MtrStatus_t_>(),
+        4usize,
+        concat!("Alignment of ", stringify!(Sec_MtrStatus_t_))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nInputs) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Sec_MtrStatus_t_),
+            "::",
+            stringify!(nInputs)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nNodes) as usize - ptr as usize },
+        4usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Sec_MtrStatus_t_),
+            "::",
+            stringify!(nNodes)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nOutputs) as usize - ptr as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Sec_MtrStatus_t_),
+            "::",
+            stringify!(nOutputs)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nUnsat) as usize - ptr as usize },
+        12usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Sec_MtrStatus_t_),
+            "::",
+            stringify!(nUnsat)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nSat) as usize - ptr as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Sec_MtrStatus_t_),
+            "::",
+            stringify!(nSat)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nUndec) as usize - ptr as usize },
+        20usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Sec_MtrStatus_t_),
+            "::",
+            stringify!(nUndec)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).iOut) as usize - ptr as usize },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Sec_MtrStatus_t_),
+            "::",
+            stringify!(iOut)
+        )
+    );
+}
+pub type Saig_ParBbr_t = Saig_ParBbr_t_;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Saig_ParBbr_t_ {
+    pub TimeLimit: ::std::os::raw::c_int,
+    pub nBddMax: ::std::os::raw::c_int,
+    pub nIterMax: ::std::os::raw::c_int,
+    pub fPartition: ::std::os::raw::c_int,
+    pub fReorder: ::std::os::raw::c_int,
+    pub fReorderImage: ::std::os::raw::c_int,
+    pub fVerbose: ::std::os::raw::c_int,
+    pub fSilent: ::std::os::raw::c_int,
+    pub fSkipOutCheck: ::std::os::raw::c_int,
+    pub iFrame: ::std::os::raw::c_int,
+}
+#[test]
+fn bindgen_test_layout_Saig_ParBbr_t_() {
+    const UNINIT: ::std::mem::MaybeUninit<Saig_ParBbr_t_> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<Saig_ParBbr_t_>(),
+        40usize,
+        concat!("Size of: ", stringify!(Saig_ParBbr_t_))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<Saig_ParBbr_t_>(),
+        4usize,
+        concat!("Alignment of ", stringify!(Saig_ParBbr_t_))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).TimeLimit) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Saig_ParBbr_t_),
+            "::",
+            stringify!(TimeLimit)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nBddMax) as usize - ptr as usize },
+        4usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Saig_ParBbr_t_),
+            "::",
+            stringify!(nBddMax)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nIterMax) as usize - ptr as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Saig_ParBbr_t_),
+            "::",
+            stringify!(nIterMax)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fPartition) as usize - ptr as usize },
+        12usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Saig_ParBbr_t_),
+            "::",
+            stringify!(fPartition)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fReorder) as usize - ptr as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Saig_ParBbr_t_),
+            "::",
+            stringify!(fReorder)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fReorderImage) as usize - ptr as usize },
+        20usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Saig_ParBbr_t_),
+            "::",
+            stringify!(fReorderImage)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fVerbose) as usize - ptr as usize },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Saig_ParBbr_t_),
+            "::",
+            stringify!(fVerbose)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fSilent) as usize - ptr as usize },
+        28usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Saig_ParBbr_t_),
+            "::",
+            stringify!(fSilent)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fSkipOutCheck) as usize - ptr as usize },
+        32usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Saig_ParBbr_t_),
+            "::",
+            stringify!(fSkipOutCheck)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).iFrame) as usize - ptr as usize },
+        36usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Saig_ParBbr_t_),
+            "::",
+            stringify!(iFrame)
+        )
+    );
+}
+extern "C" {
+    #[link_name = "Saig_ManPiNum_imctk_abc_sys"]
+    pub fn Saig_ManPiNum(p: *mut Aig_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Saig_ManPoNum_imctk_abc_sys"]
+    pub fn Saig_ManPoNum(p: *mut Aig_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Saig_ManCiNum_imctk_abc_sys"]
+    pub fn Saig_ManCiNum(p: *mut Aig_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Saig_ManCoNum_imctk_abc_sys"]
+    pub fn Saig_ManCoNum(p: *mut Aig_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Saig_ManRegNum_imctk_abc_sys"]
+    pub fn Saig_ManRegNum(p: *mut Aig_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Saig_ManConstrNum_imctk_abc_sys"]
+    pub fn Saig_ManConstrNum(p: *mut Aig_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Saig_ManLo_imctk_abc_sys"]
+    pub fn Saig_ManLo(p: *mut Aig_Man_t, i: ::std::os::raw::c_int) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    #[link_name = "Saig_ManLi_imctk_abc_sys"]
+    pub fn Saig_ManLi(p: *mut Aig_Man_t, i: ::std::os::raw::c_int) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    #[link_name = "Saig_ObjIsPi_imctk_abc_sys"]
+    pub fn Saig_ObjIsPi(p: *mut Aig_Man_t, pObj: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Saig_ObjIsPo_imctk_abc_sys"]
+    pub fn Saig_ObjIsPo(p: *mut Aig_Man_t, pObj: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Saig_ObjIsLo_imctk_abc_sys"]
+    pub fn Saig_ObjIsLo(p: *mut Aig_Man_t, pObj: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Saig_ObjIsLi_imctk_abc_sys"]
+    pub fn Saig_ObjIsLi(p: *mut Aig_Man_t, pObj: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Saig_ObjLoToLi_imctk_abc_sys"]
+    pub fn Saig_ObjLoToLi(p: *mut Aig_Man_t, pObj: *mut Aig_Obj_t) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    #[link_name = "Saig_ObjLiToLo_imctk_abc_sys"]
+    pub fn Saig_ObjLiToLo(p: *mut Aig_Man_t, pObj: *mut Aig_Obj_t) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    #[link_name = "Saig_ObjRegId_imctk_abc_sys"]
+    pub fn Saig_ObjRegId(p: *mut Aig_Man_t, pObj: *mut Aig_Obj_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Saig_ManPrintCones(p: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Saig_ManDupUnfoldConstrs(pAig: *mut Aig_Man_t) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Saig_ManDupFoldConstrs(pAig: *mut Aig_Man_t, vConstrs: *mut Vec_Int_t)
+        -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Saig_ManDetectConstrTest(p: *mut Aig_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Saig_ManDetectConstrFuncTest(
+        p: *mut Aig_Man_t,
+        nFrames: ::std::os::raw::c_int,
+        nConfs: ::std::os::raw::c_int,
+        nProps: ::std::os::raw::c_int,
+        fOldAlgo: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Saig_ManDupFoldConstrsFunc(
+        pAig: *mut Aig_Man_t,
+        fCompl: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+        fSeqCleanup: ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Saig_ManDupUnfoldConstrsFunc(
+        pAig: *mut Aig_Man_t,
+        nFrames: ::std::os::raw::c_int,
+        nConfs: ::std::os::raw::c_int,
+        nProps: ::std::os::raw::c_int,
+        fOldAlgo: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Saig_ManDupFoldConstrsFunc2(
+        pAig: *mut Aig_Man_t,
+        fCompl: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+        typeII_cnt: ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Saig_ManDupUnfoldConstrsFunc2(
+        pAig: *mut Aig_Man_t,
+        nFrames: ::std::os::raw::c_int,
+        nConfs: ::std::os::raw::c_int,
+        nProps: ::std::os::raw::c_int,
+        fOldAlgo: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+        typeII_cnt: *mut ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Saig_ManDupDual(
+        pAig: *mut Aig_Man_t,
+        vDcFlops: *mut Vec_Int_t,
+        nDualPis: ::std::os::raw::c_int,
+        fDualFfs: ::std::os::raw::c_int,
+        fMiterFfs: ::std::os::raw::c_int,
+        fComplPo: ::std::os::raw::c_int,
+        fCheckZero: ::std::os::raw::c_int,
+        fCheckOne: ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Saig_ManBlockPo(pAig: *mut Aig_Man_t, nCycles: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Saig_ManDupOrpos(p: *mut Aig_Man_t) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Saig_ManCreateEquivMiter(
+        pAig: *mut Aig_Man_t,
+        vPairs: *mut Vec_Int_t,
+        fAddOuts: ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Saig_ManDupAbstraction(pAig: *mut Aig_Man_t, vFlops: *mut Vec_Int_t) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Saig_ManVerifyCex(pAig: *mut Aig_Man_t, p: *mut Abc_Cex_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Saig_ManExtendCex(pAig: *mut Aig_Man_t, p: *mut Abc_Cex_t) -> *mut Abc_Cex_t;
+}
+extern "C" {
+    pub fn Saig_ManFindFailedPoCex(
+        pAig: *mut Aig_Man_t,
+        p: *mut Abc_Cex_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Saig_ManDupWithPhase(pAig: *mut Aig_Man_t, vInit: *mut Vec_Int_t) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Saig_ManDupCones(
+        pAig: *mut Aig_Man_t,
+        pPos: *mut ::std::os::raw::c_int,
+        nPos: ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Saig_ManHaigRecord(
+        p: *mut Aig_Man_t,
+        nIters: ::std::os::raw::c_int,
+        nSteps: ::std::os::raw::c_int,
+        fRetimingOnly: ::std::os::raw::c_int,
+        fAddBugs: ::std::os::raw::c_int,
+        fUseCnf: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Saig_ManInduction(
+        p: *mut Aig_Man_t,
+        nTimeOut: ::std::os::raw::c_int,
+        nFramesMax: ::std::os::raw::c_int,
+        nConfMax: ::std::os::raw::c_int,
+        fUnique: ::std::os::raw::c_int,
+        fUniqueAll: ::std::os::raw::c_int,
+        fGetCex: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+        fVeryVerbose: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Saig_ManDumpBlif(p: *mut Aig_Man_t, pFileName: *mut ::std::os::raw::c_char);
+}
+extern "C" {
+    pub fn Saig_ManReadBlif(pFileName: *mut ::std::os::raw::c_char) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Saig_ManFindIsoPerm(
+        pAig: *mut Aig_Man_t,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> *mut Vec_Int_t;
+}
+extern "C" {
+    pub fn Saig_ManDupIsoCanonical(
+        pAig: *mut Aig_Man_t,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Saig_ManIsoReduce(
+        pAig: *mut Aig_Man_t,
+        pvCosEquivs: *mut *mut Vec_Ptr_t,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Saig_IsoDetectFast(pAig: *mut Aig_Man_t) -> *mut Vec_Vec_t;
+}
+extern "C" {
+    pub fn Sec_MiterStatus(p: *mut Aig_Man_t) -> Sec_MtrStatus_t;
+}
+extern "C" {
+    pub fn Saig_ManCreateMiter(
+        p1: *mut Aig_Man_t,
+        p2: *mut Aig_Man_t,
+        Oper: ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Saig_ManCreateMiterComb(
+        p1: *mut Aig_Man_t,
+        p2: *mut Aig_Man_t,
+        Oper: ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Saig_ManDualRail(p: *mut Aig_Man_t, fMiter: ::std::os::raw::c_int) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Saig_ManCreateMiterTwo(
+        pOld: *mut Aig_Man_t,
+        pNew: *mut Aig_Man_t,
+        nFrames: ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Saig_ManDemiterSimple(
+        p: *mut Aig_Man_t,
+        ppAig0: *mut *mut Aig_Man_t,
+        ppAig1: *mut *mut Aig_Man_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Saig_ManDemiterSimpleDiff(
+        p: *mut Aig_Man_t,
+        ppAig0: *mut *mut Aig_Man_t,
+        ppAig1: *mut *mut Aig_Man_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Saig_ManDemiterDual(
+        p: *mut Aig_Man_t,
+        ppAig0: *mut *mut Aig_Man_t,
+        ppAig1: *mut *mut Aig_Man_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Ssw_SecSpecialMiter(
+        p0: *mut Aig_Man_t,
+        p1: *mut Aig_Man_t,
+        nFrames: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Saig_ManDemiterNew(pMan: *mut Aig_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Saig_ManDecPropertyOutput(
+        pAig: *mut Aig_Man_t,
+        nLits: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Saig_ManPhaseAbstract(
+        p: *mut Aig_Man_t,
+        vInits: *mut Vec_Int_t,
+        nFrames: ::std::os::raw::c_int,
+        nPref: ::std::os::raw::c_int,
+        fIgnore: ::std::os::raw::c_int,
+        fPrint: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Saig_ManMarkAutonomous(p: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Saig_ManRetimeForward(
+        p: *mut Aig_Man_t,
+        nMaxIters: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Saig_ManRetimeDupForward(p: *mut Aig_Man_t, vCut: *mut Vec_Ptr_t) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Saig_ManRetimeMinArea(
+        p: *mut Aig_Man_t,
+        nMaxIters: ::std::os::raw::c_int,
+        fForwardOnly: ::std::os::raw::c_int,
+        fBackwardOnly: ::std::os::raw::c_int,
+        fInitial: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Saig_ManRetimeSteps(
+        p: *mut Aig_Man_t,
+        nSteps: ::std::os::raw::c_int,
+        fForward: ::std::os::raw::c_int,
+        fAddBugs: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Saig_ManReportUselessRegisters(pAig: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Saig_MvManSimulate(
+        pAig: *mut Aig_Man_t,
+        nFramesSymb: ::std::os::raw::c_int,
+        nFramesSatur: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+        fVeryVerbose: ::std::os::raw::c_int,
+    ) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Saig_StrSimPerformMatching(
+        p0: *mut Aig_Man_t,
+        p1: *mut Aig_Man_t,
+        nDist: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+        ppMiter: *mut *mut Aig_Man_t,
+    ) -> *mut Vec_Int_t;
+}
+extern "C" {
+    pub fn Saig_ManComputeSwitchProb2s(
+        p: *mut Aig_Man_t,
+        nFrames: ::std::os::raw::c_int,
+        nPref: ::std::os::raw::c_int,
+        fProbOne: ::std::os::raw::c_int,
+    ) -> *mut Vec_Int_t;
+}
+extern "C" {
+    pub fn Saig_ManDupInitZero(p: *mut Aig_Man_t) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Saig_ManTimeframeSimplify(
+        pAig: *mut Aig_Man_t,
+        nFrames: ::std::os::raw::c_int,
+        nFramesMax: ::std::os::raw::c_int,
+        fInit: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Saig_ManWindowExtract(
+        p: *mut Aig_Man_t,
+        pObj: *mut Aig_Obj_t,
+        nDist: ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Saig_ManWindowInsert(
+        p: *mut Aig_Man_t,
+        pObj: *mut Aig_Obj_t,
+        nDist: ::std::os::raw::c_int,
+        pWnd: *mut Aig_Man_t,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Saig_ManFindPivot(p: *mut Aig_Man_t) -> *mut Aig_Obj_t;
+}
+pub type Dar_RwrPar_t = Dar_RwrPar_t_;
+pub type Dar_RefPar_t = Dar_RefPar_t_;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Dar_RwrPar_t_ {
+    pub nCutsMax: ::std::os::raw::c_int,
+    pub nSubgMax: ::std::os::raw::c_int,
+    pub nMinSaved: ::std::os::raw::c_int,
+    pub fFanout: ::std::os::raw::c_int,
+    pub fUpdateLevel: ::std::os::raw::c_int,
+    pub fUseZeros: ::std::os::raw::c_int,
+    pub fPower: ::std::os::raw::c_int,
+    pub fRecycle: ::std::os::raw::c_int,
+    pub fVerbose: ::std::os::raw::c_int,
+    pub fVeryVerbose: ::std::os::raw::c_int,
+}
+#[test]
+fn bindgen_test_layout_Dar_RwrPar_t_() {
+    const UNINIT: ::std::mem::MaybeUninit<Dar_RwrPar_t_> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<Dar_RwrPar_t_>(),
+        40usize,
+        concat!("Size of: ", stringify!(Dar_RwrPar_t_))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<Dar_RwrPar_t_>(),
+        4usize,
+        concat!("Alignment of ", stringify!(Dar_RwrPar_t_))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nCutsMax) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_RwrPar_t_),
+            "::",
+            stringify!(nCutsMax)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nSubgMax) as usize - ptr as usize },
+        4usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_RwrPar_t_),
+            "::",
+            stringify!(nSubgMax)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nMinSaved) as usize - ptr as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_RwrPar_t_),
+            "::",
+            stringify!(nMinSaved)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fFanout) as usize - ptr as usize },
+        12usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_RwrPar_t_),
+            "::",
+            stringify!(fFanout)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fUpdateLevel) as usize - ptr as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_RwrPar_t_),
+            "::",
+            stringify!(fUpdateLevel)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fUseZeros) as usize - ptr as usize },
+        20usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_RwrPar_t_),
+            "::",
+            stringify!(fUseZeros)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fPower) as usize - ptr as usize },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_RwrPar_t_),
+            "::",
+            stringify!(fPower)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fRecycle) as usize - ptr as usize },
+        28usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_RwrPar_t_),
+            "::",
+            stringify!(fRecycle)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fVerbose) as usize - ptr as usize },
+        32usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_RwrPar_t_),
+            "::",
+            stringify!(fVerbose)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fVeryVerbose) as usize - ptr as usize },
+        36usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_RwrPar_t_),
+            "::",
+            stringify!(fVeryVerbose)
+        )
+    );
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Dar_RefPar_t_ {
+    pub nMffcMin: ::std::os::raw::c_int,
+    pub nLeafMax: ::std::os::raw::c_int,
+    pub nCutsMax: ::std::os::raw::c_int,
+    pub fExtend: ::std::os::raw::c_int,
+    pub fUpdateLevel: ::std::os::raw::c_int,
+    pub fUseZeros: ::std::os::raw::c_int,
+    pub fVerbose: ::std::os::raw::c_int,
+    pub fVeryVerbose: ::std::os::raw::c_int,
+}
+#[test]
+fn bindgen_test_layout_Dar_RefPar_t_() {
+    const UNINIT: ::std::mem::MaybeUninit<Dar_RefPar_t_> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<Dar_RefPar_t_>(),
+        32usize,
+        concat!("Size of: ", stringify!(Dar_RefPar_t_))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<Dar_RefPar_t_>(),
+        4usize,
+        concat!("Alignment of ", stringify!(Dar_RefPar_t_))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nMffcMin) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_RefPar_t_),
+            "::",
+            stringify!(nMffcMin)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nLeafMax) as usize - ptr as usize },
+        4usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_RefPar_t_),
+            "::",
+            stringify!(nLeafMax)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nCutsMax) as usize - ptr as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_RefPar_t_),
+            "::",
+            stringify!(nCutsMax)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fExtend) as usize - ptr as usize },
+        12usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_RefPar_t_),
+            "::",
+            stringify!(fExtend)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fUpdateLevel) as usize - ptr as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_RefPar_t_),
+            "::",
+            stringify!(fUpdateLevel)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fUseZeros) as usize - ptr as usize },
+        20usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_RefPar_t_),
+            "::",
+            stringify!(fUseZeros)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fVerbose) as usize - ptr as usize },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_RefPar_t_),
+            "::",
+            stringify!(fVerbose)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fVeryVerbose) as usize - ptr as usize },
+        28usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_RefPar_t_),
+            "::",
+            stringify!(fVeryVerbose)
+        )
+    );
+}
+extern "C" {
+    pub fn Dar_LibStart();
+}
+extern "C" {
+    pub fn Dar_LibStop();
+}
+extern "C" {
+    pub fn Dar_LibPrepare(nSubgraphs: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Dar_LibReturnClass(uTruth: ::std::os::raw::c_uint) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Dar_ManBalance(p: *mut Aig_Man_t, fUpdateLevel: ::std::os::raw::c_int)
+        -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Dar_ManBalanceXor(
+        pAig: *mut Aig_Man_t,
+        fExor: ::std::os::raw::c_int,
+        fUpdateLevel: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Dar_BalancePrintStats(p: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Dar_ManDefaultRwrParams(pPars: *mut Dar_RwrPar_t);
+}
+extern "C" {
+    pub fn Dar_ManRewrite(pAig: *mut Aig_Man_t, pPars: *mut Dar_RwrPar_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Dar_ManComputeCuts(
+        pAig: *mut Aig_Man_t,
+        nCutsMax: ::std::os::raw::c_int,
+        fSkipTtMin: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> *mut Aig_MmFixed_t;
+}
+extern "C" {
+    pub fn Dar_ManDefaultRefParams(pPars: *mut Dar_RefPar_t);
+}
+extern "C" {
+    pub fn Dar_ManRefactor(pAig: *mut Aig_Man_t, pPars: *mut Dar_RefPar_t)
+        -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Dar_ManRewriteDefault(pAig: *mut Aig_Man_t) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Dar_ManRwsat(
+        pAig: *mut Aig_Man_t,
+        fBalance: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Dar_ManCompress(
+        pAig: *mut Aig_Man_t,
+        fBalance: ::std::os::raw::c_int,
+        fUpdateLevel: ::std::os::raw::c_int,
+        fPower: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Dar_ManCompress2(
+        pAig: *mut Aig_Man_t,
+        fBalance: ::std::os::raw::c_int,
+        fUpdateLevel: ::std::os::raw::c_int,
+        fFanout: ::std::os::raw::c_int,
+        fPower: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+extern "C" {
+    pub fn Dar_ManChoice(
+        pAig: *mut Aig_Man_t,
+        fBalance: ::std::os::raw::c_int,
+        fUpdateLevel: ::std::os::raw::c_int,
+        fConstruct: ::std::os::raw::c_int,
+        nConfMax: ::std::os::raw::c_int,
+        nLevelMax: ::std::os::raw::c_int,
+        fVerbose: ::std::os::raw::c_int,
+    ) -> *mut Aig_Man_t;
+}
+pub type Dar_Man_t = Dar_Man_t_;
+pub type Dar_Cut_t = Dar_Cut_t_;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Dar_Cut_t_ {
+    pub uSign: ::std::os::raw::c_uint,
+    pub _bitfield_align_1: [u16; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 4usize]>,
+    pub pLeaves: [::std::os::raw::c_int; 4usize],
+}
+#[test]
+fn bindgen_test_layout_Dar_Cut_t_() {
+    const UNINIT: ::std::mem::MaybeUninit<Dar_Cut_t_> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<Dar_Cut_t_>(),
+        24usize,
+        concat!("Size of: ", stringify!(Dar_Cut_t_))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<Dar_Cut_t_>(),
+        4usize,
+        concat!("Alignment of ", stringify!(Dar_Cut_t_))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).uSign) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_Cut_t_),
+            "::",
+            stringify!(uSign)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pLeaves) as usize - ptr as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_Cut_t_),
+            "::",
+            stringify!(pLeaves)
+        )
+    );
+}
+impl Dar_Cut_t_ {
+    #[inline]
+    pub fn uTruth(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(0usize, 16u8) as u32) }
+    }
+    #[inline]
+    pub fn set_uTruth(&mut self, val: ::std::os::raw::c_uint) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(0usize, 16u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn Value(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(16usize, 11u8) as u32) }
+    }
+    #[inline]
+    pub fn set_Value(&mut self, val: ::std::os::raw::c_uint) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(16usize, 11u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn fBest(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(27usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_fBest(&mut self, val: ::std::os::raw::c_uint) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(27usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn fUsed(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(28usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_fUsed(&mut self, val: ::std::os::raw::c_uint) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(28usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn nLeaves(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(29usize, 3u8) as u32) }
+    }
+    #[inline]
+    pub fn set_nLeaves(&mut self, val: ::std::os::raw::c_uint) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(29usize, 3u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(
+        uTruth: ::std::os::raw::c_uint,
+        Value: ::std::os::raw::c_uint,
+        fBest: ::std::os::raw::c_uint,
+        fUsed: ::std::os::raw::c_uint,
+        nLeaves: ::std::os::raw::c_uint,
+    ) -> __BindgenBitfieldUnit<[u8; 4usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 4usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 16u8, {
+            let uTruth: u32 = unsafe { ::std::mem::transmute(uTruth) };
+            uTruth as u64
+        });
+        __bindgen_bitfield_unit.set(16usize, 11u8, {
+            let Value: u32 = unsafe { ::std::mem::transmute(Value) };
+            Value as u64
+        });
+        __bindgen_bitfield_unit.set(27usize, 1u8, {
+            let fBest: u32 = unsafe { ::std::mem::transmute(fBest) };
+            fBest as u64
+        });
+        __bindgen_bitfield_unit.set(28usize, 1u8, {
+            let fUsed: u32 = unsafe { ::std::mem::transmute(fUsed) };
+            fUsed as u64
+        });
+        __bindgen_bitfield_unit.set(29usize, 3u8, {
+            let nLeaves: u32 = unsafe { ::std::mem::transmute(nLeaves) };
+            nLeaves as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Dar_Man_t_ {
+    pub pPars: *mut Dar_RwrPar_t,
+    pub pAig: *mut Aig_Man_t,
+    pub pMemCuts: *mut Aig_MmFixed_t,
+    pub pManCnf: *mut ::std::os::raw::c_void,
+    pub vCutNodes: *mut Vec_Ptr_t,
+    pub vLeavesBest: *mut Vec_Ptr_t,
+    pub OutBest: ::std::os::raw::c_int,
+    pub OutNumBest: ::std::os::raw::c_int,
+    pub GainBest: ::std::os::raw::c_int,
+    pub LevelBest: ::std::os::raw::c_int,
+    pub ClassBest: ::std::os::raw::c_int,
+    pub nTotalSubgs: ::std::os::raw::c_int,
+    pub ClassTimes: [::std::os::raw::c_int; 222usize],
+    pub ClassGains: [::std::os::raw::c_int; 222usize],
+    pub ClassSubgs: [::std::os::raw::c_int; 222usize],
+    pub nCutMemUsed: ::std::os::raw::c_int,
+    pub nNodesInit: ::std::os::raw::c_int,
+    pub nNodesTried: ::std::os::raw::c_int,
+    pub nCutsAll: ::std::os::raw::c_int,
+    pub nCutsTried: ::std::os::raw::c_int,
+    pub nCutsUsed: ::std::os::raw::c_int,
+    pub nCutsBad: ::std::os::raw::c_int,
+    pub nCutsGood: ::std::os::raw::c_int,
+    pub nCutsSkipped: ::std::os::raw::c_int,
+    pub timeCuts: abctime,
+    pub timeEval: abctime,
+    pub timeOther: abctime,
+    pub timeTotal: abctime,
+    pub time1: abctime,
+    pub time2: abctime,
+}
+#[test]
+fn bindgen_test_layout_Dar_Man_t_() {
+    const UNINIT: ::std::mem::MaybeUninit<Dar_Man_t_> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<Dar_Man_t_>(),
+        2824usize,
+        concat!("Size of: ", stringify!(Dar_Man_t_))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<Dar_Man_t_>(),
+        8usize,
+        concat!("Alignment of ", stringify!(Dar_Man_t_))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pPars) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_Man_t_),
+            "::",
+            stringify!(pPars)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pAig) as usize - ptr as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_Man_t_),
+            "::",
+            stringify!(pAig)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pMemCuts) as usize - ptr as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_Man_t_),
+            "::",
+            stringify!(pMemCuts)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pManCnf) as usize - ptr as usize },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_Man_t_),
+            "::",
+            stringify!(pManCnf)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vCutNodes) as usize - ptr as usize },
+        32usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_Man_t_),
+            "::",
+            stringify!(vCutNodes)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vLeavesBest) as usize - ptr as usize },
+        40usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_Man_t_),
+            "::",
+            stringify!(vLeavesBest)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).OutBest) as usize - ptr as usize },
+        48usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_Man_t_),
+            "::",
+            stringify!(OutBest)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).OutNumBest) as usize - ptr as usize },
+        52usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_Man_t_),
+            "::",
+            stringify!(OutNumBest)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).GainBest) as usize - ptr as usize },
+        56usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_Man_t_),
+            "::",
+            stringify!(GainBest)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).LevelBest) as usize - ptr as usize },
+        60usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_Man_t_),
+            "::",
+            stringify!(LevelBest)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).ClassBest) as usize - ptr as usize },
+        64usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_Man_t_),
+            "::",
+            stringify!(ClassBest)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nTotalSubgs) as usize - ptr as usize },
+        68usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_Man_t_),
+            "::",
+            stringify!(nTotalSubgs)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).ClassTimes) as usize - ptr as usize },
+        72usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_Man_t_),
+            "::",
+            stringify!(ClassTimes)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).ClassGains) as usize - ptr as usize },
+        960usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_Man_t_),
+            "::",
+            stringify!(ClassGains)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).ClassSubgs) as usize - ptr as usize },
+        1848usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_Man_t_),
+            "::",
+            stringify!(ClassSubgs)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nCutMemUsed) as usize - ptr as usize },
+        2736usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_Man_t_),
+            "::",
+            stringify!(nCutMemUsed)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nNodesInit) as usize - ptr as usize },
+        2740usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_Man_t_),
+            "::",
+            stringify!(nNodesInit)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nNodesTried) as usize - ptr as usize },
+        2744usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_Man_t_),
+            "::",
+            stringify!(nNodesTried)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nCutsAll) as usize - ptr as usize },
+        2748usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_Man_t_),
+            "::",
+            stringify!(nCutsAll)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nCutsTried) as usize - ptr as usize },
+        2752usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_Man_t_),
+            "::",
+            stringify!(nCutsTried)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nCutsUsed) as usize - ptr as usize },
+        2756usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_Man_t_),
+            "::",
+            stringify!(nCutsUsed)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nCutsBad) as usize - ptr as usize },
+        2760usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_Man_t_),
+            "::",
+            stringify!(nCutsBad)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nCutsGood) as usize - ptr as usize },
+        2764usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_Man_t_),
+            "::",
+            stringify!(nCutsGood)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nCutsSkipped) as usize - ptr as usize },
+        2768usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_Man_t_),
+            "::",
+            stringify!(nCutsSkipped)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).timeCuts) as usize - ptr as usize },
+        2776usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_Man_t_),
+            "::",
+            stringify!(timeCuts)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).timeEval) as usize - ptr as usize },
+        2784usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_Man_t_),
+            "::",
+            stringify!(timeEval)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).timeOther) as usize - ptr as usize },
+        2792usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_Man_t_),
+            "::",
+            stringify!(timeOther)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).timeTotal) as usize - ptr as usize },
+        2800usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_Man_t_),
+            "::",
+            stringify!(timeTotal)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).time1) as usize - ptr as usize },
+        2808usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_Man_t_),
+            "::",
+            stringify!(time1)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).time2) as usize - ptr as usize },
+        2816usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Dar_Man_t_),
+            "::",
+            stringify!(time2)
+        )
+    );
+}
+extern "C" {
+    #[link_name = "Dar_ObjCuts_imctk_abc_sys"]
+    pub fn Dar_ObjCuts(pObj: *mut Aig_Obj_t) -> *mut Dar_Cut_t;
+}
+extern "C" {
+    #[link_name = "Dar_ObjSetCuts_imctk_abc_sys"]
+    pub fn Dar_ObjSetCuts(pObj: *mut Aig_Obj_t, pCuts: *mut Dar_Cut_t);
+}
+extern "C" {
+    pub fn Dar_ManCutsRestart(p: *mut Dar_Man_t, pRoot: *mut Aig_Obj_t);
+}
+extern "C" {
+    pub fn Dar_ManCutsFree(p: *mut Dar_Man_t);
+}
+extern "C" {
+    pub fn Dar_ObjPrepareCuts(p: *mut Dar_Man_t, pObj: *mut Aig_Obj_t) -> *mut Dar_Cut_t;
+}
+extern "C" {
+    pub fn Dar_ObjComputeCuts_rec(p: *mut Dar_Man_t, pObj: *mut Aig_Obj_t) -> *mut Dar_Cut_t;
+}
+extern "C" {
+    pub fn Dar_ObjComputeCuts(
+        p: *mut Dar_Man_t,
+        pObj: *mut Aig_Obj_t,
+        fSkipTtMin: ::std::os::raw::c_int,
+    ) -> *mut Dar_Cut_t;
+}
+extern "C" {
+    pub fn Dar_ObjCutPrint(p: *mut Aig_Man_t, pObj: *mut Aig_Obj_t);
+}
+extern "C" {
+    pub fn Dar_LibReadNodes() -> *mut Vec_Int_t;
+}
+extern "C" {
+    pub fn Dar_LibReadOuts() -> *mut Vec_Int_t;
+}
+extern "C" {
+    pub fn Dar_LibReadPrios() -> *mut Vec_Int_t;
+}
+extern "C" {
+    pub fn Dar_LibReturnCanonicals(pCanons: *mut ::std::os::raw::c_uint);
+}
+extern "C" {
+    pub fn Dar_LibEval(
+        p: *mut Dar_Man_t,
+        pRoot: *mut Aig_Obj_t,
+        pCut: *mut Dar_Cut_t,
+        Required: ::std::os::raw::c_int,
+        pnMffcSize: *mut ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Dar_LibBuildBest(p: *mut Dar_Man_t) -> *mut Aig_Obj_t;
+}
+extern "C" {
+    pub fn Dar_ManStart(pAig: *mut Aig_Man_t, pPars: *mut Dar_RwrPar_t) -> *mut Dar_Man_t;
+}
+extern "C" {
+    pub fn Dar_ManStop(p: *mut Dar_Man_t);
+}
+extern "C" {
+    pub fn Dar_ManPrintStats(p: *mut Dar_Man_t);
+}
+extern "C" {
+    pub fn Dar_Permutations(n: ::std::os::raw::c_int) -> *mut *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn Dar_Truth4VarNPN(
+        puCanons: *mut *mut ::std::os::raw::c_ushort,
+        puPhases: *mut *mut ::std::os::raw::c_char,
+        puPerms: *mut *mut ::std::os::raw::c_char,
+        puMap: *mut *mut ::std::os::raw::c_uchar,
+    );
+}
+pub type Cnf_Man_t = Cnf_Man_t_;
+pub type Cnf_Dat_t = Cnf_Dat_t_;
+pub type Cnf_Cut_t = Cnf_Cut_t_;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Cnf_Dat_t_ {
+    pub pMan: *mut Aig_Man_t,
+    pub nVars: ::std::os::raw::c_int,
+    pub nLiterals: ::std::os::raw::c_int,
+    pub nClauses: ::std::os::raw::c_int,
+    pub pClauses: *mut *mut ::std::os::raw::c_int,
+    pub pVarNums: *mut ::std::os::raw::c_int,
+    pub pObj2Clause: *mut ::std::os::raw::c_int,
+    pub pObj2Count: *mut ::std::os::raw::c_int,
+    pub pClaPols: *mut ::std::os::raw::c_uchar,
+    pub vMapping: *mut Vec_Int_t,
+}
+#[test]
+fn bindgen_test_layout_Cnf_Dat_t_() {
+    const UNINIT: ::std::mem::MaybeUninit<Cnf_Dat_t_> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<Cnf_Dat_t_>(),
+        72usize,
+        concat!("Size of: ", stringify!(Cnf_Dat_t_))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<Cnf_Dat_t_>(),
+        8usize,
+        concat!("Alignment of ", stringify!(Cnf_Dat_t_))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pMan) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Cnf_Dat_t_),
+            "::",
+            stringify!(pMan)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nVars) as usize - ptr as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Cnf_Dat_t_),
+            "::",
+            stringify!(nVars)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nLiterals) as usize - ptr as usize },
+        12usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Cnf_Dat_t_),
+            "::",
+            stringify!(nLiterals)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nClauses) as usize - ptr as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Cnf_Dat_t_),
+            "::",
+            stringify!(nClauses)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pClauses) as usize - ptr as usize },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Cnf_Dat_t_),
+            "::",
+            stringify!(pClauses)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pVarNums) as usize - ptr as usize },
+        32usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Cnf_Dat_t_),
+            "::",
+            stringify!(pVarNums)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pObj2Clause) as usize - ptr as usize },
+        40usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Cnf_Dat_t_),
+            "::",
+            stringify!(pObj2Clause)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pObj2Count) as usize - ptr as usize },
+        48usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Cnf_Dat_t_),
+            "::",
+            stringify!(pObj2Count)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pClaPols) as usize - ptr as usize },
+        56usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Cnf_Dat_t_),
+            "::",
+            stringify!(pClaPols)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vMapping) as usize - ptr as usize },
+        64usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Cnf_Dat_t_),
+            "::",
+            stringify!(vMapping)
+        )
+    );
+}
+#[repr(C)]
+#[derive(Debug)]
+pub struct Cnf_Cut_t_ {
+    pub nFanins: ::std::os::raw::c_char,
+    pub Cost: ::std::os::raw::c_char,
+    pub nWords: ::std::os::raw::c_short,
+    pub vIsop: [*mut Vec_Int_t; 2usize],
+    pub pFanins: __IncompleteArrayField<::std::os::raw::c_int>,
+}
+#[test]
+fn bindgen_test_layout_Cnf_Cut_t_() {
+    const UNINIT: ::std::mem::MaybeUninit<Cnf_Cut_t_> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<Cnf_Cut_t_>(),
+        24usize,
+        concat!("Size of: ", stringify!(Cnf_Cut_t_))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<Cnf_Cut_t_>(),
+        8usize,
+        concat!("Alignment of ", stringify!(Cnf_Cut_t_))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nFanins) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Cnf_Cut_t_),
+            "::",
+            stringify!(nFanins)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).Cost) as usize - ptr as usize },
+        1usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Cnf_Cut_t_),
+            "::",
+            stringify!(Cost)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nWords) as usize - ptr as usize },
+        2usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Cnf_Cut_t_),
+            "::",
+            stringify!(nWords)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vIsop) as usize - ptr as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Cnf_Cut_t_),
+            "::",
+            stringify!(vIsop)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pFanins) as usize - ptr as usize },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Cnf_Cut_t_),
+            "::",
+            stringify!(pFanins)
+        )
+    );
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Cnf_Man_t_ {
+    pub pManAig: *mut Aig_Man_t,
+    pub pSopSizes: *mut ::std::os::raw::c_char,
+    pub pSops: *mut *mut ::std::os::raw::c_char,
+    pub aArea: ::std::os::raw::c_int,
+    pub pMemCuts: *mut Aig_MmFlex_t,
+    pub nMergeLimit: ::std::os::raw::c_int,
+    pub pTruths: [*mut ::std::os::raw::c_uint; 4usize],
+    pub vMemory: *mut Vec_Int_t,
+    pub timeCuts: abctime,
+    pub timeMap: abctime,
+    pub timeSave: abctime,
+}
+#[test]
+fn bindgen_test_layout_Cnf_Man_t_() {
+    const UNINIT: ::std::mem::MaybeUninit<Cnf_Man_t_> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<Cnf_Man_t_>(),
+        112usize,
+        concat!("Size of: ", stringify!(Cnf_Man_t_))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<Cnf_Man_t_>(),
+        8usize,
+        concat!("Alignment of ", stringify!(Cnf_Man_t_))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pManAig) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Cnf_Man_t_),
+            "::",
+            stringify!(pManAig)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pSopSizes) as usize - ptr as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Cnf_Man_t_),
+            "::",
+            stringify!(pSopSizes)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pSops) as usize - ptr as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Cnf_Man_t_),
+            "::",
+            stringify!(pSops)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).aArea) as usize - ptr as usize },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Cnf_Man_t_),
+            "::",
+            stringify!(aArea)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pMemCuts) as usize - ptr as usize },
+        32usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Cnf_Man_t_),
+            "::",
+            stringify!(pMemCuts)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nMergeLimit) as usize - ptr as usize },
+        40usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Cnf_Man_t_),
+            "::",
+            stringify!(nMergeLimit)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pTruths) as usize - ptr as usize },
+        48usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Cnf_Man_t_),
+            "::",
+            stringify!(pTruths)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vMemory) as usize - ptr as usize },
+        80usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Cnf_Man_t_),
+            "::",
+            stringify!(vMemory)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).timeCuts) as usize - ptr as usize },
+        88usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Cnf_Man_t_),
+            "::",
+            stringify!(timeCuts)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).timeMap) as usize - ptr as usize },
+        96usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Cnf_Man_t_),
+            "::",
+            stringify!(timeMap)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).timeSave) as usize - ptr as usize },
+        104usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Cnf_Man_t_),
+            "::",
+            stringify!(timeSave)
+        )
+    );
+}
+extern "C" {
+    #[link_name = "Dar_ObjBestCut_imctk_abc_sys"]
+    pub fn Dar_ObjBestCut(pObj: *mut Aig_Obj_t) -> *mut Dar_Cut_t;
+}
+extern "C" {
+    #[link_name = "Cnf_CutSopCost_imctk_abc_sys"]
+    pub fn Cnf_CutSopCost(p: *mut Cnf_Man_t, pCut: *mut Dar_Cut_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Cnf_CutLeaveNum_imctk_abc_sys"]
+    pub fn Cnf_CutLeaveNum(pCut: *mut Cnf_Cut_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Cnf_CutLeaves_imctk_abc_sys"]
+    pub fn Cnf_CutLeaves(pCut: *mut Cnf_Cut_t) -> *mut ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Cnf_CutTruth_imctk_abc_sys"]
+    pub fn Cnf_CutTruth(pCut: *mut Cnf_Cut_t) -> *mut ::std::os::raw::c_uint;
+}
+extern "C" {
+    #[link_name = "Cnf_ObjBestCut_imctk_abc_sys"]
+    pub fn Cnf_ObjBestCut(pObj: *mut Aig_Obj_t) -> *mut Cnf_Cut_t;
+}
+extern "C" {
+    #[link_name = "Cnf_ObjSetBestCut_imctk_abc_sys"]
+    pub fn Cnf_ObjSetBestCut(pObj: *mut Aig_Obj_t, pCut: *mut Cnf_Cut_t);
+}
+extern "C" {
+    pub fn Cnf_DeriveMappingArray(pAig: *mut Aig_Man_t) -> *mut Vec_Int_t;
+}
+extern "C" {
+    pub fn Cnf_Derive(pAig: *mut Aig_Man_t, nOutputs: ::std::os::raw::c_int) -> *mut Cnf_Dat_t;
+}
+extern "C" {
+    pub fn Cnf_DeriveWithMan(
+        p: *mut Cnf_Man_t,
+        pAig: *mut Aig_Man_t,
+        nOutputs: ::std::os::raw::c_int,
+    ) -> *mut Cnf_Dat_t;
+}
+extern "C" {
+    pub fn Cnf_DeriveOther(
+        pAig: *mut Aig_Man_t,
+        fSkipTtMin: ::std::os::raw::c_int,
+    ) -> *mut Cnf_Dat_t;
+}
+extern "C" {
+    pub fn Cnf_DeriveOtherWithMan(
+        p: *mut Cnf_Man_t,
+        pAig: *mut Aig_Man_t,
+        fSkipTtMin: ::std::os::raw::c_int,
+    ) -> *mut Cnf_Dat_t;
+}
+extern "C" {
+    pub fn Cnf_ManPrepare();
+}
+extern "C" {
+    pub fn Cnf_ManRead() -> *mut Cnf_Man_t;
+}
+extern "C" {
+    pub fn Cnf_ManFree();
+}
+extern "C" {
+    pub fn Cnf_CutCreate(p: *mut Cnf_Man_t, pObj: *mut Aig_Obj_t) -> *mut Cnf_Cut_t;
+}
+extern "C" {
+    pub fn Cnf_CutPrint(pCut: *mut Cnf_Cut_t);
+}
+extern "C" {
+    pub fn Cnf_CutFree(pCut: *mut Cnf_Cut_t);
+}
+extern "C" {
+    pub fn Cnf_CutUpdateRefs(
+        p: *mut Cnf_Man_t,
+        pCut: *mut Cnf_Cut_t,
+        pCutFan: *mut Cnf_Cut_t,
+        pCutRes: *mut Cnf_Cut_t,
+    );
+}
+extern "C" {
+    pub fn Cnf_CutCompose(
+        p: *mut Cnf_Man_t,
+        pCut: *mut Cnf_Cut_t,
+        pCutFan: *mut Cnf_Cut_t,
+        iFan: ::std::os::raw::c_int,
+    ) -> *mut Cnf_Cut_t;
+}
+extern "C" {
+    pub fn Cnf_ReadMsops(
+        ppSopSizes: *mut *mut ::std::os::raw::c_char,
+        ppSops: *mut *mut *mut ::std::os::raw::c_char,
+    );
+}
+extern "C" {
+    pub fn Cnf_CollectLeaves(
+        pRoot: *mut Aig_Obj_t,
+        vSuper: *mut Vec_Ptr_t,
+        fStopCompl: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Cnf_ComputeClauses(
+        p: *mut Aig_Man_t,
+        pRoot: *mut Aig_Obj_t,
+        vLeaves: *mut Vec_Ptr_t,
+        vNodes: *mut Vec_Ptr_t,
+        vMap: *mut Vec_Int_t,
+        vCover: *mut Vec_Int_t,
+        vClauses: *mut Vec_Int_t,
+    );
+}
+extern "C" {
+    pub fn Cnf_DeriveFastMark(p: *mut Aig_Man_t);
+}
+extern "C" {
+    pub fn Cnf_DeriveFast(p: *mut Aig_Man_t, nOutputs: ::std::os::raw::c_int) -> *mut Cnf_Dat_t;
+}
+extern "C" {
+    pub fn Cnf_ManStart() -> *mut Cnf_Man_t;
+}
+extern "C" {
+    pub fn Cnf_ManStop(p: *mut Cnf_Man_t);
+}
+extern "C" {
+    pub fn Cnf_DataCollectPiSatNums(pCnf: *mut Cnf_Dat_t, p: *mut Aig_Man_t) -> *mut Vec_Int_t;
+}
+extern "C" {
+    pub fn Cnf_DataAlloc(
+        pAig: *mut Aig_Man_t,
+        nVars: ::std::os::raw::c_int,
+        nClauses: ::std::os::raw::c_int,
+        nLiterals: ::std::os::raw::c_int,
+    ) -> *mut Cnf_Dat_t;
+}
+extern "C" {
+    pub fn Cnf_DataDup(p: *mut Cnf_Dat_t) -> *mut Cnf_Dat_t;
+}
+extern "C" {
+    pub fn Cnf_DataDupCof(p: *mut Cnf_Dat_t, Lit: ::std::os::raw::c_int) -> *mut Cnf_Dat_t;
+}
+extern "C" {
+    pub fn Cnf_DataDupCofArray(p: *mut Cnf_Dat_t, vLits: *mut Vec_Int_t) -> *mut Cnf_Dat_t;
+}
+extern "C" {
+    pub fn Cnf_DataFree(p: *mut Cnf_Dat_t);
+}
+extern "C" {
+    pub fn Cnf_DataLift(p: *mut Cnf_Dat_t, nVarsPlus: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Cnf_DataCollectFlipLits(
+        p: *mut Cnf_Dat_t,
+        iFlipVar: ::std::os::raw::c_int,
+        vFlips: *mut Vec_Int_t,
+    );
+}
+extern "C" {
+    pub fn Cnf_DataLiftAndFlipLits(
+        p: *mut Cnf_Dat_t,
+        nVarsPlus: ::std::os::raw::c_int,
+        vLits: *mut Vec_Int_t,
+    );
+}
+extern "C" {
+    pub fn Cnf_DataPrint(p: *mut Cnf_Dat_t, fReadable: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Cnf_DataWriteIntoFile(
+        p: *mut Cnf_Dat_t,
+        pFileName: *mut ::std::os::raw::c_char,
+        fReadable: ::std::os::raw::c_int,
+        vForAlls: *mut Vec_Int_t,
+        vExists: *mut Vec_Int_t,
+    );
+}
+extern "C" {
+    pub fn Cnf_DataWriteIntoFileInv(
+        p: *mut Cnf_Dat_t,
+        pFileName: *mut ::std::os::raw::c_char,
+        fReadable: ::std::os::raw::c_int,
+        vExists1: *mut Vec_Int_t,
+        vForAlls: *mut Vec_Int_t,
+        vExists2: *mut Vec_Int_t,
+    );
+}
+extern "C" {
+    pub fn Cnf_DataWriteIntoSolver(
+        p: *mut Cnf_Dat_t,
+        nFrames: ::std::os::raw::c_int,
+        fInit: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    pub fn Cnf_DataWriteIntoSolverInt(
+        pSat: *mut ::std::os::raw::c_void,
+        p: *mut Cnf_Dat_t,
+        nFrames: ::std::os::raw::c_int,
+        fInit: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    pub fn Cnf_DataWriteOrClause(
+        pSat: *mut ::std::os::raw::c_void,
+        pCnf: *mut Cnf_Dat_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Cnf_DataWriteAndClauses(
+        p: *mut ::std::os::raw::c_void,
+        pCnf: *mut Cnf_Dat_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Cnf_DataTranformPolarity(pCnf: *mut Cnf_Dat_t, fTransformPos: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Cnf_DataAddXorClause(
+        pSat: *mut ::std::os::raw::c_void,
+        iVarA: ::std::os::raw::c_int,
+        iVarB: ::std::os::raw::c_int,
+        iVarC: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Cnf_DeriveMapping(p: *mut Cnf_Man_t);
+}
+extern "C" {
+    pub fn Cnf_ManMapForCnf(p: *mut Cnf_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Cnf_ManTransferCuts(p: *mut Cnf_Man_t);
+}
+extern "C" {
+    pub fn Cnf_ManFreeCuts(p: *mut Cnf_Man_t);
+}
+extern "C" {
+    pub fn Cnf_ManPostprocess(p: *mut Cnf_Man_t);
+}
+extern "C" {
+    pub fn Aig_ManScanMapping(p: *mut Cnf_Man_t, fCollect: ::std::os::raw::c_int)
+        -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Cnf_ManScanMapping(
+        p: *mut Cnf_Man_t,
+        fCollect: ::std::os::raw::c_int,
+        fPreorder: ::std::os::raw::c_int,
+    ) -> *mut Vec_Ptr_t;
+}
+extern "C" {
+    pub fn Cnf_DataCollectCiSatNums(pCnf: *mut Cnf_Dat_t, p: *mut Aig_Man_t) -> *mut Vec_Int_t;
+}
+extern "C" {
+    pub fn Cnf_DataCollectCoSatNums(pCnf: *mut Cnf_Dat_t, p: *mut Aig_Man_t) -> *mut Vec_Int_t;
+}
+extern "C" {
+    pub fn Cnf_DataDeriveLitPolarities(p: *mut Cnf_Dat_t) -> *mut ::std::os::raw::c_uchar;
+}
+extern "C" {
+    pub fn Cnf_DataReadFromFile(pFileName: *mut ::std::os::raw::c_char) -> *mut Cnf_Dat_t;
+}
+extern "C" {
+    pub fn Cnf_ManWriteCnfMapping(p: *mut Cnf_Man_t, vMapped: *mut Vec_Ptr_t) -> *mut Vec_Int_t;
+}
+extern "C" {
+    pub fn Cnf_SopConvertToVector(
+        pSop: *mut ::std::os::raw::c_char,
+        nCubes: ::std::os::raw::c_int,
+        vCover: *mut Vec_Int_t,
+    );
+}
+extern "C" {
+    pub fn Cnf_ManWriteCnf(
+        p: *mut Cnf_Man_t,
+        vMapped: *mut Vec_Ptr_t,
+        nOutputs: ::std::os::raw::c_int,
+    ) -> *mut Cnf_Dat_t;
+}
+extern "C" {
+    pub fn Cnf_ManWriteCnfOther(p: *mut Cnf_Man_t, vMapped: *mut Vec_Ptr_t) -> *mut Cnf_Dat_t;
+}
+extern "C" {
+    pub fn Cnf_DeriveSimple(p: *mut Aig_Man_t, nOutputs: ::std::os::raw::c_int) -> *mut Cnf_Dat_t;
+}
+extern "C" {
+    pub fn Cnf_DeriveSimpleForRetiming(p: *mut Aig_Man_t) -> *mut Cnf_Dat_t;
+}
+extern "C" {
+    pub fn Hash_DefaultHashFunc(
+        key: ::std::os::raw::c_int,
+        nBins: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+pub type Hash_Int_t = Hash_Int_t_;
+pub type Hash_Int_Entry_t = Hash_Int_Entry_t_;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Hash_Int_Entry_t_ {
+    pub key: ::std::os::raw::c_int,
+    pub data: ::std::os::raw::c_int,
+    pub pNext: *mut Hash_Int_Entry_t_,
+}
+#[test]
+fn bindgen_test_layout_Hash_Int_Entry_t_() {
+    const UNINIT: ::std::mem::MaybeUninit<Hash_Int_Entry_t_> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<Hash_Int_Entry_t_>(),
+        16usize,
+        concat!("Size of: ", stringify!(Hash_Int_Entry_t_))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<Hash_Int_Entry_t_>(),
+        8usize,
+        concat!("Alignment of ", stringify!(Hash_Int_Entry_t_))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).key) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Hash_Int_Entry_t_),
+            "::",
+            stringify!(key)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).data) as usize - ptr as usize },
+        4usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Hash_Int_Entry_t_),
+            "::",
+            stringify!(data)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pNext) as usize - ptr as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Hash_Int_Entry_t_),
+            "::",
+            stringify!(pNext)
+        )
+    );
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Hash_Int_t_ {
+    pub nSize: ::std::os::raw::c_int,
+    pub nBins: ::std::os::raw::c_int,
+    pub fHash: ::std::option::Option<
+        unsafe extern "C" fn(
+            key: ::std::os::raw::c_int,
+            nBins: ::std::os::raw::c_int,
+        ) -> ::std::os::raw::c_int,
+    >,
+    pub pArray: *mut *mut Hash_Int_Entry_t,
+}
+#[test]
+fn bindgen_test_layout_Hash_Int_t_() {
+    const UNINIT: ::std::mem::MaybeUninit<Hash_Int_t_> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<Hash_Int_t_>(),
+        24usize,
+        concat!("Size of: ", stringify!(Hash_Int_t_))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<Hash_Int_t_>(),
+        8usize,
+        concat!("Alignment of ", stringify!(Hash_Int_t_))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nSize) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Hash_Int_t_),
+            "::",
+            stringify!(nSize)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nBins) as usize - ptr as usize },
+        4usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Hash_Int_t_),
+            "::",
+            stringify!(nBins)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fHash) as usize - ptr as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Hash_Int_t_),
+            "::",
+            stringify!(fHash)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pArray) as usize - ptr as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Hash_Int_t_),
+            "::",
+            stringify!(pArray)
+        )
+    );
+}
+extern "C" {
+    #[link_name = "Hash_IntAlloc_imctk_abc_sys"]
+    pub fn Hash_IntAlloc(nBins: ::std::os::raw::c_int) -> *mut Hash_Int_t;
+}
+extern "C" {
+    #[link_name = "Hash_IntExists_imctk_abc_sys"]
+    pub fn Hash_IntExists(p: *mut Hash_Int_t, key: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hash_IntWriteEntry_imctk_abc_sys"]
+    pub fn Hash_IntWriteEntry(
+        p: *mut Hash_Int_t,
+        key: ::std::os::raw::c_int,
+        data: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    #[link_name = "Hash_IntEntry_imctk_abc_sys"]
+    pub fn Hash_IntEntry(
+        p: *mut Hash_Int_t,
+        key: ::std::os::raw::c_int,
+        fCreate: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hash_IntEntryPtr_imctk_abc_sys"]
+    pub fn Hash_IntEntryPtr(
+        p: *mut Hash_Int_t,
+        key: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Hash_IntFree_imctk_abc_sys"]
+    pub fn Hash_IntFree(p: *mut Hash_Int_t);
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct veci_t {
+    pub cap: ::std::os::raw::c_int,
+    pub size: ::std::os::raw::c_int,
+    pub ptr: *mut ::std::os::raw::c_int,
+}
+#[test]
+fn bindgen_test_layout_veci_t() {
+    const UNINIT: ::std::mem::MaybeUninit<veci_t> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<veci_t>(),
+        16usize,
+        concat!("Size of: ", stringify!(veci_t))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<veci_t>(),
+        8usize,
+        concat!("Alignment of ", stringify!(veci_t))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).cap) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(veci_t),
+            "::",
+            stringify!(cap)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).size) as usize - ptr as usize },
+        4usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(veci_t),
+            "::",
+            stringify!(size)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).ptr) as usize - ptr as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(veci_t),
+            "::",
+            stringify!(ptr)
+        )
+    );
+}
+pub type veci = veci_t;
+extern "C" {
+    #[link_name = "veci_new_imctk_abc_sys"]
+    pub fn veci_new(v: *mut veci);
+}
+extern "C" {
+    #[link_name = "veci_delete_imctk_abc_sys"]
+    pub fn veci_delete(v: *mut veci);
+}
+extern "C" {
+    #[link_name = "veci_begin_imctk_abc_sys"]
+    pub fn veci_begin(v: *mut veci) -> *mut ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "veci_size_imctk_abc_sys"]
+    pub fn veci_size(v: *mut veci) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "veci_resize_imctk_abc_sys"]
+    pub fn veci_resize(v: *mut veci, k: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[link_name = "veci_pop_imctk_abc_sys"]
+    pub fn veci_pop(v: *mut veci) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "veci_push_imctk_abc_sys"]
+    pub fn veci_push(v: *mut veci, e: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[link_name = "veci_remove_imctk_abc_sys"]
+    pub fn veci_remove(v: *mut veci, e: ::std::os::raw::c_int);
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct vecp_t {
+    pub cap: ::std::os::raw::c_int,
+    pub size: ::std::os::raw::c_int,
+    pub ptr: *mut *mut ::std::os::raw::c_void,
+}
+#[test]
+fn bindgen_test_layout_vecp_t() {
+    const UNINIT: ::std::mem::MaybeUninit<vecp_t> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<vecp_t>(),
+        16usize,
+        concat!("Size of: ", stringify!(vecp_t))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<vecp_t>(),
+        8usize,
+        concat!("Alignment of ", stringify!(vecp_t))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).cap) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(vecp_t),
+            "::",
+            stringify!(cap)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).size) as usize - ptr as usize },
+        4usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(vecp_t),
+            "::",
+            stringify!(size)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).ptr) as usize - ptr as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(vecp_t),
+            "::",
+            stringify!(ptr)
+        )
+    );
+}
+pub type vecp = vecp_t;
+extern "C" {
+    #[link_name = "vecp_new_imctk_abc_sys"]
+    pub fn vecp_new(v: *mut vecp);
+}
+extern "C" {
+    #[link_name = "vecp_delete_imctk_abc_sys"]
+    pub fn vecp_delete(v: *mut vecp);
+}
+extern "C" {
+    #[link_name = "vecp_begin_imctk_abc_sys"]
+    pub fn vecp_begin(v: *mut vecp) -> *mut *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    #[link_name = "vecp_size_imctk_abc_sys"]
+    pub fn vecp_size(v: *mut vecp) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "vecp_resize_imctk_abc_sys"]
+    pub fn vecp_resize(v: *mut vecp, k: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[link_name = "vecp_push_imctk_abc_sys"]
+    pub fn vecp_push(v: *mut vecp, e: *mut ::std::os::raw::c_void);
+}
+extern "C" {
+    #[link_name = "vecp_remove_imctk_abc_sys"]
+    pub fn vecp_remove(v: *mut vecp, e: *mut ::std::os::raw::c_void);
+}
+pub type lit = ::std::os::raw::c_int;
+pub type cla = ::std::os::raw::c_int;
+pub type lbool = ::std::os::raw::c_char;
+pub const var_Undef: ::std::os::raw::c_int = -1;
+pub const lit_Undef: lit = -2;
+pub const l_Undef: lbool = 0;
+pub const l_True: lbool = 1;
+pub const l_False: lbool = -1;
+extern "C" {
+    #[link_name = "toLit_imctk_abc_sys"]
+    pub fn toLit(v: ::std::os::raw::c_int) -> lit;
+}
+extern "C" {
+    #[link_name = "toLitCond_imctk_abc_sys"]
+    pub fn toLitCond(v: ::std::os::raw::c_int, c: ::std::os::raw::c_int) -> lit;
+}
+extern "C" {
+    #[link_name = "lit_neg_imctk_abc_sys"]
+    pub fn lit_neg(l: lit) -> lit;
+}
+extern "C" {
+    #[link_name = "lit_var_imctk_abc_sys"]
+    pub fn lit_var(l: lit) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "lit_sign_imctk_abc_sys"]
+    pub fn lit_sign(l: lit) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "lit_print_imctk_abc_sys"]
+    pub fn lit_print(l: lit) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "lit_read_imctk_abc_sys"]
+    pub fn lit_read(s: ::std::os::raw::c_int) -> lit;
+}
+extern "C" {
+    #[link_name = "lit_check_imctk_abc_sys"]
+    pub fn lit_check(l: lit, n: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct stats_t {
+    pub starts: ::std::os::raw::c_uint,
+    pub clauses: ::std::os::raw::c_uint,
+    pub learnts: ::std::os::raw::c_uint,
+    pub decisions: ABC_INT64_T,
+    pub propagations: ABC_INT64_T,
+    pub inspects: ABC_INT64_T,
+    pub conflicts: ABC_INT64_T,
+    pub clauses_literals: ABC_INT64_T,
+    pub learnts_literals: ABC_INT64_T,
+    pub tot_literals: ABC_INT64_T,
+}
+#[test]
+fn bindgen_test_layout_stats_t() {
+    const UNINIT: ::std::mem::MaybeUninit<stats_t> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<stats_t>(),
+        72usize,
+        concat!("Size of: ", stringify!(stats_t))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<stats_t>(),
+        8usize,
+        concat!("Alignment of ", stringify!(stats_t))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).starts) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(stats_t),
+            "::",
+            stringify!(starts)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).clauses) as usize - ptr as usize },
+        4usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(stats_t),
+            "::",
+            stringify!(clauses)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).learnts) as usize - ptr as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(stats_t),
+            "::",
+            stringify!(learnts)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).decisions) as usize - ptr as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(stats_t),
+            "::",
+            stringify!(decisions)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).propagations) as usize - ptr as usize },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(stats_t),
+            "::",
+            stringify!(propagations)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).inspects) as usize - ptr as usize },
+        32usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(stats_t),
+            "::",
+            stringify!(inspects)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).conflicts) as usize - ptr as usize },
+        40usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(stats_t),
+            "::",
+            stringify!(conflicts)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).clauses_literals) as usize - ptr as usize },
+        48usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(stats_t),
+            "::",
+            stringify!(clauses_literals)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).learnts_literals) as usize - ptr as usize },
+        56usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(stats_t),
+            "::",
+            stringify!(learnts_literals)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).tot_literals) as usize - ptr as usize },
+        64usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(stats_t),
+            "::",
+            stringify!(tot_literals)
+        )
+    );
+}
+pub type clause = clause_t;
+#[repr(C)]
+#[derive(Debug)]
+pub struct clause_t {
+    pub _bitfield_align_1: [u32; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 4usize]>,
+    pub lits: __IncompleteArrayField<lit>,
+}
+#[test]
+fn bindgen_test_layout_clause_t() {
+    const UNINIT: ::std::mem::MaybeUninit<clause_t> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<clause_t>(),
+        4usize,
+        concat!("Size of: ", stringify!(clause_t))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<clause_t>(),
+        4usize,
+        concat!("Alignment of ", stringify!(clause_t))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).lits) as usize - ptr as usize },
+        4usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(clause_t),
+            "::",
+            stringify!(lits)
+        )
+    );
+}
+impl clause_t {
+    #[inline]
+    pub fn lrn(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_lrn(&mut self, val: ::std::os::raw::c_uint) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(0usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn mark(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(1usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_mark(&mut self, val: ::std::os::raw::c_uint) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(1usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn partA(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(2usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_partA(&mut self, val: ::std::os::raw::c_uint) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(2usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn lbd(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(3usize, 8u8) as u32) }
+    }
+    #[inline]
+    pub fn set_lbd(&mut self, val: ::std::os::raw::c_uint) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(3usize, 8u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn size(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(11usize, 21u8) as u32) }
+    }
+    #[inline]
+    pub fn set_size(&mut self, val: ::std::os::raw::c_uint) {
+        unsafe {
+            let val: u32 = ::std::mem::transmute(val);
+            self._bitfield_1.set(11usize, 21u8, val as u64)
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(
+        lrn: ::std::os::raw::c_uint,
+        mark: ::std::os::raw::c_uint,
+        partA: ::std::os::raw::c_uint,
+        lbd: ::std::os::raw::c_uint,
+        size: ::std::os::raw::c_uint,
+    ) -> __BindgenBitfieldUnit<[u8; 4usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 4usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 1u8, {
+            let lrn: u32 = unsafe { ::std::mem::transmute(lrn) };
+            lrn as u64
+        });
+        __bindgen_bitfield_unit.set(1usize, 1u8, {
+            let mark: u32 = unsafe { ::std::mem::transmute(mark) };
+            mark as u64
+        });
+        __bindgen_bitfield_unit.set(2usize, 1u8, {
+            let partA: u32 = unsafe { ::std::mem::transmute(partA) };
+            partA as u64
+        });
+        __bindgen_bitfield_unit.set(3usize, 8u8, {
+            let lbd: u32 = unsafe { ::std::mem::transmute(lbd) };
+            lbd as u64
+        });
+        __bindgen_bitfield_unit.set(11usize, 21u8, {
+            let size: u32 = unsafe { ::std::mem::transmute(size) };
+            size as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+pub type Sat_Mem_t = Sat_Mem_t_;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Sat_Mem_t_ {
+    pub nEntries: [::std::os::raw::c_int; 2usize],
+    pub BookMarkH: [::std::os::raw::c_int; 2usize],
+    pub BookMarkE: [::std::os::raw::c_int; 2usize],
+    pub iPage: [::std::os::raw::c_int; 2usize],
+    pub nPageSize: ::std::os::raw::c_int,
+    pub uPageMask: ::std::os::raw::c_uint,
+    pub uLearnedMask: ::std::os::raw::c_uint,
+    pub nPagesAlloc: ::std::os::raw::c_int,
+    pub pPages: *mut *mut ::std::os::raw::c_int,
+}
+#[test]
+fn bindgen_test_layout_Sat_Mem_t_() {
+    const UNINIT: ::std::mem::MaybeUninit<Sat_Mem_t_> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<Sat_Mem_t_>(),
+        56usize,
+        concat!("Size of: ", stringify!(Sat_Mem_t_))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<Sat_Mem_t_>(),
+        8usize,
+        concat!("Alignment of ", stringify!(Sat_Mem_t_))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nEntries) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Sat_Mem_t_),
+            "::",
+            stringify!(nEntries)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).BookMarkH) as usize - ptr as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Sat_Mem_t_),
+            "::",
+            stringify!(BookMarkH)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).BookMarkE) as usize - ptr as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Sat_Mem_t_),
+            "::",
+            stringify!(BookMarkE)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).iPage) as usize - ptr as usize },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Sat_Mem_t_),
+            "::",
+            stringify!(iPage)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nPageSize) as usize - ptr as usize },
+        32usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Sat_Mem_t_),
+            "::",
+            stringify!(nPageSize)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).uPageMask) as usize - ptr as usize },
+        36usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Sat_Mem_t_),
+            "::",
+            stringify!(uPageMask)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).uLearnedMask) as usize - ptr as usize },
+        40usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Sat_Mem_t_),
+            "::",
+            stringify!(uLearnedMask)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nPagesAlloc) as usize - ptr as usize },
+        44usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Sat_Mem_t_),
+            "::",
+            stringify!(nPagesAlloc)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pPages) as usize - ptr as usize },
+        48usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Sat_Mem_t_),
+            "::",
+            stringify!(pPages)
+        )
+    );
+}
+extern "C" {
+    #[link_name = "Sat_MemLimit_imctk_abc_sys"]
+    pub fn Sat_MemLimit(p: *mut ::std::os::raw::c_int) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Sat_MemIncLimit_imctk_abc_sys"]
+    pub fn Sat_MemIncLimit(
+        p: *mut ::std::os::raw::c_int,
+        nInts: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Sat_MemWriteLimit_imctk_abc_sys"]
+    pub fn Sat_MemWriteLimit(p: *mut ::std::os::raw::c_int, nInts: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[link_name = "Sat_MemHandPage_imctk_abc_sys"]
+    pub fn Sat_MemHandPage(p: *mut Sat_Mem_t, h: cla) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Sat_MemHandShift_imctk_abc_sys"]
+    pub fn Sat_MemHandShift(p: *mut Sat_Mem_t, h: cla) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Sat_MemIntSize_imctk_abc_sys"]
+    pub fn Sat_MemIntSize(
+        size: ::std::os::raw::c_int,
+        lrn: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Sat_MemClauseSize_imctk_abc_sys"]
+    pub fn Sat_MemClauseSize(p: *mut clause) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Sat_MemClauseSize2_imctk_abc_sys"]
+    pub fn Sat_MemClauseSize2(p: *mut clause) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Sat_MemClause_imctk_abc_sys"]
+    pub fn Sat_MemClause(
+        p: *mut Sat_Mem_t,
+        i: ::std::os::raw::c_int,
+        k: ::std::os::raw::c_int,
+    ) -> *mut clause;
+}
+extern "C" {
+    #[link_name = "Sat_MemClauseHand_imctk_abc_sys"]
+    pub fn Sat_MemClauseHand(p: *mut Sat_Mem_t, h: cla) -> *mut clause;
+}
+extern "C" {
+    #[link_name = "Sat_MemEntryNum_imctk_abc_sys"]
+    pub fn Sat_MemEntryNum(p: *mut Sat_Mem_t, lrn: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Sat_MemHand_imctk_abc_sys"]
+    pub fn Sat_MemHand(
+        p: *mut Sat_Mem_t,
+        i: ::std::os::raw::c_int,
+        k: ::std::os::raw::c_int,
+    ) -> cla;
+}
+extern "C" {
+    #[link_name = "Sat_MemHandCurrent_imctk_abc_sys"]
+    pub fn Sat_MemHandCurrent(p: *mut Sat_Mem_t, lrn: ::std::os::raw::c_int) -> cla;
+}
+extern "C" {
+    #[link_name = "Sat_MemClauseUsed_imctk_abc_sys"]
+    pub fn Sat_MemClauseUsed(p: *mut Sat_Mem_t, h: cla) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Sat_MemMemoryHand_imctk_abc_sys"]
+    pub fn Sat_MemMemoryHand(p: *mut Sat_Mem_t, h: cla) -> f64;
+}
+extern "C" {
+    #[link_name = "Sat_MemMemoryUsed_imctk_abc_sys"]
+    pub fn Sat_MemMemoryUsed(p: *mut Sat_Mem_t, lrn: ::std::os::raw::c_int) -> f64;
+}
+extern "C" {
+    #[link_name = "Sat_MemMemoryAllUsed_imctk_abc_sys"]
+    pub fn Sat_MemMemoryAllUsed(p: *mut Sat_Mem_t) -> f64;
+}
+extern "C" {
+    #[link_name = "Sat_MemMemoryAll_imctk_abc_sys"]
+    pub fn Sat_MemMemoryAll(p: *mut Sat_Mem_t) -> f64;
+}
+extern "C" {
+    #[link_name = "clause_from_lit_imctk_abc_sys"]
+    pub fn clause_from_lit(l: lit) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "clause_is_lit_imctk_abc_sys"]
+    pub fn clause_is_lit(h: cla) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "clause_read_lit_imctk_abc_sys"]
+    pub fn clause_read_lit(h: cla) -> lit;
+}
+extern "C" {
+    #[link_name = "clause_learnt_h_imctk_abc_sys"]
+    pub fn clause_learnt_h(p: *mut Sat_Mem_t, h: cla) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "clause_learnt_imctk_abc_sys"]
+    pub fn clause_learnt(c: *mut clause) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "clause_id_imctk_abc_sys"]
+    pub fn clause_id(c: *mut clause) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "clause_set_id_imctk_abc_sys"]
+    pub fn clause_set_id(c: *mut clause, id: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[link_name = "clause_size_imctk_abc_sys"]
+    pub fn clause_size(c: *mut clause) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "clause_begin_imctk_abc_sys"]
+    pub fn clause_begin(c: *mut clause) -> *mut lit;
+}
+extern "C" {
+    #[link_name = "clause_end_imctk_abc_sys"]
+    pub fn clause_end(c: *mut clause) -> *mut lit;
+}
+extern "C" {
+    #[link_name = "clause_print__imctk_abc_sys"]
+    pub fn clause_print_(c: *mut clause);
+}
+extern "C" {
+    #[link_name = "Sat_MemCountL_imctk_abc_sys"]
+    pub fn Sat_MemCountL(p: *mut Sat_Mem_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Sat_MemAlloc__imctk_abc_sys"]
+    pub fn Sat_MemAlloc_(p: *mut Sat_Mem_t, nPageSize: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[link_name = "Sat_MemAlloc_imctk_abc_sys"]
+    pub fn Sat_MemAlloc(nPageSize: ::std::os::raw::c_int) -> *mut Sat_Mem_t;
+}
+extern "C" {
+    #[link_name = "Sat_MemRestart_imctk_abc_sys"]
+    pub fn Sat_MemRestart(p: *mut Sat_Mem_t);
+}
+extern "C" {
+    #[link_name = "Sat_MemBookMark_imctk_abc_sys"]
+    pub fn Sat_MemBookMark(p: *mut Sat_Mem_t);
+}
+extern "C" {
+    #[link_name = "Sat_MemRollBack_imctk_abc_sys"]
+    pub fn Sat_MemRollBack(p: *mut Sat_Mem_t);
+}
+extern "C" {
+    #[link_name = "Sat_MemFree__imctk_abc_sys"]
+    pub fn Sat_MemFree_(p: *mut Sat_Mem_t);
+}
+extern "C" {
+    #[link_name = "Sat_MemFree_imctk_abc_sys"]
+    pub fn Sat_MemFree(p: *mut Sat_Mem_t);
+}
+extern "C" {
+    #[link_name = "Sat_MemAppend_imctk_abc_sys"]
+    pub fn Sat_MemAppend(
+        p: *mut Sat_Mem_t,
+        pArray: *mut ::std::os::raw::c_int,
+        nSize: ::std::os::raw::c_int,
+        lrn: ::std::os::raw::c_int,
+        fPlus1: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "Sat_MemShrink_imctk_abc_sys"]
+    pub fn Sat_MemShrink(p: *mut Sat_Mem_t, h: ::std::os::raw::c_int, lrn: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[link_name = "Sat_MemCompactLearned_imctk_abc_sys"]
+    pub fn Sat_MemCompactLearned(
+        p: *mut Sat_Mem_t,
+        fDoMove: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+pub type xdbl = word;
+extern "C" {
+    #[link_name = "Xdbl_Exp_imctk_abc_sys"]
+    pub fn Xdbl_Exp(a: xdbl) -> word;
+}
+extern "C" {
+    #[link_name = "Xdbl_Mnt_imctk_abc_sys"]
+    pub fn Xdbl_Mnt(a: xdbl) -> word;
+}
+extern "C" {
+    #[link_name = "Xdbl_Create_imctk_abc_sys"]
+    pub fn Xdbl_Create(Exp: word, Mnt: word) -> xdbl;
+}
+extern "C" {
+    #[link_name = "Xdbl_Const1_imctk_abc_sys"]
+    pub fn Xdbl_Const1() -> xdbl;
+}
+extern "C" {
+    #[link_name = "Xdbl_Const2_imctk_abc_sys"]
+    pub fn Xdbl_Const2() -> xdbl;
+}
+extern "C" {
+    #[link_name = "Xdbl_Const3_imctk_abc_sys"]
+    pub fn Xdbl_Const3() -> xdbl;
+}
+extern "C" {
+    #[link_name = "Xdbl_Const12_imctk_abc_sys"]
+    pub fn Xdbl_Const12() -> xdbl;
+}
+extern "C" {
+    #[link_name = "Xdbl_Const1point5_imctk_abc_sys"]
+    pub fn Xdbl_Const1point5() -> xdbl;
+}
+extern "C" {
+    #[link_name = "Xdbl_Const2point5_imctk_abc_sys"]
+    pub fn Xdbl_Const2point5() -> xdbl;
+}
+extern "C" {
+    #[link_name = "Xdbl_Maximum_imctk_abc_sys"]
+    pub fn Xdbl_Maximum() -> xdbl;
+}
+extern "C" {
+    #[link_name = "Xdbl_ToDouble_imctk_abc_sys"]
+    pub fn Xdbl_ToDouble(a: xdbl) -> f64;
+}
+extern "C" {
+    #[link_name = "Xdbl_FromDouble_imctk_abc_sys"]
+    pub fn Xdbl_FromDouble(a: f64) -> xdbl;
+}
+extern "C" {
+    #[link_name = "Xdbl_Add_imctk_abc_sys"]
+    pub fn Xdbl_Add(a: xdbl, b: xdbl) -> xdbl;
+}
+extern "C" {
+    #[link_name = "Xdbl_Mul_imctk_abc_sys"]
+    pub fn Xdbl_Mul(a: xdbl, b: xdbl) -> xdbl;
+}
+extern "C" {
+    #[link_name = "Xdbl_Div_imctk_abc_sys"]
+    pub fn Xdbl_Div(a: xdbl, Deg2: ::std::os::raw::c_uint) -> xdbl;
+}
+extern "C" {
+    #[link_name = "Xdbl_Test_imctk_abc_sys"]
+    pub fn Xdbl_Test();
+}
+pub type sat_solver = sat_solver_t;
+extern "C" {
+    pub fn sat_solver_new() -> *mut sat_solver;
+}
+extern "C" {
+    pub fn zsat_solver_new_seed(seed: f64) -> *mut sat_solver;
+}
+extern "C" {
+    pub fn sat_solver_delete(s: *mut sat_solver);
+}
+extern "C" {
+    pub fn sat_solver_addclause(
+        s: *mut sat_solver,
+        begin: *mut lit,
+        end: *mut lit,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn sat_solver_clause_new(
+        s: *mut sat_solver,
+        begin: *mut lit,
+        end: *mut lit,
+        learnt: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn sat_solver_simplify(s: *mut sat_solver) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn sat_solver_solve(
+        s: *mut sat_solver,
+        begin: *mut lit,
+        end: *mut lit,
+        nConfLimit: ABC_INT64_T,
+        nInsLimit: ABC_INT64_T,
+        nConfLimitGlobal: ABC_INT64_T,
+        nInsLimitGlobal: ABC_INT64_T,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn sat_solver_solve_internal(s: *mut sat_solver) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn sat_solver_solve_lexsat(
+        s: *mut sat_solver,
+        pLits: *mut ::std::os::raw::c_int,
+        nLits: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn sat_solver_minimize_assumptions(
+        s: *mut sat_solver,
+        pLits: *mut ::std::os::raw::c_int,
+        nLits: ::std::os::raw::c_int,
+        nConfLimit: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn sat_solver_minimize_assumptions2(
+        s: *mut sat_solver,
+        pLits: *mut ::std::os::raw::c_int,
+        nLits: ::std::os::raw::c_int,
+        nConfLimit: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn sat_solver_push(s: *mut sat_solver, p: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn sat_solver_pop(s: *mut sat_solver);
+}
+extern "C" {
+    pub fn sat_solver_set_resource_limits(
+        s: *mut sat_solver,
+        nConfLimit: ABC_INT64_T,
+        nInsLimit: ABC_INT64_T,
+        nConfLimitGlobal: ABC_INT64_T,
+        nInsLimitGlobal: ABC_INT64_T,
+    );
+}
+extern "C" {
+    pub fn sat_solver_restart(s: *mut sat_solver);
+}
+extern "C" {
+    pub fn zsat_solver_restart_seed(s: *mut sat_solver, seed: f64);
+}
+extern "C" {
+    pub fn sat_solver_rollback(s: *mut sat_solver);
+}
+extern "C" {
+    pub fn sat_solver_nvars(s: *mut sat_solver) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn sat_solver_nclauses(s: *mut sat_solver) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn sat_solver_nconflicts(s: *mut sat_solver) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn sat_solver_memory(s: *mut sat_solver) -> f64;
+}
+extern "C" {
+    pub fn sat_solver_count_assigned(s: *mut sat_solver) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn sat_solver_addvar(s: *mut sat_solver) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn sat_solver_setnvars(s: *mut sat_solver, n: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn sat_solver_get_var_value(
+        s: *mut sat_solver,
+        v: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn sat_solver_set_var_activity(
+        s: *mut sat_solver,
+        pVars: *mut ::std::os::raw::c_int,
+        nVars: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Sat_SolverWriteDimacs(
+        p: *mut sat_solver,
+        pFileName: *mut ::std::os::raw::c_char,
+        assumptionsBegin: *mut lit,
+        assumptionsEnd: *mut lit,
+        incrementVars: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Sat_SolverPrintStats(pFile: *mut FILE, p: *mut sat_solver);
+}
+extern "C" {
+    pub fn Sat_SolverGetModel(
+        p: *mut sat_solver,
+        pVars: *mut ::std::os::raw::c_int,
+        nVars: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Sat_SolverDoubleClauses(p: *mut sat_solver, iVar: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Sat_SolverTraceStart(pSat: *mut sat_solver, pName: *mut ::std::os::raw::c_char);
+}
+extern "C" {
+    pub fn Sat_SolverTraceStop(pSat: *mut sat_solver);
+}
+extern "C" {
+    pub fn Sat_SolverTraceWrite(
+        pSat: *mut sat_solver,
+        pBeg: *mut ::std::os::raw::c_int,
+        pEnd: *mut ::std::os::raw::c_int,
+        fRoot: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn sat_solver_store_alloc(s: *mut sat_solver);
+}
+extern "C" {
+    pub fn sat_solver_store_write(s: *mut sat_solver, pFileName: *mut ::std::os::raw::c_char);
+}
+extern "C" {
+    pub fn sat_solver_store_free(s: *mut sat_solver);
+}
+extern "C" {
+    pub fn sat_solver_store_mark_roots(s: *mut sat_solver);
+}
+extern "C" {
+    pub fn sat_solver_store_mark_clauses_a(s: *mut sat_solver);
+}
+extern "C" {
+    pub fn sat_solver_store_release(s: *mut sat_solver) -> *mut ::std::os::raw::c_void;
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct varinfo_t {
+    _unused: [u8; 0],
+}
+pub type varinfo = varinfo_t;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct sat_solver_t {
+    pub size: ::std::os::raw::c_int,
+    pub cap: ::std::os::raw::c_int,
+    pub qhead: ::std::os::raw::c_int,
+    pub qtail: ::std::os::raw::c_int,
+    pub Mem: Sat_Mem_t,
+    pub hLearnts: ::std::os::raw::c_int,
+    pub hBinary: ::std::os::raw::c_int,
+    pub binary: *mut clause,
+    pub wlists: *mut veci,
+    pub iVarPivot: ::std::os::raw::c_int,
+    pub iTrailPivot: ::std::os::raw::c_int,
+    pub hProofPivot: ::std::os::raw::c_int,
+    pub VarActType: ::std::os::raw::c_int,
+    pub ClaActType: ::std::os::raw::c_int,
+    pub var_inc: word,
+    pub var_inc2: word,
+    pub var_decay: word,
+    pub activity: *mut word,
+    pub activity2: *mut word,
+    pub cla_inc: ::std::os::raw::c_uint,
+    pub cla_decay: ::std::os::raw::c_uint,
+    pub act_clas: veci,
+    pub pFreqs: *mut ::std::os::raw::c_char,
+    pub nVarUsed: ::std::os::raw::c_int,
+    pub levels: *mut ::std::os::raw::c_int,
+    pub assigns: *mut ::std::os::raw::c_char,
+    pub polarity: *mut ::std::os::raw::c_char,
+    pub tags: *mut ::std::os::raw::c_char,
+    pub loads: *mut ::std::os::raw::c_char,
+    pub orderpos: *mut ::std::os::raw::c_int,
+    pub reasons: *mut ::std::os::raw::c_int,
+    pub trail: *mut lit,
+    pub tagged: veci,
+    pub stack: veci,
+    pub order: veci,
+    pub trail_lim: veci,
+    pub model: *mut ::std::os::raw::c_int,
+    pub conf_final: veci,
+    pub root_level: ::std::os::raw::c_int,
+    pub simpdb_assigns: ::std::os::raw::c_int,
+    pub simpdb_props: ::std::os::raw::c_int,
+    pub random_seed: f64,
+    pub progress_estimate: f64,
+    pub verbosity: ::std::os::raw::c_int,
+    pub fVerbose: ::std::os::raw::c_int,
+    pub fPrintClause: ::std::os::raw::c_int,
+    pub stats: stats_t,
+    pub nLearntMax: ::std::os::raw::c_int,
+    pub nLearntStart: ::std::os::raw::c_int,
+    pub nLearntDelta: ::std::os::raw::c_int,
+    pub nLearntRatio: ::std::os::raw::c_int,
+    pub nDBreduces: ::std::os::raw::c_int,
+    pub nConfLimit: ABC_INT64_T,
+    pub nInsLimit: ABC_INT64_T,
+    pub nRuntimeLimit: abctime,
+    pub act_vars: veci,
+    pub factors: *mut f64,
+    pub nRestarts: ::std::os::raw::c_int,
+    pub nCalls: ::std::os::raw::c_int,
+    pub nCalls2: ::std::os::raw::c_int,
+    pub unit_lits: veci,
+    pub pivot_vars: veci,
+    pub fSkipSimplify: ::std::os::raw::c_int,
+    pub fNotUseRandom: ::std::os::raw::c_int,
+    pub fNoRestarts: ::std::os::raw::c_int,
+    pub pGlobalVars: *mut ::std::os::raw::c_int,
+    pub pStore: *mut ::std::os::raw::c_void,
+    pub fSolved: ::std::os::raw::c_int,
+    pub pFile: *mut FILE,
+    pub nClauses: ::std::os::raw::c_int,
+    pub nRoots: ::std::os::raw::c_int,
+    pub temp_clause: veci,
+    pub user_vars: veci,
+    pub user_values: veci,
+    pub pCnfMan: *mut ::std::os::raw::c_void,
+    pub pCnfFunc: ::std::option::Option<
+        unsafe extern "C" fn(
+            p: *mut ::std::os::raw::c_void,
+            arg1: ::std::os::raw::c_int,
+        ) -> ::std::os::raw::c_int,
+    >,
+    pub RunId: ::std::os::raw::c_int,
+    pub pFuncStop: ::std::option::Option<
+        unsafe extern "C" fn(arg1: ::std::os::raw::c_int) -> ::std::os::raw::c_int,
+    >,
+}
+#[test]
+fn bindgen_test_layout_sat_solver_t() {
+    const UNINIT: ::std::mem::MaybeUninit<sat_solver_t> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<sat_solver_t>(),
+        728usize,
+        concat!("Size of: ", stringify!(sat_solver_t))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<sat_solver_t>(),
+        8usize,
+        concat!("Alignment of ", stringify!(sat_solver_t))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).size) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(size)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).cap) as usize - ptr as usize },
+        4usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(cap)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).qhead) as usize - ptr as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(qhead)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).qtail) as usize - ptr as usize },
+        12usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(qtail)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).Mem) as usize - ptr as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(Mem)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).hLearnts) as usize - ptr as usize },
+        72usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(hLearnts)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).hBinary) as usize - ptr as usize },
+        76usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(hBinary)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).binary) as usize - ptr as usize },
+        80usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(binary)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).wlists) as usize - ptr as usize },
+        88usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(wlists)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).iVarPivot) as usize - ptr as usize },
+        96usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(iVarPivot)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).iTrailPivot) as usize - ptr as usize },
+        100usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(iTrailPivot)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).hProofPivot) as usize - ptr as usize },
+        104usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(hProofPivot)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).VarActType) as usize - ptr as usize },
+        108usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(VarActType)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).ClaActType) as usize - ptr as usize },
+        112usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(ClaActType)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).var_inc) as usize - ptr as usize },
+        120usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(var_inc)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).var_inc2) as usize - ptr as usize },
+        128usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(var_inc2)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).var_decay) as usize - ptr as usize },
+        136usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(var_decay)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).activity) as usize - ptr as usize },
+        144usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(activity)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).activity2) as usize - ptr as usize },
+        152usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(activity2)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).cla_inc) as usize - ptr as usize },
+        160usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(cla_inc)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).cla_decay) as usize - ptr as usize },
+        164usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(cla_decay)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).act_clas) as usize - ptr as usize },
+        168usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(act_clas)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pFreqs) as usize - ptr as usize },
+        184usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(pFreqs)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nVarUsed) as usize - ptr as usize },
+        192usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(nVarUsed)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).levels) as usize - ptr as usize },
+        200usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(levels)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).assigns) as usize - ptr as usize },
+        208usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(assigns)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).polarity) as usize - ptr as usize },
+        216usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(polarity)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).tags) as usize - ptr as usize },
+        224usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(tags)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).loads) as usize - ptr as usize },
+        232usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(loads)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).orderpos) as usize - ptr as usize },
+        240usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(orderpos)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).reasons) as usize - ptr as usize },
+        248usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(reasons)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).trail) as usize - ptr as usize },
+        256usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(trail)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).tagged) as usize - ptr as usize },
+        264usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(tagged)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).stack) as usize - ptr as usize },
+        280usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(stack)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).order) as usize - ptr as usize },
+        296usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(order)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).trail_lim) as usize - ptr as usize },
+        312usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(trail_lim)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).model) as usize - ptr as usize },
+        328usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(model)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).conf_final) as usize - ptr as usize },
+        336usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(conf_final)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).root_level) as usize - ptr as usize },
+        352usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(root_level)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).simpdb_assigns) as usize - ptr as usize },
+        356usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(simpdb_assigns)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).simpdb_props) as usize - ptr as usize },
+        360usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(simpdb_props)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).random_seed) as usize - ptr as usize },
+        368usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(random_seed)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).progress_estimate) as usize - ptr as usize },
+        376usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(progress_estimate)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).verbosity) as usize - ptr as usize },
+        384usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(verbosity)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fVerbose) as usize - ptr as usize },
+        388usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(fVerbose)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fPrintClause) as usize - ptr as usize },
+        392usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(fPrintClause)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).stats) as usize - ptr as usize },
+        400usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(stats)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nLearntMax) as usize - ptr as usize },
+        472usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(nLearntMax)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nLearntStart) as usize - ptr as usize },
+        476usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(nLearntStart)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nLearntDelta) as usize - ptr as usize },
+        480usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(nLearntDelta)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nLearntRatio) as usize - ptr as usize },
+        484usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(nLearntRatio)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nDBreduces) as usize - ptr as usize },
+        488usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(nDBreduces)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nConfLimit) as usize - ptr as usize },
+        496usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(nConfLimit)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nInsLimit) as usize - ptr as usize },
+        504usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(nInsLimit)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nRuntimeLimit) as usize - ptr as usize },
+        512usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(nRuntimeLimit)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).act_vars) as usize - ptr as usize },
+        520usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(act_vars)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).factors) as usize - ptr as usize },
+        536usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(factors)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nRestarts) as usize - ptr as usize },
+        544usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(nRestarts)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nCalls) as usize - ptr as usize },
+        548usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(nCalls)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nCalls2) as usize - ptr as usize },
+        552usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(nCalls2)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).unit_lits) as usize - ptr as usize },
+        560usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(unit_lits)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pivot_vars) as usize - ptr as usize },
+        576usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(pivot_vars)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fSkipSimplify) as usize - ptr as usize },
+        592usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(fSkipSimplify)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fNotUseRandom) as usize - ptr as usize },
+        596usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(fNotUseRandom)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fNoRestarts) as usize - ptr as usize },
+        600usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(fNoRestarts)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pGlobalVars) as usize - ptr as usize },
+        608usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(pGlobalVars)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pStore) as usize - ptr as usize },
+        616usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(pStore)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fSolved) as usize - ptr as usize },
+        624usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(fSolved)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pFile) as usize - ptr as usize },
+        632usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(pFile)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nClauses) as usize - ptr as usize },
+        640usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(nClauses)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nRoots) as usize - ptr as usize },
+        644usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(nRoots)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).temp_clause) as usize - ptr as usize },
+        648usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(temp_clause)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).user_vars) as usize - ptr as usize },
+        664usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(user_vars)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).user_values) as usize - ptr as usize },
+        680usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(user_values)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pCnfMan) as usize - ptr as usize },
+        696usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(pCnfMan)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pCnfFunc) as usize - ptr as usize },
+        704usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(pCnfFunc)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).RunId) as usize - ptr as usize },
+        712usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(RunId)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pFuncStop) as usize - ptr as usize },
+        720usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(sat_solver_t),
+            "::",
+            stringify!(pFuncStop)
+        )
+    );
+}
+extern "C" {
+    #[link_name = "clause_read_imctk_abc_sys"]
+    pub fn clause_read(s: *mut sat_solver, h: cla) -> *mut clause;
+}
+extern "C" {
+    #[link_name = "sat_solver_var_value_imctk_abc_sys"]
+    pub fn sat_solver_var_value(
+        s: *mut sat_solver,
+        v: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "sat_solver_var_literal_imctk_abc_sys"]
+    pub fn sat_solver_var_literal(
+        s: *mut sat_solver,
+        v: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "sat_solver_flip_print_clause_imctk_abc_sys"]
+    pub fn sat_solver_flip_print_clause(s: *mut sat_solver);
+}
+extern "C" {
+    #[link_name = "sat_solver_act_var_clear_imctk_abc_sys"]
+    pub fn sat_solver_act_var_clear(s: *mut sat_solver);
+}
+extern "C" {
+    #[link_name = "sat_solver_compress_imctk_abc_sys"]
+    pub fn sat_solver_compress(s: *mut sat_solver);
+}
+extern "C" {
+    #[link_name = "sat_solver_delete_p_imctk_abc_sys"]
+    pub fn sat_solver_delete_p(ps: *mut *mut sat_solver);
+}
+extern "C" {
+    #[link_name = "sat_solver_clean_polarity_imctk_abc_sys"]
+    pub fn sat_solver_clean_polarity(
+        s: *mut sat_solver,
+        pVars: *mut ::std::os::raw::c_int,
+        nVars: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    #[link_name = "sat_solver_set_polarity_imctk_abc_sys"]
+    pub fn sat_solver_set_polarity(
+        s: *mut sat_solver,
+        pVars: *mut ::std::os::raw::c_int,
+        nVars: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    #[link_name = "sat_solver_set_literal_polarity_imctk_abc_sys"]
+    pub fn sat_solver_set_literal_polarity(
+        s: *mut sat_solver,
+        pLits: *mut ::std::os::raw::c_int,
+        nLits: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    #[link_name = "sat_solver_final_imctk_abc_sys"]
+    pub fn sat_solver_final(
+        s: *mut sat_solver,
+        ppArray: *mut *mut ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "sat_solver_randomize_imctk_abc_sys"]
+    pub fn sat_solver_randomize(
+        pSat: *mut sat_solver,
+        iVar: ::std::os::raw::c_int,
+        nVars: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    #[link_name = "sat_solver_set_runtime_limit_imctk_abc_sys"]
+    pub fn sat_solver_set_runtime_limit(s: *mut sat_solver, Limit: abctime) -> abctime;
+}
+extern "C" {
+    #[link_name = "sat_solver_set_random_imctk_abc_sys"]
+    pub fn sat_solver_set_random(
+        s: *mut sat_solver,
+        fNotUseRandom: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "sat_solver_bookmark_imctk_abc_sys"]
+    pub fn sat_solver_bookmark(s: *mut sat_solver);
+}
+extern "C" {
+    #[link_name = "sat_solver_set_pivot_variables_imctk_abc_sys"]
+    pub fn sat_solver_set_pivot_variables(
+        s: *mut sat_solver,
+        pPivots: *mut ::std::os::raw::c_int,
+        nPivots: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    #[link_name = "sat_solver_count_usedvars_imctk_abc_sys"]
+    pub fn sat_solver_count_usedvars(s: *mut sat_solver) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "sat_solver_set_runid_imctk_abc_sys"]
+    pub fn sat_solver_set_runid(s: *mut sat_solver, id: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[link_name = "sat_solver_set_stop_func_imctk_abc_sys"]
+    pub fn sat_solver_set_stop_func(
+        s: *mut sat_solver,
+        fnct: ::std::option::Option<
+            unsafe extern "C" fn(arg1: ::std::os::raw::c_int) -> ::std::os::raw::c_int,
+        >,
+    );
+}
+extern "C" {
+    #[link_name = "sat_solver_add_const_imctk_abc_sys"]
+    pub fn sat_solver_add_const(
+        pSat: *mut sat_solver,
+        iVar: ::std::os::raw::c_int,
+        fCompl: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "sat_solver_add_buffer_imctk_abc_sys"]
+    pub fn sat_solver_add_buffer(
+        pSat: *mut sat_solver,
+        iVarA: ::std::os::raw::c_int,
+        iVarB: ::std::os::raw::c_int,
+        fCompl: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "sat_solver_add_buffer_enable_imctk_abc_sys"]
+    pub fn sat_solver_add_buffer_enable(
+        pSat: *mut sat_solver,
+        iVarA: ::std::os::raw::c_int,
+        iVarB: ::std::os::raw::c_int,
+        iVarEn: ::std::os::raw::c_int,
+        fCompl: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "sat_solver_add_and_imctk_abc_sys"]
+    pub fn sat_solver_add_and(
+        pSat: *mut sat_solver,
+        iVar: ::std::os::raw::c_int,
+        iVar0: ::std::os::raw::c_int,
+        iVar1: ::std::os::raw::c_int,
+        fCompl0: ::std::os::raw::c_int,
+        fCompl1: ::std::os::raw::c_int,
+        fCompl: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "sat_solver_add_xor_imctk_abc_sys"]
+    pub fn sat_solver_add_xor(
+        pSat: *mut sat_solver,
+        iVarA: ::std::os::raw::c_int,
+        iVarB: ::std::os::raw::c_int,
+        iVarC: ::std::os::raw::c_int,
+        fCompl: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "sat_solver_add_mux_imctk_abc_sys"]
+    pub fn sat_solver_add_mux(
+        pSat: *mut sat_solver,
+        iVarZ: ::std::os::raw::c_int,
+        iVarC: ::std::os::raw::c_int,
+        iVarT: ::std::os::raw::c_int,
+        iVarE: ::std::os::raw::c_int,
+        iComplC: ::std::os::raw::c_int,
+        iComplT: ::std::os::raw::c_int,
+        iComplE: ::std::os::raw::c_int,
+        iComplZ: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "sat_solver_add_mux41_imctk_abc_sys"]
+    pub fn sat_solver_add_mux41(
+        pSat: *mut sat_solver,
+        iVarZ: ::std::os::raw::c_int,
+        iVarC0: ::std::os::raw::c_int,
+        iVarC1: ::std::os::raw::c_int,
+        iVarD0: ::std::os::raw::c_int,
+        iVarD1: ::std::os::raw::c_int,
+        iVarD2: ::std::os::raw::c_int,
+        iVarD3: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "sat_solver_add_xor_and_imctk_abc_sys"]
+    pub fn sat_solver_add_xor_and(
+        pSat: *mut sat_solver,
+        iVarF: ::std::os::raw::c_int,
+        iVarA: ::std::os::raw::c_int,
+        iVarB: ::std::os::raw::c_int,
+        iVarC: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "sat_solver_add_constraint_imctk_abc_sys"]
+    pub fn sat_solver_add_constraint(
+        pSat: *mut sat_solver,
+        iVar: ::std::os::raw::c_int,
+        iVar2: ::std::os::raw::c_int,
+        fCompl: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[link_name = "sat_solver_add_half_sorter_imctk_abc_sys"]
+    pub fn sat_solver_add_half_sorter(
+        pSat: *mut sat_solver,
+        iVarA: ::std::os::raw::c_int,
+        iVarB: ::std::os::raw::c_int,
+        iVar0: ::std::os::raw::c_int,
+        iVar1: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Txs_Man_t_ {
+    _unused: [u8; 0],
+}
+pub type Txs_Man_t = Txs_Man_t_;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Txs3_Man_t_ {
+    _unused: [u8; 0],
+}
+pub type Txs3_Man_t = Txs3_Man_t_;
+pub type Pdr_Set_t = Pdr_Set_t_;
+#[repr(C)]
+#[derive(Debug)]
+pub struct Pdr_Set_t_ {
+    pub Sign: word,
+    pub nRefs: ::std::os::raw::c_int,
+    pub iBound: ::std::os::raw::c_int,
+    pub nTotal: ::std::os::raw::c_int,
+    pub nLits: ::std::os::raw::c_int,
+    pub Lits: __IncompleteArrayField<::std::os::raw::c_int>,
+}
+#[test]
+fn bindgen_test_layout_Pdr_Set_t_() {
+    const UNINIT: ::std::mem::MaybeUninit<Pdr_Set_t_> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<Pdr_Set_t_>(),
+        24usize,
+        concat!("Size of: ", stringify!(Pdr_Set_t_))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<Pdr_Set_t_>(),
+        8usize,
+        concat!("Alignment of ", stringify!(Pdr_Set_t_))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).Sign) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Set_t_),
+            "::",
+            stringify!(Sign)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nRefs) as usize - ptr as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Set_t_),
+            "::",
+            stringify!(nRefs)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).iBound) as usize - ptr as usize },
+        12usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Set_t_),
+            "::",
+            stringify!(iBound)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nTotal) as usize - ptr as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Set_t_),
+            "::",
+            stringify!(nTotal)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nLits) as usize - ptr as usize },
+        20usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Set_t_),
+            "::",
+            stringify!(nLits)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).Lits) as usize - ptr as usize },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Set_t_),
+            "::",
+            stringify!(Lits)
+        )
+    );
+}
+pub type Pdr_Obl_t = Pdr_Obl_t_;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Pdr_Obl_t_ {
+    pub iFrame: ::std::os::raw::c_int,
+    pub prio: ::std::os::raw::c_int,
+    pub nRefs: ::std::os::raw::c_int,
+    pub pState: *mut Pdr_Set_t,
+    pub pNext: *mut Pdr_Obl_t,
+    pub pLink: *mut Pdr_Obl_t,
+}
+#[test]
+fn bindgen_test_layout_Pdr_Obl_t_() {
+    const UNINIT: ::std::mem::MaybeUninit<Pdr_Obl_t_> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<Pdr_Obl_t_>(),
+        40usize,
+        concat!("Size of: ", stringify!(Pdr_Obl_t_))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<Pdr_Obl_t_>(),
+        8usize,
+        concat!("Alignment of ", stringify!(Pdr_Obl_t_))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).iFrame) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Obl_t_),
+            "::",
+            stringify!(iFrame)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).prio) as usize - ptr as usize },
+        4usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Obl_t_),
+            "::",
+            stringify!(prio)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nRefs) as usize - ptr as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Obl_t_),
+            "::",
+            stringify!(nRefs)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pState) as usize - ptr as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Obl_t_),
+            "::",
+            stringify!(pState)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pNext) as usize - ptr as usize },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Obl_t_),
+            "::",
+            stringify!(pNext)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pLink) as usize - ptr as usize },
+        32usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Obl_t_),
+            "::",
+            stringify!(pLink)
+        )
+    );
+}
+pub type Pdr_Man_t = Pdr_Man_t_;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Pdr_Man_t_ {
+    pub pPars: *mut Pdr_Par_t,
+    pub pAig: *mut Aig_Man_t,
+    pub pGia: *mut Gia_Man_t,
+    pub pCnfMan: *mut Cnf_Man_t,
+    pub pCnf1: *mut Cnf_Dat_t,
+    pub vVar2Reg: *mut Vec_Int_t,
+    pub pCnf2: *mut Cnf_Dat_t,
+    pub pvId2Vars: *mut Vec_Int_t,
+    pub vVar2Ids: Vec_Ptr_t,
+    pub vVLits: *mut Vec_Wec_t,
+    pub iOutCur: ::std::os::raw::c_int,
+    pub nPrioShift: ::std::os::raw::c_int,
+    pub vCexes: *mut Vec_Ptr_t,
+    pub vSolvers: *mut Vec_Ptr_t,
+    pub vClauses: *mut Vec_Vec_t,
+    pub pQueue: *mut Pdr_Obl_t,
+    pub pOrder: *mut ::std::os::raw::c_int,
+    pub vActVars: *mut Vec_Int_t,
+    pub iUseFrame: ::std::os::raw::c_int,
+    pub nAbsFlops: ::std::os::raw::c_int,
+    pub vAbsFlops: *mut Vec_Int_t,
+    pub vMapFf2Ppi: *mut Vec_Int_t,
+    pub vMapPpi2Ff: *mut Vec_Int_t,
+    pub nCexes: ::std::os::raw::c_int,
+    pub nCexesTotal: ::std::os::raw::c_int,
+    pub pTxs3: *mut Txs3_Man_t,
+    pub vPrio: *mut Vec_Int_t,
+    pub vLits: *mut Vec_Int_t,
+    pub vCiObjs: *mut Vec_Int_t,
+    pub vCoObjs: *mut Vec_Int_t,
+    pub vCiVals: *mut Vec_Int_t,
+    pub vCoVals: *mut Vec_Int_t,
+    pub vNodes: *mut Vec_Int_t,
+    pub vUndo: *mut Vec_Int_t,
+    pub vVisits: *mut Vec_Int_t,
+    pub vCi2Rem: *mut Vec_Int_t,
+    pub vRes: *mut Vec_Int_t,
+    pub pTime4Outs: *mut abctime,
+    pub vInfCubes: *mut Vec_Ptr_t,
+    pub nBlocks: ::std::os::raw::c_int,
+    pub nObligs: ::std::os::raw::c_int,
+    pub nCubes: ::std::os::raw::c_int,
+    pub nCalls: ::std::os::raw::c_int,
+    pub nCallsS: ::std::os::raw::c_int,
+    pub nCallsU: ::std::os::raw::c_int,
+    pub nStarts: ::std::os::raw::c_int,
+    pub nFrames: ::std::os::raw::c_int,
+    pub nCasesSS: ::std::os::raw::c_int,
+    pub nCasesSU: ::std::os::raw::c_int,
+    pub nCasesUS: ::std::os::raw::c_int,
+    pub nCasesUU: ::std::os::raw::c_int,
+    pub nQueCur: ::std::os::raw::c_int,
+    pub nQueMax: ::std::os::raw::c_int,
+    pub nQueLim: ::std::os::raw::c_int,
+    pub nQueLimStep: ::std::os::raw::c_int,
+    pub nXsimRuns: ::std::os::raw::c_int,
+    pub nXsimLits: ::std::os::raw::c_int,
+    pub nInfClauses: ::std::os::raw::c_int,
+    pub fNewInfClauses: ::std::os::raw::c_int,
+    pub timeToStop: abctime,
+    pub timeToStopOne: abctime,
+    pub tSat: abctime,
+    pub tSatSat: abctime,
+    pub tSatUnsat: abctime,
+    pub tGeneral: abctime,
+    pub tPush: abctime,
+    pub tTsim: abctime,
+    pub tContain: abctime,
+    pub tCnf: abctime,
+    pub tAbs: abctime,
+    pub tTotal: abctime,
+    pub tStart: abctime,
+}
+#[test]
+fn bindgen_test_layout_Pdr_Man_t_() {
+    const UNINIT: ::std::mem::MaybeUninit<Pdr_Man_t_> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<Pdr_Man_t_>(),
+        480usize,
+        concat!("Size of: ", stringify!(Pdr_Man_t_))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<Pdr_Man_t_>(),
+        8usize,
+        concat!("Alignment of ", stringify!(Pdr_Man_t_))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pPars) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(pPars)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pAig) as usize - ptr as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(pAig)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pGia) as usize - ptr as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(pGia)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pCnfMan) as usize - ptr as usize },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(pCnfMan)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pCnf1) as usize - ptr as usize },
+        32usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(pCnf1)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vVar2Reg) as usize - ptr as usize },
+        40usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(vVar2Reg)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pCnf2) as usize - ptr as usize },
+        48usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(pCnf2)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pvId2Vars) as usize - ptr as usize },
+        56usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(pvId2Vars)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vVar2Ids) as usize - ptr as usize },
+        64usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(vVar2Ids)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vVLits) as usize - ptr as usize },
+        80usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(vVLits)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).iOutCur) as usize - ptr as usize },
+        88usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(iOutCur)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nPrioShift) as usize - ptr as usize },
+        92usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(nPrioShift)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vCexes) as usize - ptr as usize },
+        96usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(vCexes)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vSolvers) as usize - ptr as usize },
+        104usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(vSolvers)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vClauses) as usize - ptr as usize },
+        112usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(vClauses)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pQueue) as usize - ptr as usize },
+        120usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(pQueue)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pOrder) as usize - ptr as usize },
+        128usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(pOrder)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vActVars) as usize - ptr as usize },
+        136usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(vActVars)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).iUseFrame) as usize - ptr as usize },
+        144usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(iUseFrame)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nAbsFlops) as usize - ptr as usize },
+        148usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(nAbsFlops)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vAbsFlops) as usize - ptr as usize },
+        152usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(vAbsFlops)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vMapFf2Ppi) as usize - ptr as usize },
+        160usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(vMapFf2Ppi)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vMapPpi2Ff) as usize - ptr as usize },
+        168usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(vMapPpi2Ff)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nCexes) as usize - ptr as usize },
+        176usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(nCexes)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nCexesTotal) as usize - ptr as usize },
+        180usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(nCexesTotal)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pTxs3) as usize - ptr as usize },
+        184usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(pTxs3)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vPrio) as usize - ptr as usize },
+        192usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(vPrio)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vLits) as usize - ptr as usize },
+        200usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(vLits)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vCiObjs) as usize - ptr as usize },
+        208usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(vCiObjs)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vCoObjs) as usize - ptr as usize },
+        216usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(vCoObjs)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vCiVals) as usize - ptr as usize },
+        224usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(vCiVals)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vCoVals) as usize - ptr as usize },
+        232usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(vCoVals)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vNodes) as usize - ptr as usize },
+        240usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(vNodes)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vUndo) as usize - ptr as usize },
+        248usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(vUndo)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vVisits) as usize - ptr as usize },
+        256usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(vVisits)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vCi2Rem) as usize - ptr as usize },
+        264usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(vCi2Rem)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vRes) as usize - ptr as usize },
+        272usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(vRes)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pTime4Outs) as usize - ptr as usize },
+        280usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(pTime4Outs)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).vInfCubes) as usize - ptr as usize },
+        288usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(vInfCubes)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nBlocks) as usize - ptr as usize },
+        296usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(nBlocks)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nObligs) as usize - ptr as usize },
+        300usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(nObligs)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nCubes) as usize - ptr as usize },
+        304usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(nCubes)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nCalls) as usize - ptr as usize },
+        308usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(nCalls)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nCallsS) as usize - ptr as usize },
+        312usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(nCallsS)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nCallsU) as usize - ptr as usize },
+        316usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(nCallsU)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nStarts) as usize - ptr as usize },
+        320usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(nStarts)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nFrames) as usize - ptr as usize },
+        324usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(nFrames)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nCasesSS) as usize - ptr as usize },
+        328usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(nCasesSS)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nCasesSU) as usize - ptr as usize },
+        332usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(nCasesSU)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nCasesUS) as usize - ptr as usize },
+        336usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(nCasesUS)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nCasesUU) as usize - ptr as usize },
+        340usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(nCasesUU)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nQueCur) as usize - ptr as usize },
+        344usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(nQueCur)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nQueMax) as usize - ptr as usize },
+        348usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(nQueMax)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nQueLim) as usize - ptr as usize },
+        352usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(nQueLim)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nQueLimStep) as usize - ptr as usize },
+        356usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(nQueLimStep)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nXsimRuns) as usize - ptr as usize },
+        360usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(nXsimRuns)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nXsimLits) as usize - ptr as usize },
+        364usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(nXsimLits)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).nInfClauses) as usize - ptr as usize },
+        368usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(nInfClauses)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).fNewInfClauses) as usize - ptr as usize },
+        372usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(fNewInfClauses)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).timeToStop) as usize - ptr as usize },
+        376usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(timeToStop)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).timeToStopOne) as usize - ptr as usize },
+        384usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(timeToStopOne)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).tSat) as usize - ptr as usize },
+        392usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(tSat)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).tSatSat) as usize - ptr as usize },
+        400usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(tSatSat)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).tSatUnsat) as usize - ptr as usize },
+        408usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(tSatUnsat)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).tGeneral) as usize - ptr as usize },
+        416usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(tGeneral)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).tPush) as usize - ptr as usize },
+        424usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(tPush)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).tTsim) as usize - ptr as usize },
+        432usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(tTsim)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).tContain) as usize - ptr as usize },
+        440usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(tContain)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).tCnf) as usize - ptr as usize },
+        448usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(tCnf)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).tAbs) as usize - ptr as usize },
+        456usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(tAbs)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).tTotal) as usize - ptr as usize },
+        464usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(tTotal)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).tStart) as usize - ptr as usize },
+        472usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(Pdr_Man_t_),
+            "::",
+            stringify!(tStart)
+        )
+    );
+}
+extern "C" {
+    #[link_name = "Pdr_ManSolver_imctk_abc_sys"]
+    pub fn Pdr_ManSolver(p: *mut Pdr_Man_t, k: ::std::os::raw::c_int) -> *mut sat_solver;
+}
+extern "C" {
+    #[link_name = "Pdr_ManTimeLimit_imctk_abc_sys"]
+    pub fn Pdr_ManTimeLimit(p: *mut Pdr_Man_t) -> abctime;
+}
+extern "C" {
+    pub fn Pdr_ObjSatVar(
+        p: *mut Pdr_Man_t,
+        k: ::std::os::raw::c_int,
+        Pol: ::std::os::raw::c_int,
+        pObj: *mut Aig_Obj_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Pdr_ObjRegNum(
+        p: *mut Pdr_Man_t,
+        k: ::std::os::raw::c_int,
+        iSatVar: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Pdr_ManFreeVar(p: *mut Pdr_Man_t, k: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Pdr_ManNewSolver(
+        pSat: *mut sat_solver,
+        p: *mut Pdr_Man_t,
+        k: ::std::os::raw::c_int,
+        fInit: ::std::os::raw::c_int,
+    ) -> *mut sat_solver;
+}
+extern "C" {
+    pub fn Pdr_ManCheckContainment(
+        p: *mut Pdr_Man_t,
+        k: ::std::os::raw::c_int,
+        pSet: *mut Pdr_Set_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Pdr_ManCountFlopsInv(p: *mut Pdr_Man_t) -> *mut Vec_Int_t;
+}
+extern "C" {
+    pub fn Pdr_ManPrintProgress(p: *mut Pdr_Man_t, fClose: ::std::os::raw::c_int, Time: abctime);
+}
+extern "C" {
+    pub fn Pdr_ManPrintClauses(p: *mut Pdr_Man_t, kStart: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Pdr_ManDumpClauses(
+        p: *mut Pdr_Man_t,
+        pFileName: *mut ::std::os::raw::c_char,
+        fProved: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
+    pub fn Pdr_ManDumpString(p: *mut Pdr_Man_t) -> *mut Vec_Str_t;
+}
+extern "C" {
+    pub fn Pdr_ManReportInvariant(p: *mut Pdr_Man_t);
+}
+extern "C" {
+    pub fn Pdr_ManVerifyInvariant(p: *mut Pdr_Man_t);
+}
+extern "C" {
+    pub fn Pdr_ManDeriveInfinityClauses(
+        p: *mut Pdr_Man_t,
+        fReduce: ::std::os::raw::c_int,
+    ) -> *mut Vec_Int_t;
+}
+extern "C" {
+    pub fn Pdr_ManStart(
+        pAig: *mut Aig_Man_t,
+        pPars: *mut Pdr_Par_t,
+        vPrioInit: *mut Vec_Int_t,
+    ) -> *mut Pdr_Man_t;
+}
+extern "C" {
+    pub fn Pdr_ManStop(p: *mut Pdr_Man_t);
+}
+extern "C" {
+    pub fn Pdr_ManDeriveCex(p: *mut Pdr_Man_t) -> *mut Abc_Cex_t;
+}
+extern "C" {
+    pub fn Pdr_ManDeriveCexAbs(p: *mut Pdr_Man_t) -> *mut Abc_Cex_t;
+}
+extern "C" {
+    pub fn Pdr_ManCreateSolver(p: *mut Pdr_Man_t, k: ::std::os::raw::c_int) -> *mut sat_solver;
+}
+extern "C" {
+    pub fn Pdr_ManFetchSolver(p: *mut Pdr_Man_t, k: ::std::os::raw::c_int) -> *mut sat_solver;
+}
+extern "C" {
+    pub fn Pdr_ManSetPropertyOutput(p: *mut Pdr_Man_t, k: ::std::os::raw::c_int);
+}
+extern "C" {
+    pub fn Pdr_ManCubeToLits(
+        p: *mut Pdr_Man_t,
+        k: ::std::os::raw::c_int,
+        pCube: *mut Pdr_Set_t,
+        fCompl: ::std::os::raw::c_int,
+        fNext: ::std::os::raw::c_int,
+    ) -> *mut Vec_Int_t;
+}
+extern "C" {
+    pub fn Pdr_ManLitsToCube(
+        p: *mut Pdr_Man_t,
+        k: ::std::os::raw::c_int,
+        pArray: *mut ::std::os::raw::c_int,
+        nArray: ::std::os::raw::c_int,
+    ) -> *mut Vec_Int_t;
+}
+extern "C" {
+    pub fn Pdr_ManSolverAddClause(
+        p: *mut Pdr_Man_t,
+        k: ::std::os::raw::c_int,
+        pCube: *mut Pdr_Set_t,
+    );
+}
+extern "C" {
+    pub fn Pdr_ManCollectValues(
+        p: *mut Pdr_Man_t,
+        k: ::std::os::raw::c_int,
+        vObjIds: *mut Vec_Int_t,
+        vValues: *mut Vec_Int_t,
+    );
+}
+extern "C" {
+    pub fn Pdr_ManCheckCubeCs(
+        p: *mut Pdr_Man_t,
+        k: ::std::os::raw::c_int,
+        pCube: *mut Pdr_Set_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Pdr_ManCheckCube(
+        p: *mut Pdr_Man_t,
+        k: ::std::os::raw::c_int,
+        pCube: *mut Pdr_Set_t,
+        ppPred: *mut *mut Pdr_Set_t,
+        nConfLimit: ::std::os::raw::c_int,
+        fTryConf: ::std::os::raw::c_int,
+        fUseLit: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Pdr_ManTernarySim(
+        p: *mut Pdr_Man_t,
+        k: ::std::os::raw::c_int,
+        pCube: *mut Pdr_Set_t,
+    ) -> *mut Pdr_Set_t;
+}
+extern "C" {
+    pub fn Txs_ManStart(
+        pMan: *mut Pdr_Man_t,
+        pAig: *mut Aig_Man_t,
+        vPrio: *mut Vec_Int_t,
+    ) -> *mut Txs_Man_t;
+}
+extern "C" {
+    pub fn Txs_ManStop(arg1: *mut Txs_Man_t);
+}
+extern "C" {
+    pub fn Txs_ManTernarySim(
+        p: *mut Txs_Man_t,
+        k: ::std::os::raw::c_int,
+        pCube: *mut Pdr_Set_t,
+    ) -> *mut Pdr_Set_t;
+}
+extern "C" {
+    pub fn Txs3_ManStart(
+        pMan: *mut Pdr_Man_t,
+        pAig: *mut Aig_Man_t,
+        vPrio: *mut Vec_Int_t,
+    ) -> *mut Txs3_Man_t;
+}
+extern "C" {
+    pub fn Txs3_ManStop(arg1: *mut Txs3_Man_t);
+}
+extern "C" {
+    pub fn Txs3_ManTernarySim(
+        p: *mut Txs3_Man_t,
+        k: ::std::os::raw::c_int,
+        pCube: *mut Pdr_Set_t,
+    ) -> *mut Pdr_Set_t;
+}
+extern "C" {
+    pub fn Pdr_SetAlloc(nSize: ::std::os::raw::c_int) -> *mut Pdr_Set_t;
+}
+extern "C" {
+    pub fn Pdr_SetCreate(vLits: *mut Vec_Int_t, vPiLits: *mut Vec_Int_t) -> *mut Pdr_Set_t;
+}
+extern "C" {
+    pub fn Pdr_SetCreateFrom(
+        pSet: *mut Pdr_Set_t,
+        iRemove: ::std::os::raw::c_int,
+    ) -> *mut Pdr_Set_t;
+}
+extern "C" {
+    pub fn Pdr_SetCreateSubset(
+        pSet: *mut Pdr_Set_t,
+        pLits: *mut ::std::os::raw::c_int,
+        nLits: ::std::os::raw::c_int,
+    ) -> *mut Pdr_Set_t;
+}
+extern "C" {
+    pub fn Pdr_SetDup(pSet: *mut Pdr_Set_t) -> *mut Pdr_Set_t;
+}
+extern "C" {
+    pub fn Pdr_SetRef(p: *mut Pdr_Set_t) -> *mut Pdr_Set_t;
+}
+extern "C" {
+    pub fn Pdr_SetDeref(p: *mut Pdr_Set_t);
+}
+extern "C" {
+    pub fn ZPdr_SetIntersection(
+        p1: *mut Pdr_Set_t,
+        p2: *mut Pdr_Set_t,
+        keep: *mut Hash_Int_t,
+    ) -> *mut Pdr_Set_t;
+}
+extern "C" {
+    pub fn Pdr_SetContains(pOld: *mut Pdr_Set_t, pNew: *mut Pdr_Set_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Pdr_SetContainsSimple(
+        pOld: *mut Pdr_Set_t,
+        pNew: *mut Pdr_Set_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Pdr_SetIsInit(
+        p: *mut Pdr_Set_t,
+        iRemove: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn ZPdr_SetIsInit(p: *mut Pdr_Set_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Pdr_SetPrint(
+        pFile: *mut FILE,
+        p: *mut Pdr_Set_t,
+        nRegs: ::std::os::raw::c_int,
+        vFlopCounts: *mut Vec_Int_t,
+    );
+}
+extern "C" {
+    pub fn ZPdr_SetPrint(p: *mut Pdr_Set_t);
+}
+extern "C" {
+    pub fn Pdr_SetPrintStr(
+        vStr: *mut Vec_Str_t,
+        p: *mut Pdr_Set_t,
+        nRegs: ::std::os::raw::c_int,
+        vFlopCounts: *mut Vec_Int_t,
+    );
+}
+extern "C" {
+    pub fn Pdr_SetCompare(
+        pp1: *mut *mut Pdr_Set_t,
+        pp2: *mut *mut Pdr_Set_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Pdr_SetBoundSizeLextCompare(
+        pp1: *mut *mut Pdr_Set_t,
+        pp2: *mut *mut Pdr_Set_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Pdr_OblStart(
+        k: ::std::os::raw::c_int,
+        prio: ::std::os::raw::c_int,
+        pState: *mut Pdr_Set_t,
+        pNext: *mut Pdr_Obl_t,
+    ) -> *mut Pdr_Obl_t;
+}
+extern "C" {
+    pub fn Pdr_OblRef(p: *mut Pdr_Obl_t) -> *mut Pdr_Obl_t;
+}
+extern "C" {
+    pub fn Pdr_OblDeref(p: *mut Pdr_Obl_t);
+}
+extern "C" {
+    pub fn Pdr_QueueIsEmpty(p: *mut Pdr_Man_t) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn Pdr_QueueHead(p: *mut Pdr_Man_t) -> *mut Pdr_Obl_t;
+}
+extern "C" {
+    pub fn Pdr_QueuePop(p: *mut Pdr_Man_t) -> *mut Pdr_Obl_t;
+}
+extern "C" {
+    pub fn Pdr_QueueClean(p: *mut Pdr_Man_t);
+}
+extern "C" {
+    pub fn Pdr_QueuePush(p: *mut Pdr_Man_t, pObl: *mut Pdr_Obl_t);
+}
+extern "C" {
+    pub fn Pdr_QueuePrint(p: *mut Pdr_Man_t);
+}
+extern "C" {
+    pub fn Pdr_QueueStop(p: *mut Pdr_Man_t);
+}
 extern "C" {
     pub fn imctk_abc_glucose2_init() -> *mut ::std::os::raw::c_void;
 }
@@ -12700,6 +29397,12 @@ extern "C" {
         -> *mut ::std::os::raw::c_int;
 }
 extern "C" {
+    pub fn imctk_abc_glucose2_produce_inner_model(
+        s: *mut ::std::os::raw::c_void,
+        produce_inner: ::std::os::raw::c_int,
+    );
+}
+extern "C" {
     pub fn imctk_abc_glucose2_value(
         s: *mut ::std::os::raw::c_void,
         var: ::std::os::raw::c_int,
@@ -12734,10 +29437,16 @@ extern "C" {
     pub fn imctk_abc_glucose2_mark_cone(s: *mut ::std::os::raw::c_void, var: ::std::os::raw::c_int);
 }
 extern "C" {
+    pub fn imctk_abc_glucose2_mark_var(s: *mut ::std::os::raw::c_void, var: ::std::os::raw::c_int);
+}
+extern "C" {
     pub fn imctk_abc_glucose2_prelocate(
         s: *mut ::std::os::raw::c_void,
         var_num: ::std::os::raw::c_int,
     );
+}
+extern "C" {
+    pub fn imctk_abc_glucose2_conflicts(s: *mut ::std::os::raw::c_void) -> i64;
 }
 extern "C" {
     pub fn imctk_abc_glucose2_set_conf_budget(s: *mut ::std::os::raw::c_void, budget: i64);
@@ -12772,6 +29481,8 @@ extern "C" {
         conflict: ::std::option::Option<
             unsafe extern "C" fn(
                 data: *mut ::std::os::raw::c_void,
+                lits: *const ::std::os::raw::c_int,
+                nlits: ::std::os::raw::c_int,
                 tags: *const u32,
                 ntags: ::std::os::raw::c_int,
                 units: *const ::std::os::raw::c_int,
@@ -12790,6 +29501,19 @@ extern "C" {
     pub fn imctk_abc_glucose2_proof_trace_default_tag(s: *mut ::std::os::raw::c_void) -> u32;
 }
 extern "C" {
+    pub fn imctk_abc_glucose2_conflict_size(
+        s: *mut ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn imctk_abc_glucose2_conflict_lits(
+        s: *mut ::std::os::raw::c_void,
+    ) -> *const ::std::os::raw::c_int;
+}
+extern "C" {
+    pub static mut enable_dbg_outs: ::std::os::raw::c_uint;
+}
+extern "C" {
     pub fn Cec4_ManSetParams(pPars: *mut Cec_ParFra_t);
 }
 extern "C" {
@@ -12801,4 +29525,10 @@ extern "C" {
         subBatchSz: ::std::os::raw::c_int,
         adaRecycle: ::std::os::raw::c_int,
     ) -> *mut Gia_Man_t;
+}
+extern "C" {
+    pub fn Abc_NtkFromAigPhase(pMan: *mut Aig_Man_t) -> *mut Abc_Ntk_t;
+}
+extern "C" {
+    pub fn Abc_NtkDarPdr(pNtk: *mut Abc_Ntk_t, pPars: *mut Pdr_Par_t) -> ::std::os::raw::c_int;
 }
