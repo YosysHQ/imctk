@@ -28,3 +28,11 @@ pub fn fmt_closure<T: Fn(&mut Formatter<'_>) -> std::fmt::Result>(
 ) -> impl Display + Debug {
     FmtClosure(closure)
 }
+
+/// Takes an iterator returning closure and returns a value that formats the yielded items using
+/// [`Formatter::debug_list`] when formatted.
+pub fn fmt_list<T: IntoIterator<Item = impl Debug>>(
+    get_iter: impl Fn() -> T,
+) -> impl Display + Debug {
+    fmt_closure(move |f| f.debug_list().entries(get_iter()).finish())
+}
