@@ -36,6 +36,7 @@ struct Node {
     prev: Option<NodeId>,
     next: Option<NodeId>,
     skip: NodeId,
+    skip_timestamp: u32,
     order: Order,
 }
 
@@ -44,7 +45,8 @@ impl Default for Node {
         Self {
             prev: Default::default(),
             next: Default::default(),
-            skip: NodeId::MAX_ID,
+            skip: NodeId::MIN_ID,
+            skip_timestamp: 0,
             order: Default::default(),
         }
     }
@@ -110,6 +112,10 @@ impl<K> Default for RefinementKeys<K> {
 pub struct IncrementalRefinement<T: Id> {
     node: IdVec<NodeId, Node>,
 
+    timestamp: IdVec<T, u32>,
+
+    current_timestamp: u32,
+
     first: Option<NodeId>,
     last: Option<NodeId>,
 
@@ -132,6 +138,34 @@ impl<T: Id> IncrementalRefinement<T> {
         NodeId::from_id_index((id.id_index() << 1) | 1)
     }
 
+    fn bump_timestamp(&mut self) {
+        self.current_timestamp += 2;
+        if self.current_timestamp + 1 == u32::MAX {
+            todo!("reset timestamps");
+        }
+    }
+
+    fn get_skip(&self, node_id: NodeId, parent: bool) -> Option<NodeId> {
+        let timestamp = self.node[node_id].skip_timestamp;
+        if (timestamp & 1 != 0) != parent {
+            None
+        } else if self.timestamp[Self::node_item(self.node[node_id].skip)] == timestamp & !1 {
+            Some(self.node[node_id].skip)
+        } else {
+            None
+        }
+    }
+
+    fn set_skip(&mut self, node_id: NodeId, skip: NodeId, parent: bool) {
+        let timestamp = self.timestamp[Self::node_item(skip)];
+        self.node[node_id].skip = skip;
+        self.node[node_id].skip_timestamp = timestamp | (parent as u32);
+    }
+
+    fn clear_skip(&mut self, node_id: NodeId) {
+        self.node[node_id].skip_timestamp = 0;
+    }
+
     pub fn insert_item(&mut self, id: T) -> bool {
         let enter = Self::enter_id(id);
         let leave = enter.other_end();
@@ -139,16 +173,14 @@ impl<T: Id> IncrementalRefinement<T> {
         if leave_node.prev.is_some() {
             return false;
         }
-        if self.node[enter].order.0 != u64::MAX {
-            // TODO I think we might be able to lift this restriction with a slight adjustment of
-            // the skip link checks
-            panic!("cannot insert a previouslt removed item");
-        }
+
+        self.bump_timestamp();
+        *self.timestamp.grow_for_key_with(id, || u32::MAX) = self.current_timestamp;
 
         self.prepend_node(enter);
-        self.node[enter].skip = enter;
+        self.clear_skip(enter);
         self.append_node(leave);
-        self.node[leave].skip = enter;
+        self.clear_skip(leave);
 
         self.item_count += 1;
 
@@ -161,13 +193,11 @@ impl<T: Id> IncrementalRefinement<T> {
         if node.next.is_none() {
             return false;
         }
+        self.timestamp[id] = u32::MAX;
         let leave = enter.other_end();
 
         self.unlink_node(enter);
         self.unlink_node(leave);
-        // This order value marks this as removed
-        self.node[enter].order.0 = u64::MAX - 1;
-        self.node[leave].order.0 = u64::MAX - 1;
 
         self.item_count -= 1;
         true
@@ -177,6 +207,56 @@ impl<T: Id> IncrementalRefinement<T> {
         let enter = Self::enter_id(id);
         let Some(node) = self.node.get(enter) else { return false };
         node.next.is_some()
+    }
+
+    pub fn root(&mut self, id: T) -> T {
+        let root = self.root_scan(id);
+        self.root_update(id, root);
+        root
+    }
+
+    fn root_scan(&mut self, mut id: T) -> T {
+        loop {
+            let first_sibling = self.first_sibling(id);
+
+            let enter_first_sibling = Self::enter_id(first_sibling);
+            let Some(parent) = self.node[enter_first_sibling].prev else {
+                return id;
+            };
+
+            if let Some(candidate) = self.get_skip(enter_first_sibling, true) {
+                if self.contains(Self::node_item(candidate), id) {
+                    id = Self::node_item(candidate)
+                } else {
+                    id = Self::node_item(parent)
+                }
+            } else {
+                id = Self::node_item(parent)
+            }
+        }
+    }
+
+    fn root_update(&mut self, mut id: T, root: T) {
+        loop {
+            let first_sibling = self.first_sibling(id);
+
+            let enter_first_sibling = Self::enter_id(first_sibling);
+            let Some(parent) = self.node[enter_first_sibling].prev else {
+                return;
+            };
+
+            if let Some(candidate) = self.get_skip(enter_first_sibling, true) {
+                if self.contains(Self::node_item(candidate), id) {
+                    id = Self::node_item(candidate)
+                } else {
+                    id = Self::node_item(parent)
+                }
+            } else {
+                id = Self::node_item(parent)
+            }
+
+            self.set_skip(enter_first_sibling, Self::leave_id(root), true);
+        }
     }
 
     pub fn first_sibling(&mut self, id: T) -> T {
@@ -207,11 +287,15 @@ impl<T: Id> IncrementalRefinement<T> {
             } else {
                 return id;
             };
-            let skip = self.node[enter].skip;
-            let skip = if self.node[skip].order >= self.node[prev_enter].order {
-                prev_enter
+
+            let skip = if let Some(skip) = self.get_skip(enter, false) {
+                if self.node[skip].order >= self.node[prev_enter].order {
+                    prev_enter
+                } else {
+                    skip
+                }
             } else {
-                skip
+                prev_enter
             };
 
             id = Self::node_item(skip);
@@ -235,14 +319,18 @@ impl<T: Id> IncrementalRefinement<T> {
             } else {
                 return;
             };
-            let skip = self.node[enter].skip;
-            let skip = if self.node[skip].order >= self.node[prev_enter].order {
-                prev_enter
+
+            let skip = if let Some(skip) = self.get_skip(enter, false) {
+                if self.node[skip].order >= self.node[prev_enter].order {
+                    prev_enter
+                } else {
+                    skip
+                }
             } else {
-                skip
+                prev_enter
             };
 
-            self.node[enter].skip = Self::enter_id(value);
+            self.set_skip(enter, Self::enter_id(value), false);
             id = Self::node_item(skip);
         }
     }
@@ -283,14 +371,18 @@ impl<T: Id> IncrementalRefinement<T> {
             };
 
             let leave = enter.other_end();
-            let skip_run = self.node[leave].skip;
-            let skip_run = if self.node[skip_run].order >= self.node[prev_enter].order {
-                prev_enter
+
+            let skip = if let Some(skip) = self.get_skip(leave, false) {
+                if self.node[skip].order >= self.node[prev_enter].order {
+                    prev_enter
+                } else {
+                    skip
+                }
             } else {
-                skip_run
+                prev_enter
             };
 
-            id = Self::node_item(skip_run);
+            id = Self::node_item(skip);
         }
     }
 
@@ -319,15 +411,18 @@ impl<T: Id> IncrementalRefinement<T> {
             };
 
             let leave = enter.other_end();
-            let skip_run = self.node[leave].skip;
-            let skip_run = if self.node[skip_run].order >= self.node[prev_enter].order {
-                prev_enter
+            let skip = if let Some(skip) = self.get_skip(leave, false) {
+                if self.node[skip].order >= self.node[prev_enter].order {
+                    prev_enter
+                } else {
+                    skip
+                }
             } else {
-                skip_run
+                prev_enter
             };
 
-            self.node[leave].skip = Self::enter_id(value);
-            id = Self::node_item(skip_run);
+            self.set_skip(leave, Self::enter_id(value), false);
+            id = Self::node_item(skip);
         }
     }
 
@@ -386,6 +481,20 @@ impl<T: Id> IncrementalRefinement<T> {
         node.next == Some(enter.other_end())
     }
 
+    pub fn is_root(&mut self, id: T) -> bool {
+        let enter = Self::enter_id(id);
+        let Some(node) = self.node.get(enter) else { panic!("item not present") };
+        if node.next.is_none() {
+            panic!("item not present");
+        }
+        let first_sibling = self.first_sibling(id);
+        self.node[Self::enter_id(first_sibling)].prev.is_none()
+    }
+
+    pub fn is_isolated(&mut self, id: T) -> bool {
+        self.is_leaf(id) && self.is_root(id)
+    }
+
     pub fn ancestral_sibling_count(&mut self, id: T) -> usize {
         let mut count = 1; // For the root itself
 
@@ -424,31 +533,47 @@ impl<T: Id> IncrementalRefinement<T> {
             panic!("item {outer:?} not present");
         };
         if outer_node.next.is_none() {
-            panic!("item not present");
+            panic!("item {outer:?} not present");
         }
         let enter_inner = Self::enter_id(inner);
         let Some(inner_node) = self.node.get(enter_inner) else {
             panic!("item {inner:?} not present");
         };
         if inner_node.next.is_none() {
-            panic!("item not present");
+            panic!("item {inner:?} not present");
         }
-        let leave_outer = enter_inner.other_end();
+        let leave_outer = enter_outer.other_end();
 
         outer_node.order < inner_node.order && inner_node.order < self.node[leave_outer].order
     }
 
-    pub fn nonleaf_root_count2(&self) -> usize {
-        let mut count = 0;
-        let mut root_iter = self.first;
-
-        while let Some(current) = root_iter {
-            debug_assert!(current.is_enter());
-            count += !self.is_leaf(Self::node_item(current)) as usize;
-            root_iter = self.node[current.other_end()].next
+    pub fn equiv(&mut self, items: [T; 2]) {
+        let inner;
+        let outer;
+        if self.contains(items[0], items[1]) {
+            [outer, inner] = items
+        } else if self.contains(items[1], items[0]) {
+            [inner, outer] = items
+        } else {
+            panic!("items {items:?} are non-overlapping");
         }
 
-        count
+        let enter_outer = Self::enter_id(outer);
+        let leave_outer = enter_outer.other_end();
+        let enter_inner = Self::enter_id(inner);
+        let leave_inner = enter_inner.other_end();
+
+        self.unlink_node(enter_outer);
+        self.unlink_node(leave_outer);
+
+        self.clear_skip(enter_outer);
+        self.insert_node_before(enter_outer, Some(enter_inner));
+        self.clear_skip(leave_outer);
+        self.insert_node_after(leave_outer, Some(leave_inner));
+
+        self.bump_timestamp();
+        self.timestamp[inner] = self.current_timestamp;
+        self.timestamp[outer] = self.current_timestamp;
     }
 
     pub fn nonleaf_root_count(&mut self) -> usize {
@@ -456,7 +581,14 @@ impl<T: Id> IncrementalRefinement<T> {
         let mut root_rev_iter = self.last;
 
         while let Some(current) = root_rev_iter {
-            debug_assert!(current.is_leave());
+            if !current.is_leave() {
+                println!("{:?}", self);
+            }
+            debug_assert!(
+                current.is_leave(),
+                "{current:?} {:?}",
+                Self::node_item(current)
+            );
             if self.is_leaf(Self::node_item(current)) {
                 let first_leaf_in_run = self.first_in_leaf_run(Self::node_item(current));
                 root_rev_iter = self.node[Self::enter_id(first_leaf_in_run)].prev;
@@ -469,6 +601,25 @@ impl<T: Id> IncrementalRefinement<T> {
         }
 
         count
+    }
+
+    pub fn nonleaf_root_iter(&mut self) -> impl Iterator<Item = T> + '_ {
+        let mut root_rev_iter = self.last;
+
+        std::iter::from_fn(move || loop {
+            let current = root_rev_iter?;
+            debug_assert!(current.is_leave());
+            if self.is_leaf(Self::node_item(current)) {
+                let first_leaf_in_run = self.first_in_leaf_run(Self::node_item(current));
+                root_rev_iter = self.node[Self::enter_id(first_leaf_in_run)].prev;
+
+                continue;
+            }
+            assert!(!self.is_leaf(Self::node_item(current)));
+
+            root_rev_iter = self.node[current.other_end()].prev;
+            return Some(Self::node_item(current));
+        })
     }
 
     pub fn postorder_descendants_iter(&self, id: T) -> impl Iterator<Item = T> + '_ {
@@ -510,6 +661,46 @@ impl<T: Id> IncrementalRefinement<T> {
                     return Some(Self::node_item(current));
                 }
             }
+        })
+    }
+
+    pub fn nonisolated_iter(&mut self) -> impl Iterator<Item = T> + '_ {
+        let mut root_rev_iter = self.last;
+
+        let mut span: Option<(NodeId, NodeId)> = None;
+
+        std::iter::from_fn(move || loop {
+            if let Some((iter, leave)) = &mut span {
+                if *iter == *leave {
+                    span = None;
+                } else {
+                    *iter = self.node[*iter].next.unwrap();
+                    let current = *iter;
+                    if current.is_leave() {
+                        return Some(Self::node_item(current));
+                    } else {
+                        continue;
+                    }
+                }
+            }
+            let current = root_rev_iter?;
+            debug_assert!(current.is_leave());
+
+            if self.is_leaf(Self::node_item(current)) {
+                let first_leaf_in_run = self.first_in_leaf_run(Self::node_item(current));
+                root_rev_iter = self.node[Self::enter_id(first_leaf_in_run)].prev;
+
+                continue;
+            }
+            assert!(!self.is_leaf(Self::node_item(current)));
+
+            root_rev_iter = self.node[current.other_end()].prev;
+
+            if self.is_leaf(Self::node_item(current)) {
+                continue;
+            }
+            let enter = current.other_end();
+            span = Some((enter, current));
         })
     }
 
@@ -658,7 +849,7 @@ impl<T: Id> IncrementalRefinement<T> {
             self.node[refined].prev = None;
             refined_iter = self.node[refined].next.take();
 
-            self.node[refined].skip = Self::enter_id(Self::node_item(refined));
+            self.clear_skip(refined);
             self.insert_node_before(refined, insert_before);
         }
     }
@@ -692,7 +883,7 @@ impl<T: Id> IncrementalRefinement<T> {
         nodes_to_move.sort_unstable();
 
         for OrderNodeId { node_id, .. } in nodes_to_move.drain(..) {
-            self.node[node_id].skip = Self::enter_id(Self::node_item(node_id));
+            self.clear_skip(node_id);
             self.append_node(node_id);
         }
 
@@ -716,12 +907,20 @@ impl<T: Id> IncrementalRefinement<T> {
         } else {
             self.last = prev;
         }
+
+        self.bump_timestamp();
+        self.timestamp[Self::node_item(node_id)] = self.current_timestamp;
+
         debug_assert_eq!(self.first.is_none(), self.last.is_none());
     }
 
     fn append_node(&mut self, node_id: NodeId) {
         debug_assert_eq!(self.node[node_id].prev, None);
         debug_assert_eq!(self.node[node_id].next, None);
+
+        self.bump_timestamp();
+        self.timestamp[Self::node_item(node_id)] = self.current_timestamp;
+
         if let Some(last) = self.last.replace(node_id) {
             debug_assert_eq!(self.node[last].next, None);
             self.node[node_id].prev = Some(last);
@@ -745,6 +944,10 @@ impl<T: Id> IncrementalRefinement<T> {
     fn prepend_node(&mut self, node_id: NodeId) {
         debug_assert_eq!(self.node[node_id].prev, None);
         debug_assert_eq!(self.node[node_id].next, None);
+
+        self.bump_timestamp();
+        self.timestamp[Self::node_item(node_id)] = self.current_timestamp;
+
         if let Some(first) = self.first.replace(node_id) {
             debug_assert_eq!(self.node[first].prev, None);
             self.node[node_id].next = Some(first);
@@ -765,6 +968,19 @@ impl<T: Id> IncrementalRefinement<T> {
         }
     }
 
+    fn insert_node_after(&mut self, node_id: NodeId, target: Option<NodeId>) {
+        let Some(target) = target else {
+            self.prepend_node(node_id);
+            return;
+        };
+        let Some(next) = self.node[target].next else {
+            self.append_node(node_id);
+            return;
+        };
+
+        self.insert_node_between(node_id, target, next);
+    }
+
     fn insert_node_before(&mut self, node_id: NodeId, target: Option<NodeId>) {
         let Some(target) = target else {
             self.append_node(node_id);
@@ -781,6 +997,9 @@ impl<T: Id> IncrementalRefinement<T> {
     fn insert_node_between(&mut self, node_id: NodeId, prev: NodeId, next: NodeId) {
         debug_assert_eq!(self.node[prev].next, Some(next));
         debug_assert_eq!(self.node[next].prev, Some(prev));
+
+        self.bump_timestamp();
+        self.timestamp[Self::node_item(node_id)] = self.current_timestamp;
 
         self.node[prev].next = Some(node_id);
         let low = self.node[prev].order.0 + 1;
@@ -951,7 +1170,14 @@ impl<T: Id> IncrementalRefinement<T> {
                 write!(target, " x{level} ")?;
             }
             target.write_char(if current.is_enter() { '.' } else { '\'' })?;
-            writeln!(target, "- {}", fmt_node(current))?;
+            writeln!(
+                target,
+                "- {} T={} skip={} @ {}",
+                fmt_node(current),
+                self.timestamp[Self::node_item(current)],
+                fmt_node(self.node[current].skip),
+                self.node[current].skip_timestamp,
+            )?;
             if current.is_enter() {
                 level += 1;
             }

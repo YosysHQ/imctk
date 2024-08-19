@@ -315,7 +315,6 @@ impl Fraig {
     ) -> impl std::fmt::Display + std::fmt::Debug {
         let root = refine.root_count();
         let classes = refine.nonleaf_root_count();
-        assert_eq!(classes, refine.nonleaf_root_count2());
         let unique = root - classes;
         let constants = refine.ancestral_sibling_count(Var::FALSE);
         let pending = refine.item_count() - root;
