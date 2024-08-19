@@ -309,6 +309,7 @@ pub trait Term: Debug + Clone + Eq + Hash + TermDyn + 'static {
     }
 
     /// Rewrites all variables in the term using a given mapping.
+    #[must_use]
     fn apply_var_map(&mut self, var_map: impl FnMut(Var) -> Lit)
         -> <Self::Output as VarOrLit>::Pol;
 
@@ -456,6 +457,7 @@ pub trait TermDynAuto {
     fn dyn_def_eq(&self, other: &DynTerm) -> bool;
 
     /// Object safe wrapper of [`Term::apply_var_map`].
+    #[must_use]
     fn dyn_apply_var_map(&mut self, var_repr: &mut dyn FnMut(Var) -> Lit) -> Pol;
 
     /// Object safe wrapper of [`Term::reduce`].
@@ -525,6 +527,7 @@ impl<T: Term> TermDynAuto for T {
         self.def_eq(other)
     }
 
+    #[must_use]
     fn dyn_apply_var_map(&mut self, var_repr: &mut dyn FnMut(Var) -> Lit) -> Pol {
         <T::Output as VarOrLit>::process_pol(self.apply_var_map(var_repr), || Pol::Pos, |pol| pol)
     }
@@ -541,9 +544,15 @@ impl<T: Term> TermDynAuto for T {
         var_map: &mut dyn FnMut(Var) -> Lit,
     ) -> Lit {
         let mut clone = self.clone();
-        clone.apply_var_map(var_map);
+        let pol = <<Self as Term>::Output>::process_pol(
+            clone.apply_var_map(var_map),
+            || Pol::Pos,
+            |pol| pol,
+        );
+
         env.term(clone)
             .process_var_or_lit(|var| var.as_lit(), |lit| lit)
+            ^ pol
     }
 }
 
