@@ -128,6 +128,10 @@ impl EncodedVarDef {
         self.level_bound_and_flags = (self.level_bound_and_flags & Self::FLAGS_MASK) | level_bound;
     }
 
+    pub fn set_max_level_bound(&mut self) {
+        self.level_bound_and_flags |= !Self::FLAGS_MASK
+    }
+
     pub fn is_steady(&self) -> bool {
         self.level_bound_and_flags & Self::STEADY_MASK != 0
     }

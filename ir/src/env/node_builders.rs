@@ -645,17 +645,33 @@ impl Env {
         Some((node_ref, node_role))
     }
 
-    /// Adds and returns a new variable to the environment.
+    /// Adds a new variable to the environment and returns it.
     ///
     /// Note that the resulting variable starts out without any definition and with a level bound of
     /// zero. For some use cases this is an issue for maintaining acyclicity of the primary
-    /// definition graph. In those cases,
-    /// [`fresh_var_with_level_bound`][Self::fresh_var_with_level_bound] can be used instead.
+    /// definition graph. In those cases, [`Self::fresh_var_with_level_bound`] or
+    /// [`Self::fresh_var_with_max_level_bound`] can be used instead.
     pub fn fresh_var(&mut self) -> Var {
         self.var_defs.var_defs.push(EncodedVarDef::default()).0
     }
 
-    /// Adds and returns a new variable to the environment, using a given level bound.
+    /// Adds a new variable to the environment and returns it, using the maximal supported level bound.
+    ///
+    /// Until a definition for the variable is provided, which will lower the level bound, using
+    /// this as an unguarded input to a new node will produce a panic as there is no remaining
+    /// higher level bound to assign to that node's output.
+    ///
+    /// The main use case for this is to tie loops into guarded inputs, e.g. the register next state
+    /// input, where the fresh variable is only connected to the guarded input until and then later
+    /// defined by adding a node or adding an equivalence to an existing variable or literal.
+    pub fn fresh_var_with_max_level_bound(&mut self) -> Var {
+        let mut encoded_var_repr = EncodedVarDef::default();
+        encoded_var_repr.set_max_level_bound();
+
+        self.var_defs.var_defs.push(encoded_var_repr).0
+    }
+
+    /// Adds a new variable to the environment and returns it, using a given level bound.
     pub fn fresh_var_with_level_bound(&mut self, level_bound: u32) -> Var {
         let mut encoded_var_repr = EncodedVarDef::default();
         encoded_var_repr.set_level_bound(level_bound);
