@@ -353,3 +353,46 @@ impl Term for Init {
 }
 
 impl TermDyn for Init {}
+
+/// Extension trait to more conveniently add [fine-grained circuit terms][`self`] to any
+/// [`NodeBuilder`].
+pub trait FineCircuitNodeBuilder: NodeBuilder {
+    /// Adds an [`And`] term to the environment.
+    fn and(&mut self, inputs: impl Into<UnorderedPair<Lit>>) -> Lit {
+        self.term(And {
+            inputs: inputs.into(),
+        })
+    }
+
+    /// Adds an [`And`] term to the environment that computes the Boolean 'or' of two inputs using
+    /// De Morgan's laws.
+    fn or(&mut self, inputs: impl Into<UnorderedPair<Lit>>) -> Lit {
+        !self.term(And {
+            inputs: inputs.into().map(|lit| !lit),
+        })
+    }
+
+    /// Adds a [`Xor`] term to the environment, automatically normalizing polarities as required.
+    fn xor(&mut self, inputs: impl Into<UnorderedPair<Lit>>) -> Lit {
+        let inputs = inputs.into();
+        self.term(Xor {
+            inputs: inputs.map(|lit| lit.var()),
+        }) ^ inputs[0].pol()
+            ^ inputs[1].pol()
+    }
+
+    /// Adds a [`Reg`] term to the environment, automatically normalizing polarities as required.
+    fn reg(&mut self, init: Lit, next: Lit) -> Lit {
+        self.term(Reg {
+            init: init ^ next.pol(),
+            next: next.var(),
+        }) ^ next.pol()
+    }
+
+    /// Adds a [`Init`] term to the environment, automatically normalizing polarities as required.
+    fn init(&mut self, input: Lit) -> Lit {
+        self.term(Init { input: input.var() }) ^ input.pol()
+    }
+}
+
+impl<T: NodeBuilder> FineCircuitNodeBuilder for T {}
