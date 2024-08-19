@@ -546,6 +546,11 @@ impl<K: Id, V> IdVec<K, V> {
         let guard = <LengthGuard<K, V>>::new(&mut self.values);
         f(guard.values)
     }
+
+    /// Removes all entries, returning an iterator yielding the removed entries in order.
+    pub fn drain_all_values(&mut self) -> std::vec::Drain<'_, V> {
+        self.values.drain(..)
+    }
 }
 
 struct LengthGuard<'a, K: Id, V> {
