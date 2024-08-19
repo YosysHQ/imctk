@@ -93,7 +93,7 @@ impl ExistingAigerVarMap {
             self.var_map[Var::from_index(var_pos)].get_or_insert_with(|| {
                 let level_bound = env.env().var_defs().level_bound(init_lit.var()) + 1;
                 let latch_output = env.env_mut().fresh_var_with_level_bound(level_bound);
-                latch_output.as_pos()
+                latch_output.as_lit()
             });
             var_pos += 1;
         }

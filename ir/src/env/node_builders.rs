@@ -257,7 +257,7 @@ impl RawEnvNodes {
         }
 
         let (new_var, _) = self.0.var_defs.var_defs.push(EncodedVarDef::default());
-        let output = <T::Output>::build_var_or_lit(new_var, |var| var, |var| var.as_pos());
+        let output = <T::Output>::build_var_or_lit(new_var, |var| var, |var| var.as_lit());
 
         let (node_id, _) = self.insert_unique_irreducible_node(def_mode, TermNode { output, term });
 
@@ -303,7 +303,7 @@ impl RawEnvNodes {
         }
 
         let (new_var, _) = self.0.var_defs.var_defs.push(EncodedVarDef::default());
-        let output = new_var.as_pos();
+        let output = new_var.as_lit();
 
         let (node_id, _) = dyn_term_into_dyn_term_node(output, term, |node| {
             self.insert_unique_irreducible_dyn_node(def_mode, node)
@@ -439,7 +439,7 @@ impl EnvWrapper for Env {
 
 impl NodeBuilderDyn for Env {
     fn dyn_term(&mut self, mut term: Take<DynTerm>) -> Lit {
-        let pol = term.dyn_apply_var_map(&mut |var| self.var_defs.update_lit_repr(var.as_pos()));
+        let pol = term.dyn_apply_var_map(&mut |var| self.var_defs.update_lit_repr(var.as_lit()));
 
         if let Some(output) = term.dyn_reduce_into_buf(&mut self.node_buf) {
             let mut node_buf = take(&mut self.node_buf);
@@ -456,7 +456,7 @@ impl NodeBuilderDyn for Env {
     }
 
     fn dyn_node(&mut self, mut node: Take<DynNode>) {
-        node.dyn_apply_var_map(&mut |var| self.var_defs.update_lit_repr(var.as_pos()));
+        node.dyn_apply_var_map(&mut |var| self.var_defs.update_lit_repr(var.as_lit()));
 
         if node.dyn_reduce_into_buf(&mut self.node_buf) {
             let mut node_buf = take(&mut self.node_buf);
@@ -480,7 +480,7 @@ impl NodeBuilderDyn for Env {
 
 impl NodeBuilder for Env {
     fn term<T: Term>(&mut self, mut term: T) -> T::Output {
-        let pol = term.apply_var_map(|var| self.var_defs.update_lit_repr(var.as_pos()));
+        let pol = term.apply_var_map(|var| self.var_defs.update_lit_repr(var.as_lit()));
 
         if let Some(output) = term.reduce(self) {
             return output ^ pol;
@@ -492,7 +492,7 @@ impl NodeBuilder for Env {
     }
 
     fn node<T: Node>(&mut self, mut node: T) {
-        node.apply_var_map(|var| self.var_defs.update_lit_repr(var.as_pos()));
+        node.apply_var_map(|var| self.var_defs.update_lit_repr(var.as_lit()));
 
         if node.reduce(self) {
             return;
@@ -526,7 +526,7 @@ impl EnvWrapper for DefBuilder {
 
 impl NodeBuilderDyn for DefBuilder {
     fn dyn_term(&mut self, mut term: Take<DynTerm>) -> Lit {
-        let pol = term.dyn_apply_var_map(&mut |var| self.0.var_defs.update_lit_repr(var.as_pos()));
+        let pol = term.dyn_apply_var_map(&mut |var| self.0.var_defs.update_lit_repr(var.as_lit()));
 
         if let Some(output) = term.dyn_reduce_into_buf(&mut self.0.node_buf) {
             let mut node_buf = take(&mut self.0.node_buf);
@@ -543,7 +543,7 @@ impl NodeBuilderDyn for DefBuilder {
     }
 
     fn dyn_node(&mut self, mut node: Take<DynNode>) {
-        node.dyn_apply_var_map(&mut |var| self.0.var_defs.update_lit_repr(var.as_pos()));
+        node.dyn_apply_var_map(&mut |var| self.0.var_defs.update_lit_repr(var.as_lit()));
 
         if node.dyn_reduce_into_buf(&mut self.0.node_buf) {
             let mut node_buf = take(&mut self.0.node_buf);
@@ -568,7 +568,7 @@ impl NodeBuilderDyn for DefBuilder {
 
 impl NodeBuilder for DefBuilder {
     fn term<T: Term>(&mut self, mut term: T) -> T::Output {
-        let pol = term.apply_var_map(|var| self.0.var_defs.update_lit_repr(var.as_pos()));
+        let pol = term.apply_var_map(|var| self.0.var_defs.update_lit_repr(var.as_lit()));
 
         if let Some(output) = term.reduce(self) {
             return output ^ pol;
@@ -581,7 +581,7 @@ impl NodeBuilder for DefBuilder {
     }
 
     fn node<T: Node>(&mut self, mut node: T) {
-        node.apply_var_map(|var| self.0.var_defs.update_lit_repr(var.as_pos()));
+        node.apply_var_map(|var| self.0.var_defs.update_lit_repr(var.as_lit()));
 
         if node.reduce(self) {
             return;
@@ -809,7 +809,7 @@ impl Env {
                                 .remove_dyn_node(&self.nodes, node_id, node, node_role);
 
                             self.nodes.get_dyn_mut(node_id).unwrap().dyn_apply_var_map(
-                                &mut |var| self.var_defs.update_lit_repr(var.as_pos()),
+                                &mut |var| self.var_defs.update_lit_repr(var.as_lit()),
                             );
 
                             self.index.reduction_queue.push(node_id);

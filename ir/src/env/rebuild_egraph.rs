@@ -69,7 +69,7 @@ impl Env {
                     self.nodes
                         .get_dyn_mut(node_id)
                         .unwrap()
-                        .dyn_apply_var_map(&mut |var| self.var_defs.update_lit_repr(var.as_pos()));
+                        .dyn_apply_var_map(&mut |var| self.var_defs.update_lit_repr(var.as_lit()));
 
                     if let Some(updates) = &mut self.updates {
                         updates.nodes.push(node_id);

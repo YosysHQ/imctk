@@ -438,21 +438,15 @@ impl Var {
 
     /// Returns a positive polarity literal for the variable.
     #[inline(always)]
-    pub fn as_pos(self) -> Lit {
+    pub fn as_lit(self) -> Lit {
         // SAFETY: The valid index ranges of Lit and Var are chosen specifically to make this
         // work.
         unsafe { Lit::from_code_unchecked(self.index() << 1) }
     }
 
-    /// Returns a positive polarity literal for the variable.
-    #[inline(always)]
-    pub fn as_lit(self) -> Lit {
-        self.as_pos()
-    }
-
     /// Returns a negative polarity literal for the variable.
     #[inline(always)]
-    pub fn as_neg(self) -> Lit {
+    pub fn as_neg_lit(self) -> Lit {
         // SAFETY: The valid index ranges of Lit and Var are chosen specifically to make this
         // work.
         unsafe { Lit::from_code_unchecked((self.index() << 1) | 1) }

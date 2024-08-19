@@ -120,7 +120,7 @@ pub trait NodeDyn: NodeDynAuto + Debug {
     /// If the output is a variable, this should return a positive polarity literal for that
     /// variable, which is what the default implementation does.
     fn output_lit(&self) -> Option<Lit> {
-        self.output_var().map(|var| var.as_pos())
+        self.output_var().map(|var| var.as_lit())
     }
 
     /// Returns the variable with the largest id among all variables referenced by this node.
@@ -384,7 +384,7 @@ pub fn default_reduce_node<T: Term>(
 
     if new_output != output {
         builder.equiv(
-            [output, new_output].map(|x| x.process_var_or_lit(|var| var.as_pos(), |lit| lit)),
+            [output, new_output].map(|x| x.process_var_or_lit(|var| var.as_lit(), |lit| lit)),
         );
     }
 
@@ -550,7 +550,7 @@ impl<T: Term> TermDynAuto for T {
 
     fn dyn_reduce_into_buf(&mut self, buf: &mut NodeBuf) -> Option<Lit> {
         self.reduce(buf).map(|output| {
-            <T::Output as VarOrLit>::process_var_or_lit(output, |var| var.as_pos(), |lit| lit)
+            <T::Output as VarOrLit>::process_var_or_lit(output, |var| var.as_lit(), |lit| lit)
         })
     }
 
@@ -735,7 +735,7 @@ impl<T: Term> Node for TermNode<T> {
     fn apply_var_map(&mut self, mut var_map: impl FnMut(Var) -> Lit) {
         let mut new_output_lit = self
             .output
-            .process_var_or_lit(|var| var.as_pos(), |lit| lit)
+            .process_var_or_lit(|var| var.as_lit(), |lit| lit)
             .lookup(&mut var_map);
 
         let term_pol = self.term.apply_var_map(var_map);
@@ -778,7 +778,7 @@ impl<T: Term> NodeDyn for TermNode<T> {
     fn output_lit(&self) -> Option<Lit> {
         Some(
             self.output
-                .process_var_or_lit(|var| var.as_pos(), |lit| lit),
+                .process_var_or_lit(|var| var.as_lit(), |lit| lit),
         )
     }
 

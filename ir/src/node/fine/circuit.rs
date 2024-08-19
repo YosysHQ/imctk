@@ -148,7 +148,7 @@ impl Term for Xor {
         if a == b {
             Some(Lit::FALSE)
         } else if a == Var::FALSE {
-            Some(b.as_pos())
+            Some(b.as_lit())
         } else {
             None
         }
@@ -290,7 +290,7 @@ impl Term for Reg {
     }
 
     fn reduce_node(&mut self, output: Self::Output, builder: &mut impl NodeBuilder) -> bool {
-        if self.next.as_pos() == output {
+        if self.next.as_lit() == output {
             builder.node(TermNode {
                 output: output ^ self.init.pol(),
                 term: Init {

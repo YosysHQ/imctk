@@ -84,13 +84,13 @@ impl NodeBufVarMap {
         self.map
             .get(Var::MAX_ID_INDEX - var.index())
             .copied()
-            .unwrap_or(var.as_pos())
+            .unwrap_or(var.as_lit())
     }
 }
 
 impl NodeBuilderDyn for NodeBuf {
     fn dyn_term(&mut self, term: Take<DynTerm>) -> Lit {
-        let lit = Var::from_index(Var::MAX_ID_INDEX.checked_sub(self.terms).unwrap()).as_pos();
+        let lit = Var::from_index(Var::MAX_ID_INDEX.checked_sub(self.terms).unwrap()).as_lit();
 
         self.entries.push(NodeBufEntry::Term(
             self.nodes
@@ -115,7 +115,7 @@ impl NodeBuilderDyn for NodeBuf {
 
 impl NodeBuilder for NodeBuf {
     fn term<T: Term>(&mut self, term: T) -> T::Output {
-        let lit = Var::from_index(Var::MAX_ID_INDEX.checked_sub(self.terms).unwrap()).as_pos();
+        let lit = Var::from_index(Var::MAX_ID_INDEX.checked_sub(self.terms).unwrap()).as_lit();
         self.entries.push(NodeBufEntry::Term(
             self.nodes.insert(TermWrapper { term }).0,
         ));
