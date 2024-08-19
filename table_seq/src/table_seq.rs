@@ -214,7 +214,8 @@ impl<T> TableSeq<T> {
     #[inline(never)]
     fn defragment_allocator_cold(&mut self, mut allocator_index: usize) {
         self.allocator_sweep += 1;
-        if self.allocator_sweep == self.allocators.len() {
+        if self.allocator_sweep >= self.allocators.len() {
+            // the check above needs to be `>=` and not `==` to handle shrinking
             self.allocator_sweep = 0;
         }
         if self.allocator_sweep & 1 == 0 {
