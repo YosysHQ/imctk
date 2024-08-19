@@ -443,12 +443,11 @@ impl NodeBuilderDyn for Env {
 
         if let Some(output) = term.dyn_reduce_into_buf(&mut self.node_buf) {
             let mut node_buf = take(&mut self.node_buf);
-            let mut node_buf_var_map = take(&mut self.node_buf_var_map);
-            node_buf.drain_into_node_builder(self, &mut node_buf_var_map);
+            let var_map = node_buf.drain_into_node_builder(self);
+            let output = output.lookup(|var| var_map.map_var(var)) ^ pol;
             self.node_buf = node_buf;
-            self.node_buf_var_map = node_buf_var_map;
 
-            return output.lookup(|var| self.node_buf_var_map.map_var(var)) ^ pol;
+            return output;
         }
 
         self.raw_nodes()
@@ -461,10 +460,8 @@ impl NodeBuilderDyn for Env {
 
         if node.dyn_reduce_into_buf(&mut self.node_buf) {
             let mut node_buf = take(&mut self.node_buf);
-            let mut node_buf_var_map = take(&mut self.node_buf_var_map);
-            node_buf.drain_into_node_builder(self, &mut node_buf_var_map);
+            node_buf.drain_into_node_builder(self);
             self.node_buf = node_buf;
-            self.node_buf_var_map = node_buf_var_map;
             return;
         }
 
@@ -533,12 +530,10 @@ impl NodeBuilderDyn for DefBuilder {
 
         if let Some(output) = term.dyn_reduce_into_buf(&mut self.0.node_buf) {
             let mut node_buf = take(&mut self.0.node_buf);
-            let mut node_buf_var_map = take(&mut self.0.node_buf_var_map);
-            node_buf.drain_into_node_builder(self, &mut node_buf_var_map);
+            let var_map = node_buf.drain_into_node_builder(self);
+            let output = output.lookup(|var| var_map.map_var(var)) ^ pol;
             self.0.node_buf = node_buf;
-            self.0.node_buf_var_map = node_buf_var_map;
-
-            return output.lookup(|var| self.0.node_buf_var_map.map_var(var)) ^ pol;
+            return output;
         }
 
         self.0
@@ -552,10 +547,8 @@ impl NodeBuilderDyn for DefBuilder {
 
         if node.dyn_reduce_into_buf(&mut self.0.node_buf) {
             let mut node_buf = take(&mut self.0.node_buf);
-            let mut node_buf_var_map = take(&mut self.0.node_buf_var_map);
-            node_buf.drain_into_node_builder(self, &mut node_buf_var_map);
+            node_buf.drain_into_node_builder(self);
             self.0.node_buf = node_buf;
-            self.0.node_buf_var_map = node_buf_var_map;
             return;
         }
 

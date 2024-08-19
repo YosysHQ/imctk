@@ -18,7 +18,6 @@ impl Env {
         let mut passes = 0;
 
         let mut node_buf = take(&mut self.node_buf);
-        let mut node_buf_var_map = take(&mut self.node_buf_var_map);
 
         while self.index.pending_equivs < self.index.equiv_trail.len()
             || !self.index.reduction_queue.is_empty()
@@ -239,12 +238,11 @@ impl Env {
                 }
             }
 
-            def_node_buf.drain_into_node_builder(self.build_defs(), &mut node_buf_var_map);
-            node_buf.drain_into_node_builder(self, &mut node_buf_var_map);
+            def_node_buf.drain_into_node_builder(self.build_defs());
+            node_buf.drain_into_node_builder(self);
         }
 
         self.node_buf = node_buf;
-        self.node_buf_var_map = node_buf_var_map;
 
         redundant_nodes -= found_congruences;
 

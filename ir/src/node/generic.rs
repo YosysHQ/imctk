@@ -180,6 +180,9 @@ pub trait NodeDynAuto: Debug {
     /// Adds a copy of this node to the given environment using a given variable mapping.
     fn dyn_add_to_env_with_var_map(&self, env: &mut Env, var_map: &mut dyn FnMut(Var) -> Lit);
 
+    /// Adds a copy of this node to the given node buffer using a given variable mapping.
+    fn dyn_add_to_buf_with_var_map(&self, buf: &mut NodeBuf, var_map: &mut dyn FnMut(Var) -> Lit);
+
     #[doc(hidden)]
     fn zzz_hidden_default_representative_input_var(&self) -> Var;
 
@@ -239,6 +242,12 @@ impl<T: Node> NodeDynAuto for T {
         let mut clone = self.clone();
         clone.apply_var_map(var_map);
         env.node(clone);
+    }
+
+    fn dyn_add_to_buf_with_var_map(&self, buf: &mut NodeBuf, var_map: &mut dyn FnMut(Var) -> Lit) {
+        let mut clone = self.clone();
+        clone.apply_var_map(var_map);
+        buf.node(clone);
     }
 
     #[inline(always)]
@@ -463,6 +472,13 @@ pub trait TermDynAuto {
     /// Object safe wrapper of [`Term::reduce`].
     fn dyn_reduce_into_buf(&mut self, buf: &mut NodeBuf) -> Option<Lit>;
 
+    /// Adds a copy of this term to the given node buffer using a given variable mapping.
+    fn dyn_add_to_buf_with_var_map(
+        &self,
+        buf: &mut NodeBuf,
+        var_map: &mut dyn FnMut(Var) -> Lit,
+    ) -> Lit;
+
     /// Adds a copy of this term to the given environment using a given variable mapping.
     fn dyn_add_to_env_with_var_map(
         &self,
@@ -536,6 +552,22 @@ impl<T: Term> TermDynAuto for T {
         self.reduce(buf).map(|output| {
             <T::Output as VarOrLit>::process_var_or_lit(output, |var| var.as_pos(), |lit| lit)
         })
+    }
+
+    fn dyn_add_to_buf_with_var_map(
+        &self,
+        buf: &mut NodeBuf,
+        var_map: &mut dyn FnMut(Var) -> Lit,
+    ) -> Lit {
+        let mut clone = self.clone();
+        let pol = <<Self as Term>::Output>::process_pol(
+            clone.apply_var_map(var_map),
+            || Pol::Pos,
+            |pol| pol,
+        );
+        buf.term(clone)
+            .process_var_or_lit(|var| var.as_lit(), |lit| lit)
+            ^ pol
     }
 
     fn dyn_add_to_env_with_var_map(

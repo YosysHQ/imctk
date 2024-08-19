@@ -1,6 +1,4 @@
-// TODO this is currently implemented on top of Nodes, but the specific use case would be better
-// served with a different representation
-
+//! Unindexed temporary storage of nodes, terms and equivalences.
 use std::fmt::Debug;
 
 use imctk_ids::Id;
@@ -34,12 +32,25 @@ enum NodeBufEntryView<'a> {
     Equiv([Lit; 2]),
 }
 
+/// A mostly write-only collection of nodes, terms and equivalences stored outside of an
+/// environment.
+///
+/// While individual nodes, terms and equivalences can be added using the [`NodeBuilder`] trait, the
+/// only way to access the added items is by using [`Self::drain_into_node_builder`] to add all of
+/// them to another [`NodeBuilder`] (e.g. an environment that does provide access to individual
+/// nodes).
+///
+/// Note that when adding terms, a [`NodeBuf`] will allocate fresh variable with ids decreasing from
+/// the maximal supported variable id. These will get remapped to fresh or existing equivalent
+/// variables when draining the contents into another [`NodeBuilder`]. The resulting mapping is
+/// returned as a [`NodeBufVarMap`] reference.
 #[derive(Default)]
 pub struct NodeBuf {
     nodes: super::nodes::Nodes,
     entries: Vec<NodeBufEntry>,
     terms: usize,
     recycle: usize,
+    tmp_var_map: NodeBufVarMap,
 }
 
 impl Debug for NodeBuf {
@@ -58,12 +69,17 @@ impl Debug for NodeBuf {
     }
 }
 
+/// Variable mapping created when draining the contents of a [`NodeBuf`].
 #[derive(Default)]
 pub struct NodeBufVarMap {
     map: Vec<Lit>,
 }
 
 impl NodeBufVarMap {
+    /// Applies the mapping determined when draining the contents of a [`NodeBuf`] into a
+    /// [`NodeBuilder`]. This is an identity mapping for any variable or literal that was explicitly
+    /// added to the [`NodeBuf`] but will remap the freshly allocated variables for [`Term`]
+    /// outputs.
     pub fn map_var(&self, var: Var) -> Lit {
         self.map
             .get(Var::MAX_ID_INDEX - var.index())
@@ -114,20 +130,20 @@ impl NodeBuilder for NodeBuf {
 }
 
 impl NodeBuf {
-    pub fn drain_into_node_builder(
-        &mut self,
-        builder: &mut impl NodeBuilder,
-        var_map: &mut NodeBufVarMap,
-    ) {
+    /// Adds the contents of this buffer into another [`NodeBuilder`] and clear this buffer.
+    ///
+    /// This returns a [`NodeBufVarMap`] reference that contains the mapping for any variables
+    /// freshly allocated for [`Term`] outputs.
+    pub fn drain_into_node_builder(&mut self, builder: &mut impl NodeBuilder) -> &NodeBufVarMap {
         // We multiply by 2 since the builder will start allocating variables for our temporary
         // variables and we need to avoid any overlap until the very end.
         assert!(
             builder.valid_temporary_vars(self.terms * 2),
             "NodeBuf uses more temporary variables than available in the target builder"
         );
-        var_map.map.clear();
+        self.tmp_var_map.map.clear();
         if self.entries.is_empty() {
-            return;
+            return &self.tmp_var_map;
         }
 
         for entry in self.entries.drain(..) {
@@ -148,25 +164,26 @@ impl NodeBuf {
                                 )
                             };
 
-                            let map_pol = term.dyn_apply_var_map(&mut |var| var_map.map_var(var));
+                            let map_pol =
+                                term.dyn_apply_var_map(&mut |var| self.tmp_var_map.map_var(var));
 
                             let output_lit = builder.dyn_term(term);
 
-                            var_map.map.push(output_lit ^ map_pol);
+                            self.tmp_var_map.map.push(output_lit ^ map_pol);
                         })
                         .unwrap();
                 }
                 NodeBufEntry::Node(node_id) => {
                     self.nodes
                         .remove_dyn_with(node_id, |mut node| {
-                            node.dyn_apply_var_map(&mut |var| var_map.map_var(var));
+                            node.dyn_apply_var_map(&mut |var| self.tmp_var_map.map_var(var));
                             builder.dyn_node(node);
                         })
                         .unwrap();
                 }
                 NodeBufEntry::Equiv(lits) => {
                     log::trace!("draining equiv {lits:?}");
-                    builder.equiv(lits.map(|lit| lit.lookup(|var| var_map.map_var(var))));
+                    builder.equiv(lits.map(|lit| lit.lookup(|var| self.tmp_var_map.map_var(var))));
                 }
             }
         }
@@ -178,5 +195,7 @@ impl NodeBuf {
             self.recycle = 0;
             self.nodes = Default::default();
         }
+
+        &self.tmp_var_map
     }
 }

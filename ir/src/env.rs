@@ -14,10 +14,7 @@ use super::{
     index::{DynamicIndex, StructuralHashIndex},
     node::{
         builder::{NodeBuilder, NodeBuilderDyn},
-        collections::{
-            buf::{NodeBuf, NodeBufVarMap},
-            nodes::Nodes,
-        },
+        collections::{buf::NodeBuf, nodes::Nodes},
         generic::{dyn_term_into_dyn_term_node, DynNode, DynTerm, Node, Term, TermNode},
         NodeId,
     },
@@ -362,7 +359,6 @@ pub struct Env {
     index: EnvIndex,
 
     node_buf: NodeBuf,
-    node_buf_var_map: NodeBufVarMap,
 
     updates: Option<EnvUpdates>,
 }
@@ -397,6 +393,45 @@ impl Env {
     /// can be used via [`var_defs`][`Self::var_defs`].
     pub fn lit_repr(&mut self, lit: Lit) -> Lit {
         self.var_defs.update_lit_repr(lit)
+    }
+
+    /// Applies a variable map to a copy of node and adds it into the same environment.
+    ///
+    /// Note that this will also use the variable map for any output of the node, see
+    /// [`Self::duplicate_term_with_var_map`] for a version that will use a fresh or an existing
+    /// already equivalent variable instead.
+    pub fn duplicate_node_with_var_map(
+        &mut self,
+        node_id: NodeId,
+        mut var_map: impl FnMut(&Self, Var) -> Lit,
+    ) {
+        let node = self.nodes.get_dyn(node_id).unwrap();
+        let mut node_buf = take(&mut self.node_buf);
+        node.dyn_add_to_buf_with_var_map(&mut node_buf, &mut |var| var_map(self, var));
+        node_buf.drain_into_node_builder(self);
+        self.node_buf = node_buf;
+    }
+
+    /// Applies a variable map to a copy of a node's term and adds it into the same environment,
+    /// returning the fresh or existing already equivalent output variable.
+    ///
+    /// This will panic if the given node is not a [`TermNode`], see
+    /// [`Self::duplicate_node_with_var_map`] for a version that supports all nodes and also remaps
+    /// the output variable.
+    pub fn duplicate_term_with_var_map(
+        &mut self,
+        node_id: NodeId,
+        mut var_map: impl FnMut(&Self, Var) -> Lit,
+    ) -> Lit {
+        let node = self.nodes.get_dyn(node_id).unwrap();
+        let term = node.dyn_term().unwrap();
+        let mut node_buf = take(&mut self.node_buf);
+        let out_lit =
+            term.dyn_add_to_buf_with_var_map(&mut node_buf, &mut |var| var_map(self, var));
+        let var_map = node_buf.drain_into_node_builder(self);
+        let out_lit = out_lit.lookup(|var| var_map.map_var(var));
+        self.node_buf = node_buf;
+        out_lit
     }
 }
 
