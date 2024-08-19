@@ -761,6 +761,12 @@ impl Env {
         &self.index.uses_index
     }
 
+    /// Returns the index of all nodes and terms indexed by their definition (i.e. excluding the
+    /// output of [`TermNode`] nodes).
+    pub fn structural_hash_index(&self) -> &StructuralHashIndex {
+        &self.index.structural_hash_index
+    }
+
     /// Makes the specified node the primary definition for its output variable, updating its level
     /// bound according to the node's input level bounds.
     // TODO are there any issues with making this public?
