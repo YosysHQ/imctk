@@ -242,7 +242,10 @@ impl VarDefs {
     ///
     /// Representative variables are variables not known to be equivalent to other variables or
     /// their negation.
-    pub fn repr_vars(&self) -> impl Iterator<Item = Var> + '_ {
+    ///
+    /// This will yield a double ended iterator of representative variables ordered by increasing
+    /// id.
+    pub fn repr_vars(&self) -> impl DoubleEndedIterator<Item = Var> + '_ {
         self.var_defs.iter().flat_map(|(var, def)| match def.def() {
             Some(VarDef::Equiv(_)) => None,
             _ => Some(var),
