@@ -6,6 +6,7 @@ use imctk_ir::{
     node::fine::circuit::{AndNode, XorNode},
     var::{Lit, Pol, Var},
 };
+use rand::{rngs::SmallRng, Rng, SeedableRng};
 
 use crate::bit_matrix::{Word, WordVec};
 
@@ -32,7 +33,7 @@ impl SimNode {
     }
 }
 
-pub struct FraigSim {
+pub struct RefineSim {
     sim_from_env: IdVec<Var, Option<Lit>>,
     env_from_sim: IdVec<Var, Lit>,
 
@@ -43,11 +44,13 @@ pub struct FraigSim {
 
     timestamp: u32,
 
+    input_rng: SmallRng,
+
     dirty: bool,
     batch_dirty: bool,
 }
 
-impl Default for FraigSim {
+impl Default for RefineSim {
     fn default() -> Self {
         Self {
             sim_from_env: IdVec::from_vec(vec![Some(Lit::FALSE)]),
@@ -64,13 +67,14 @@ impl Default for FraigSim {
             inputs: Default::default(),
             equiv_pos: 0,
             timestamp: 0,
+            input_rng: SmallRng::seed_from_u64(0),
             dirty: false,
             batch_dirty: false,
         }
     }
 }
 
-impl FraigSim {
+impl RefineSim {
     fn process_equivs(&mut self, env: &Env) {
         for &env_var in env.equiv_vars()[self.equiv_pos..].iter() {
             let env_repr_lit = env.var_defs().lit_repr(env_var.as_lit());
@@ -106,32 +110,17 @@ impl FraigSim {
         self.equiv_pos = env.equiv_vars().len();
     }
 
-    pub fn ensure_var(
-        &mut self,
-        env: &Env,
-        env_var: Var,
-        mut input_val: impl FnMut(Var) -> WordVec,
-    ) {
-        self.import_repr_var(env, env.var_defs().var_repr(env_var), &mut input_val);
+    pub fn ensure_var(&mut self, env: &Env, env_var: Var) {
+        self.import_repr_var(env, env.var_defs().var_repr(env_var));
     }
 
-    fn import_lit(
-        &mut self,
-        env: &Env,
-        env_lit: Lit,
-        input_val: &mut impl FnMut(Var) -> WordVec,
-    ) -> Lit {
+    fn import_lit(&mut self, env: &Env, env_lit: Lit) -> Lit {
         env.var_defs()
             .lit_repr(env_lit)
-            .lookup(|var| self.import_repr_var(env, var, input_val))
+            .lookup(|var| self.import_repr_var(env, var))
     }
 
-    fn import_repr_var(
-        &mut self,
-        env: &Env,
-        env_var: Var,
-        input_val: &mut impl FnMut(Var) -> WordVec,
-    ) -> Lit {
+    fn import_repr_var(&mut self, env: &Env, env_var: Var) -> Lit {
         if env.equiv_vars().len() != self.equiv_pos {
             self.process_equivs(env);
         }
@@ -144,7 +133,7 @@ impl FraigSim {
         if let Some(and) = node.dyn_cast::<AndNode>() {
             let output_pol = and.output.pol();
             let env_inputs = and.term.inputs.into_values();
-            let sim_inputs = env_inputs.map(|lit| self.import_lit(env, lit, input_val));
+            let sim_inputs = env_inputs.map(|lit| self.import_lit(env, lit));
 
             let [a_zero, b_zero] =
                 sim_inputs.map(|lit| lit.lookup(|var| self.sim_node[var].zero_phase));
@@ -162,7 +151,7 @@ impl FraigSim {
                     op: NodeOp::And,
                     zero_phase,
                     inputs: sim_inputs,
-                    timestamp: a_timestamp.max(b_timestamp),
+                    timestamp: a_timestamp.min(b_timestamp),
                     hash: 0,
                 })
                 .0;
@@ -175,7 +164,7 @@ impl FraigSim {
         } else if let Some(xor) = node.dyn_cast::<XorNode>() {
             let output_pol = xor.output.pol();
             let env_inputs = xor.term.inputs.into_values().map(|var| var.as_lit());
-            let sim_inputs = env_inputs.map(|lit| self.import_lit(env, lit, input_val));
+            let sim_inputs = env_inputs.map(|lit| self.import_lit(env, lit));
 
             let [a_zero, b_zero] =
                 sim_inputs.map(|lit| lit.lookup(|var| self.sim_node[var].zero_phase));
@@ -193,7 +182,7 @@ impl FraigSim {
                     op: NodeOp::Xor,
                     zero_phase,
                     inputs: sim_inputs,
-                    timestamp: a_timestamp.max(b_timestamp),
+                    timestamp: a_timestamp.min(b_timestamp),
                     hash: 0,
                 })
                 .0;
@@ -217,9 +206,7 @@ impl FraigSim {
             })
             .0;
 
-        let env_lit = sim_output ^ output_pol;
-        self.value
-            .push(input_val(env_lit.var()) ^ WordVec::splat(0u64 ^ env_lit.pol()));
+        self.value.push(self.input_rng.gen::<[u64; 4]>().into());
 
         self.env_from_sim.push(env_var ^ output_pol);
         self.sim_from_env[env_var] = Some(sim_output ^ output_pol);
@@ -248,13 +235,13 @@ impl FraigSim {
 
     pub fn set_input(&mut self, env: &Env, lit: Lit, value: WordVec) {
         self.mark_dirty();
-        let sim_lit = self.import_lit(env, lit, &mut |_| WordVec::ZERO);
+        let sim_lit = self.import_lit(env, lit);
         assert!(self.sim_node[sim_lit.var()].is_input());
         self.value[sim_lit.var()] = value ^ WordVec::splat(0u64 ^ sim_lit.pol());
     }
 
     pub fn get_input(&mut self, env: &Env, lit: Lit) -> WordVec {
-        let sim_lit = self.import_lit(env, lit, &mut |_| WordVec::ZERO);
+        let sim_lit = self.import_lit(env, lit);
         assert!(self.sim_node[sim_lit.var()].is_input());
         self.value[sim_lit.var()] ^ WordVec::splat(0u64 ^ sim_lit.pol())
     }
@@ -265,7 +252,7 @@ impl FraigSim {
     }
 
     pub fn zero_phase(&mut self, env: &Env, lit: Lit) -> bool {
-        let sim_lit = self.import_lit(env, lit, &mut |_| WordVec::ZERO);
+        let sim_lit = self.import_lit(env, lit);
         self.sim_node[sim_lit.var()].zero_phase ^ sim_lit.pol()
     }
 
@@ -275,7 +262,7 @@ impl FraigSim {
             self.dirty = false;
             self.batch_dirty = true;
         }
-        let sim_lit = self.import_lit(env, lit, &mut |_| WordVec::ZERO);
+        let sim_lit = self.import_lit(env, lit);
         self.compute_lit(sim_lit)
     }
 
@@ -291,7 +278,7 @@ impl FraigSim {
             self.dirty = false;
             self.batch_dirty = true;
         }
-        let sim_lit = self.import_lit(env, var.as_lit(), &mut |_| WordVec::ZERO);
+        let sim_lit = self.import_lit(env, var.as_lit());
         let sim_repr_lit = sim_lit.var() ^ self.sim_node[sim_lit.var()].zero_phase;
         self.compute_lit(sim_repr_lit)
     }

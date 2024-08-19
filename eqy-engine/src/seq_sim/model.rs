@@ -7,7 +7,7 @@ use imctk_ir::{
 };
 use imctk_util::unordered_pair::UnorderedPair;
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct XaigStep {
     pub inputs: [Lit; 2],
 }
@@ -62,11 +62,12 @@ pub enum Step {
     Other(Option<Lit>),
 }
 
+#[derive(Default)]
 pub struct SimModel {
     pub init_steps: IdVec<Var, Step>,
     pub next_steps: IdVec<Var, Step>,
-    pub step_from_env: IdVec<Var, Option<Lit>>,
-    pub env_from_step: IdVec<Var, Lit>,
+    pub sim_from_env: IdVec<Var, Option<Lit>>,
+    pub env_from_sim: IdVec<Var, Lit>,
     pub inputs: Vec<Var>,
     pub steady_inputs: Vec<Var>,
     pub read_state: IdVec<Var, Var>,
@@ -79,8 +80,8 @@ pub fn extract_sim_model(env: &Env, targets: impl IntoIterator<Item = Var>) -> S
     let mut init_steps: IdVec<Var, Step> = IdVec::default();
     let mut next_steps: IdVec<Var, Step> = IdVec::default();
 
-    let mut step_from_env: IdVec<Var, Option<Lit>> = Default::default();
-    let mut env_from_step: IdVec<Var, Lit> = Default::default();
+    let mut sim_from_env: IdVec<Var, Option<Lit>> = Default::default();
+    let mut env_from_sim: IdVec<Var, Lit> = Default::default();
 
     let mut regs: Vec<Var> = vec![];
     let mut inputs: Vec<Var> = vec![];
@@ -88,8 +89,8 @@ pub fn extract_sim_model(env: &Env, targets: impl IntoIterator<Item = Var>) -> S
     let mut read_state: IndexedIdVec<Var, Var> = Default::default();
     // Vec<(Var, Lit)> = vec![];
 
-    env_from_step.push(Lit::FALSE);
-    step_from_env.push(Some(Lit::FALSE));
+    env_from_sim.push(Lit::FALSE);
+    sim_from_env.push(Some(Lit::FALSE));
 
     let step = Step::Xaig(XaigStep::and([Lit::FALSE; 2].into()));
 
@@ -101,13 +102,13 @@ pub fn extract_sim_model(env: &Env, targets: impl IntoIterator<Item = Var>) -> S
 
         let node = env.def_node(var).unwrap();
         if let Some(and) = node.dyn_cast::<AndNode>() {
-            let step_var = env_from_step.push(var ^ and.output.pol()).0;
-            *step_from_env.grow_for_key(var) = Some(step_var ^ and.output.pol());
+            let step_var = env_from_sim.push(var ^ and.output.pol()).0;
+            *sim_from_env.grow_for_key(var) = Some(step_var ^ and.output.pol());
 
             let inputs = and
                 .term
                 .inputs
-                .map(|input| input.lookup(|var| step_from_env[var].unwrap()));
+                .map(|input| input.lookup(|var| sim_from_env[var].unwrap()));
             let step = Step::Xaig(XaigStep::and(inputs));
             init_steps.push(step);
 
@@ -117,10 +118,10 @@ pub fn extract_sim_model(env: &Env, targets: impl IntoIterator<Item = Var>) -> S
                 next_steps.push(step);
             }
         } else if let Some(xor) = node.dyn_cast::<XorNode>() {
-            let step_var = env_from_step.push(var ^ xor.output.pol()).0;
-            *step_from_env.grow_for_key(var) = Some(step_var ^ xor.output.pol());
+            let step_var = env_from_sim.push(var ^ xor.output.pol()).0;
+            *sim_from_env.grow_for_key(var) = Some(step_var ^ xor.output.pol());
 
-            let inputs = xor.term.inputs.map(|input| step_from_env[input].unwrap());
+            let inputs = xor.term.inputs.map(|input| sim_from_env[input].unwrap());
             let step = Step::Xaig(XaigStep::and(inputs));
             init_steps.push(step);
             if steady {
@@ -129,24 +130,24 @@ pub fn extract_sim_model(env: &Env, targets: impl IntoIterator<Item = Var>) -> S
                 next_steps.push(step);
             }
         } else if let Some(init) = node.dyn_cast::<InitNode>() {
-            let step_var = env_from_step.push(var ^ init.output.pol()).0;
-            *step_from_env.grow_for_key(var) = Some(step_var ^ init.output.pol());
+            let step_var = env_from_sim.push(var ^ init.output.pol()).0;
+            *sim_from_env.grow_for_key(var) = Some(step_var ^ init.output.pol());
 
-            let input = step_from_env[init.term.input].unwrap();
+            let input = sim_from_env[init.term.input].unwrap();
             init_steps.push(Step::Xaig(XaigStep::and([Lit::TRUE, input].into())));
             next_steps.push(Step::Other(Some(step_var.as_lit())));
         } else if let Some(reg) = node.dyn_cast::<RegNode>() {
-            let step_var = env_from_step.push(var ^ reg.output.pol()).0;
-            *step_from_env.grow_for_key(var) = Some(step_var ^ reg.output.pol());
+            let step_var = env_from_sim.push(var ^ reg.output.pol()).0;
+            *sim_from_env.grow_for_key(var) = Some(step_var ^ reg.output.pol());
 
-            let init_input = reg.term.init.lookup(|var| step_from_env[var].unwrap());
+            let init_input = reg.term.init.lookup(|var| sim_from_env[var].unwrap());
             init_steps.push(Step::Xaig(XaigStep::and([Lit::TRUE, init_input].into())));
             next_steps.push(Step::Other(None));
             regs.push(step_var);
         } else {
             let output_lit = node.output_lit().unwrap();
-            let step_var = env_from_step.push(var ^ output_lit.pol()).0;
-            *step_from_env.grow_for_key(var) = Some(step_var ^ output_lit.pol());
+            let step_var = env_from_sim.push(var ^ output_lit.pol()).0;
+            *sim_from_env.grow_for_key(var) = Some(step_var ^ output_lit.pol());
 
             init_steps.push(Step::Other(None));
             if steady {
@@ -160,12 +161,12 @@ pub fn extract_sim_model(env: &Env, targets: impl IntoIterator<Item = Var>) -> S
     }
 
     for &var in regs.iter() {
-        let env_lit = env_from_step[var];
+        let env_lit = env_from_sim[var];
         let node = env.def_node(env_lit.var()).unwrap();
         let reg = node.dyn_cast::<RegNode>().unwrap();
         assert_eq!(reg.output, env_lit);
 
-        let from = step_from_env[reg.term.next].unwrap();
+        let from = sim_from_env[reg.term.next].unwrap();
 
         next_steps[var] = Step::Other(Some(from));
     }
@@ -179,8 +180,8 @@ pub fn extract_sim_model(env: &Env, targets: impl IntoIterator<Item = Var>) -> S
     SimModel {
         init_steps,
         next_steps,
-        step_from_env,
-        env_from_step,
+        sim_from_env,
+        env_from_sim,
         inputs,
         steady_inputs,
         read_state: read_state.into_id_vec(),
