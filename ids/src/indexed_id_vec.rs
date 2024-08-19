@@ -21,6 +21,17 @@ pub struct IndexedIdVec<K, V, S = BuildHasherDefault<ZwoHasher>> {
     build_hasher: S,
 }
 
+impl<K: Id, V: Hash + Eq, S: Default + BuildHasher> FromIterator<V> for IndexedIdVec<K, V, S> {
+    fn from_iter<T: IntoIterator<Item = V>>(iter: T) -> Self {
+        // TODO pre-reserve storage?
+        let mut new = Self::default();
+        for item in iter {
+            new.insert(item);
+        }
+        new
+    }
+}
+
 impl<K: Id, V, S> Deref for IndexedIdVec<K, V, S> {
     type Target = IdVec<K, V>;
 

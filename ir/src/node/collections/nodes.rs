@@ -8,9 +8,8 @@ use std::{
 };
 
 use hashbrown::HashTable;
-use imctk_ids::Id;
+use imctk_ids::{indexed_id_vec::IndexedIdVec, Id};
 use imctk_util::give_take::Take;
-use indexmap::IndexSet;
 use zwohash::ZwoHasher;
 
 use crate::node::{
@@ -462,7 +461,7 @@ struct NodeTypeChunks {
     node_type: NodeType,
     active_chunk: u32,
     len: usize,
-    chunks: IndexSet<u32, BuildHasherDefault<ZwoHasher>>,
+    chunks: IndexedIdVec<u32, u32>,
     chunks_with_spare_capacity: Vec<u32>,
 }
 
