@@ -1,3 +1,5 @@
+//! Unrolling of a sequential circuits for BMC, k-induction or similar.
+
 use std::collections::hash_map::Entry;
 
 use imctk_ids::{id_vec::IdVec, indexed_id_vec::IndexedIdVec, Id, Id32};
@@ -12,9 +14,12 @@ use zwohash::HashMap;
 
 use crate::{env_multimap::LitMultimap, time_step::TimeStep};
 
+/// [`Term`] representing an [`Input`] at a specific [`TimeStep`].
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct UnrolledInput {
+    /// The input of the sequential circuit.
     pub input: Input,
+    /// The time step in the unrolled circuit.
     pub step: TimeStep,
 }
 
@@ -38,8 +43,14 @@ impl Term for UnrolledInput {
 
 impl TermDyn for UnrolledInput {}
 
+/// [`Term`] representing the unknown and unconstrained past value of a sequential signal for
+/// induction.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct UnknownPast {
+    /// The signal of the sequential circuit.
+    ///
+    /// Note that this is not an input to the term as it refers to a signal in a different
+    /// environment.
     pub seq: Var,
 }
 
@@ -63,6 +74,8 @@ impl Term for UnknownPast {
 
 impl TermDyn for UnknownPast {}
 
+/// [`Term`] representing an unconstrained value that allows the circuit to leave the initial state.
+/// This is used to implement unrolling for a simultaneous BMC base case and k-induction step.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct ReleaseReset {
     pub step: TimeStep,
@@ -90,10 +103,25 @@ impl TermDyn for ReleaseReset {}
 
 // In Induction and Hybrid mode, the first step contains everything that's steady and the second
 // step contains the unconstrained past.
+/// Selects whether to unroll for BMC, a k-induction step or both simultaneously.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum UnrollMode {
+    /// Perform unrolling for a bounded model check (BMC).
     Bmc,
+    /// Perform unrolling for a k-induction step.
+    ///
+    /// In this mode the [`TimeStep`] of index 0 is used for steady signals (as well as the initial
+    /// state of non-steady signals used to derive steady signals). Index 1 is used for the unknown
+    /// and unconstrained past and the steps starting with index 2 will be unrolled as in BMC mode.
+    ///
+    /// This is suitable for k-induction as well as for interval property checking.
     Induction,
+    /// Perform a hybrid BMC and k-induction step.
+    ///
+    /// This behaves like the induction mode, but multiplexes between the preceding step and the
+    /// initial state between every two unrolled time steps. The multiplexing between the initial
+    /// and preceding state is constrained such that once the initial state is left, it cannot be
+    /// entered again via those multiplexers.
     Hybrid,
 }
 
@@ -120,6 +148,8 @@ impl std::ops::BitXor<Pol> for &'_ SeqFromCombEntry {
     }
 }
 
+/// Unrolling of a sequential circuits and manages the mapping between the sequential and unrolled
+/// circuit.
 pub struct Unroll {
     seen_from_seq: IndexedIdVec<Id32, Var>,
     comb_from_seen: IdVec<TimeStep, IdVec<Id32, Option<Lit>>>,

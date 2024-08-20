@@ -1,3 +1,4 @@
+//! Combinational circuit simulation for equivalence class refinement
 use std::mem::replace;
 
 use imctk_ids::id_vec::IdVec;

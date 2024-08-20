@@ -1,3 +1,7 @@
+//! Bit-packed matrix type with Boolean entries.
+//!
+//! This type implements efficient transposition and is useful in conjunction with the [bit sliced
+//! simulation engine][crate::seq_sim::bit_sliced].
 pub type Word = u64;
 pub type WordVec = wide::u64x4;
 
@@ -5,6 +9,7 @@ const VEC_LANES: usize = WordVec::LANES as usize;
 const WORD_BITS: usize = Word::BITS as usize;
 const VEC_BITS: usize = WordVec::BITS as usize;
 
+/// Bit-packed matrix type with Boolean entries.
 #[derive(Clone)]
 pub struct BitMatrix {
     words: Vec<WordVec>,

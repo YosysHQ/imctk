@@ -1,4 +1,54 @@
-// TODO document and add #![warn(missing_docs)]
+//! Incremental partition refinement.
+//!
+//! This provides an implementation of an incremental partition refinement data structure.
+//! Incrementality is allowed in two different ways:
+//!
+//! 1. It is always possible to keep refining the partition, splitting classes into multiple
+//!    classes. This is a usual requirement for partition refinement use cases.
+//! 2. It is possible to add new elements of an unknown class to the partition. This means that the
+//!    data structure doesn't represent a partition that happens to be incrementally updated, but
+//!    represents what we will call an incremental partition.
+//!
+//! Such an incremental partition can be viewed as a forest of directed trees with the incremental
+//! partition elements as vertices. Two elements are considered to be candidates for sharing a class
+//! when either is an ancestor of the other.
+//!
+//! Any (sub-)tree can be refined using a class invariant function by labeling the subtree using the
+//! class invariant values, duplicating the (sub-)tree for every observed value (all rooted at the
+//! same parent) and then for each copy contracting all vertices that do not have the value
+//! corresponding to that specific copy.
+//!
+//! When implementing this, the contracted copies can be constructed directly, avoiding any
+//! intermediate blowup.
+//!
+//! The roots of the trees can serve as class representatives of the finest non-incremental
+//! partition that is a coarsening of the incremental partition.
+//!
+//! A new element of an unknown class can be added by turning the forest into a single tree with the
+//! new element as root.
+//!
+//! The data structure is implemented by maintaining:
+//!
+//! * A linked list representing an euler tour of the forest viewed as a tree with a virtual root
+//!   not corresponding to an element, associating the unique incoming edge with each element. (An
+//!   alternative perspective is that the forest is represented as an s-expr and we maintain a
+//!   linked list of opening and closing parens.)
+//!
+//!   This requires fixing an order between siblings, which can be done arbitrarily.
+//!
+//! * An order maintenance data structure to quickly determine the relative order of two linked list
+//!   elements. In this setting, this allows us to check whether one element is the parent of
+//!   another.
+//!
+//! * Lazily updated shortcut links to find the first sibling among the children of the same parent
+//!   and to find the root of any element.
+//!
+//! * Monotone linked list item timestamps that are updated whenever we move such an item into a new
+//!   contracted "copy" and stored along the shortcut links so they can be invalidated when a target
+//!   node moves. Note that the largest subclass during refinement doesn't have to move as we will
+//!   implicitly obtain the contracted tree after having moved out all other elements.
+
+// TODO fully document and add #![warn(missing_docs)]
 #![deny(unsafe_code)]
 
 use std::{

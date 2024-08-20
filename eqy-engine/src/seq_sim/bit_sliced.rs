@@ -1,9 +1,17 @@
+//! Bit-sliced sequential circuit simulation.
+//!
+//! This simulates many instances of a single [sequential simulation model][crate::seq_sim::model]
+//! in parallel by packing the state of all instances into the bits of a SIMD vector.
+
 use super::model::{SimModel, Step};
 use crate::bit_matrix::BitMatrix;
 use imctk_ir::var::Var;
 
 pub use crate::bit_matrix::{Word, WordVec};
 
+/// Bit-sliced sequential circuit simulation engine.
+///
+/// See the [module level documentation][self] for a general overview.
 pub struct BitSlicedSim {
     lanes: usize,
     reg_len: usize,

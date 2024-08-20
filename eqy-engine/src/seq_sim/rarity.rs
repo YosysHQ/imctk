@@ -1,3 +1,11 @@
+//! Rarity simulation, randomized simulation with a bias for novel states.
+//!
+//! This uses [the bit sliced simulation engine][crate::seq_sim::bit_sliced] to perform rarity
+//! simulation. It follows the strategy described by Mishchenko, Brayton and Een[^1].
+//!
+//! [^1]: [Mishchenko, Alan, Robert Brayton, and Niklas Een. "Using speculation for sequential
+//! equivalence checking." Proceedings of International Workshop on Logic & Synthesis. 2012.
+//! (PDF)](https://people.eecs.berkeley.edu/~alanmi/publications/2012/iwls12_sec.pdf)
 use rand::{rngs::SmallRng, Rng, SeedableRng};
 
 use super::{
@@ -53,6 +61,9 @@ impl Counters {
     }
 }
 
+/// Rarity simulation engine.
+///
+/// See the [module level documentation][self] for an overview.
 pub struct RaritySim {
     inner: BitSlicedSim,
     transposed: BitMatrix,

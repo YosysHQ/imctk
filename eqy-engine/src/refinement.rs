@@ -1,3 +1,4 @@
+//! Strategies for refining equivalence candiate classes.
 use std::ops::{Deref, DerefMut};
 
 use imctk_inc_refine::IncrementalRefinement;
@@ -10,6 +11,8 @@ pub mod driver;
 pub mod bmc;
 pub mod rarity_sim;
 
+/// Wrapper for [`IncrementalRefinement<Var>`][IncrementalRefinement] to track known equivalences in
+/// the environment.
 #[derive(Default)]
 pub struct EnvVarRefinement {
     refine: IncrementalRefinement<Var>,
@@ -58,13 +61,14 @@ impl EnvVarRefinement {
     }
 }
 
-pub struct RefinementEnv<'a> {
+/// Bundles an environment, equivalence candidates and a sequential simulation model.
+pub struct RefinementContext<'a> {
     pub env: &'a mut Env,
     pub refine: &'a mut EnvVarRefinement,
     pub sim_model: &'a SimModel,
 }
 
-impl<'a> RefinementEnv<'a> {
+impl<'a> RefinementContext<'a> {
     pub fn sync_equivs(&mut self) {
         self.env.rebuild_egraph();
         self.refine.sync_equivs(self.env);

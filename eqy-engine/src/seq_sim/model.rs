@@ -1,3 +1,9 @@
+//! Linear sequential circuit simulation model.
+//!
+//! This is a cricuit representation dedicated to sequential simulation. It only supports And and
+//! Xor gates and stores the combinational part of the circuit in topologically sorted order. This
+//! makes it a static representation, unlike an [environment][Env], but offers significant
+//! performance benefits when running simulation for multiple time steps.
 use imctk::extract::extract_topo_sorted_primary_defs;
 use imctk_ids::{id_vec::IdVec, indexed_id_vec::IndexedIdVec};
 use imctk_ir::{
@@ -62,6 +68,9 @@ pub enum Step {
     Other(Option<Lit>),
 }
 
+/// Linear sequential circuit simulation model.
+///
+/// See the [module level documentation][self] for a general overview.
 #[derive(Default)]
 pub struct SimModel {
     pub init_steps: IdVec<Var, Step>,

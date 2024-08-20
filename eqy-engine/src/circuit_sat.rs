@@ -1,3 +1,16 @@
+//! Circuit aware SAT solving.
+//!
+//! This provides a circuit aware SAT solver that can be used to solve queries for combinational
+//! circuits represented in an [environment][Env].
+//!
+//! This is a wrapper around abc's glucose2 circuit aware SAT solver as described by Zhang, Jiang
+//! and Mishchenko[^1].
+//!
+//! [^1]: [Zhang, He-Teng, Jie-Hong R. Jiang, and Alan Mishchenko. "A circuit-based SAT solver for
+//!     logic synthesis." 2021 IEEE/ACM International Conference On Computer Aided Design (ICCAD).
+//!     IEEE, 2021.
+//!     (PDF)](https://people.eecs.berkeley.edu/~alanmi/publications/2022/iwls22_sweep.pdf)
+
 use std::{
     cell::RefCell,
     collections::VecDeque,
@@ -24,6 +37,9 @@ use crate::seq_sim::model::XaigStep;
 
 type InnerSolver<'a> = imctk_abc::sat::glucose2::Solver<'a, imctk_abc::sat::glucose2::CircuitProp>;
 
+/// Circuit aware SAT solving adaptor.
+///
+/// See the [module level documentation][self] for an overview.
 pub struct CircuitSat {
     solver: Option<InnerSolver<'static>>,
     sat_from_env: IdVec<Var, Option<Lit>>,

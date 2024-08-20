@@ -1,3 +1,5 @@
+//! Strategy for equivalence class refinement by scheduling pointwise equivalence queries
+//! interleaved with splitting individual classes by computing class invariant values.
 use imctk_ids::{id_vec::IdVec, Id};
 use std::{cmp::Reverse, collections::BinaryHeap, hash::Hash};
 

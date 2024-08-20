@@ -1,5 +1,6 @@
 use imctk_ids::{Id, Id32, IdRange};
 
+/// Represent a time step in the evaluation of a sequential circuit.
 #[derive(Id)]
 #[repr(transparent)]
 pub struct TimeStep(Id32);

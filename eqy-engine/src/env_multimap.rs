@@ -1,3 +1,9 @@
+//! Equivalence aware multimaps with variables or literals as keys.
+//!
+//! These collection types are multimaps that will automatically merge entries for
+//! [environemnt][Env] [variables][Var] or [literals][Lit] when they become known equivalent in the
+//! environment.
+
 // TODO should this be part of the ir crate instead?
 
 use std::{
@@ -12,6 +18,7 @@ use imctk_ir::{
 use imctk_util::hash::hash_ref;
 use table_seq::TableSeq;
 
+/// Equivalence aware multimap with [`Lit`] keys.
 pub struct LitMultimap<T> {
     equiv_pos: usize,
     entries: TableSeq<T>,
@@ -106,6 +113,7 @@ impl<T> LitMultimap<T> {
     }
 }
 
+/// Equivalence aware multimap with [`Var`] keys.
 #[derive(Default)]
 pub struct VarMultimap<T> {
     equiv_pos: usize,

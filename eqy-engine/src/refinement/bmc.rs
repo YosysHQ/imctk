@@ -1,3 +1,4 @@
+//! Bounded model checking based equivalence candiate class refinement.
 use std::mem::take;
 
 use imctk_ir::{
@@ -15,8 +16,9 @@ use crate::{
     unroll::{Unroll, UnrollMode},
 };
 
-use super::{driver::RefinementDriver, EnvVarRefinement, RefinementEnv};
+use super::{driver::RefinementDriver, EnvVarRefinement, RefinementContext};
 
+/// Bounded model checking based equivalence candiate class refinement.
 pub struct BmcRefinement {
     bmc_sim: RefineSim,
     bmc: Unroll,
@@ -40,16 +42,16 @@ impl Default for BmcRefinement {
 }
 
 impl BmcRefinement {
-    pub fn refine_for_time_step(&mut self, ref_env: &mut RefinementEnv, time: TimeStep) {
-        ref_env.sync_equivs();
+    pub fn refine_for_time_step(&mut self, ref_ctx: &mut RefinementContext, time: TimeStep) {
+        ref_ctx.sync_equivs();
         self.bmc_refine.sync_equivs(&self.bmc_env);
 
-        let target_vars = Vec::from_iter(ref_env.refine.nonisolated_iter());
+        let target_vars = Vec::from_iter(ref_ctx.refine.nonisolated_iter());
 
         // Unroll nonisolated vars to current timestep include the unrolled literals for tracking
         // candidate equivalences
         for &var in target_vars.iter() {
-            let bmc_lit = self.bmc_lit_for_seq_var(ref_env.sim_model, ref_env.env, time, var);
+            let bmc_lit = self.bmc_lit_for_seq_var(ref_ctx.sim_model, ref_ctx.env, time, var);
             self.bmc_refine.insert_item(bmc_lit.var());
         }
 
@@ -63,19 +65,19 @@ impl BmcRefinement {
         });
 
         // Refine sequential equivalences with unrolled equivalence classes
-        ref_env.refine.refine_all(&mut Default::default(), |var| {
-            self.bmc_class_for_seq_var(ref_env.sim_model, ref_env.env, time, var)
+        ref_ctx.refine.refine_all(&mut Default::default(), |var| {
+            self.bmc_class_for_seq_var(ref_ctx.sim_model, ref_ctx.env, time, var)
         });
 
-        log::debug!("unrolled repr: {}", ref_env.refine.stats());
+        log::debug!("unrolled repr: {}", ref_ctx.refine.stats());
 
         let mut driver = <RefinementDriver<Var, u32, (Var, [u64; 4])>>::default();
 
         // Initialize refinement driver
         driver.reset(target_vars.iter().map(|&var| {
-            let seq_class = ref_env.refine.root(var);
+            let seq_class = ref_ctx.refine.root(var);
             let (bmc_lit, bmc_class) =
-                self.bmc_lit_and_class_for_seq_var(ref_env.sim_model, ref_env.env, time, var);
+                self.bmc_lit_and_class_for_seq_var(ref_ctx.sim_model, ref_ctx.env, time, var);
             (var, !self.bmc_env.var_defs().level_bound(bmc_lit.var()), {
                 // The driver will be used to refine via simulation values, but we initialize it
                 // by using the known bmc classes as if they were simulation
@@ -99,14 +101,14 @@ impl BmcRefinement {
         while driver.refine(|seq_a, seq_b| {
             let seq_vars = [seq_a, seq_b];
 
-            if !ref_env.refine.contains(seq_a, seq_b) && !ref_env.refine.contains(seq_b, seq_a) {
+            if !ref_ctx.refine.contains(seq_a, seq_b) && !ref_ctx.refine.contains(seq_b, seq_a) {
                 // Already known inequivalent sequences from flushing or previous incremental use
                 stats_seq_already_refiend += 1;
                 return false;
             }
 
             let [bmc_a, bmc_b] = seq_vars
-                .map(|var| self.bmc_lit_for_seq_var(ref_env.sim_model, ref_env.env, time, var));
+                .map(|var| self.bmc_lit_for_seq_var(ref_ctx.sim_model, ref_ctx.env, time, var));
 
             if bmc_a.var() == bmc_b.var() {
                 // Known equivalent via the unrolled egraph
@@ -178,16 +180,16 @@ impl BmcRefinement {
             }
         }) {
             if take(&mut should_flush_sim) {
-                self.flush_sim(ref_env, time);
+                self.flush_sim(ref_ctx, time);
             }
 
             // Use simulation to refine the non-equivalent values of the last processed candidate
             // class
             driver.update(|var| {
-                let unrolled = self.bmc_lit_for_seq_var(ref_env.sim_model, ref_env.env, time, var);
+                let unrolled = self.bmc_lit_for_seq_var(ref_ctx.sim_model, ref_ctx.env, time, var);
 
                 (
-                    ref_env.refine.root(var),
+                    ref_ctx.refine.root(var),
                     self.bmc_sim
                         .get_pol_invariant_value(&self.bmc_env, unrolled.var())
                         .into(),
@@ -196,7 +198,7 @@ impl BmcRefinement {
         }
 
         // Finally refine using any counter examples not flushed so far
-        self.flush_sim(ref_env, time);
+        self.flush_sim(ref_ctx, time);
 
         log::debug!(
             "stats: {:?}",
@@ -257,7 +259,7 @@ impl BmcRefinement {
             .1
     }
 
-    fn flush_sim(&mut self, ref_env: &mut RefinementEnv, time: TimeStep) {
+    fn flush_sim(&mut self, ref_env: &mut RefinementContext, time: TimeStep) {
         self.bmc_refine.refine_all(&mut Default::default(), |var| {
             self.bmc_sim
                 .get_pol_invariant_value(&self.bmc_env, var)

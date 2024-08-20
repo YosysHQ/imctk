@@ -1,3 +1,6 @@
+// TODO fully document and add #![warn(missing_docs)]
+#![deny(unsafe_code)]
+
 pub mod comb_sim;
 pub mod seq_sim;
 
@@ -7,8 +10,10 @@ pub mod circuit_sat;
 
 pub mod refinement;
 
-pub mod time_step;
-
 pub mod unroll;
 
 pub mod env_multimap;
+
+mod time_step;
+
+pub use time_step::TimeStep;

@@ -1,3 +1,4 @@
+//! Rarity simulation based equivalence candiate class refinement.
 use imctk_ids::id_vec::IdVec;
 use imctk_inc_refine::RefinementKeys;
 use imctk_ir::var::Var;
@@ -8,8 +9,9 @@ use crate::{
     seq_sim::{bit_sliced::BitSlicedSim, rarity::RaritySim},
 };
 
-use super::RefinementEnv;
+use super::RefinementContext;
 
+/// Rarity simulation based equivalence candiate class refinement.
 pub struct RaritySimRefinement {
     sim: RaritySim,
     hashes: IdVec<Var, u64>,
@@ -17,10 +19,10 @@ pub struct RaritySimRefinement {
 }
 
 impl RaritySimRefinement {
-    pub fn new(refinement_env: &mut RefinementEnv) -> Self {
-        let RefinementEnv {
+    pub fn new(ref_ctx: &mut RefinementContext) -> Self {
+        let RefinementContext {
             sim_model: model, ..
-        } = refinement_env;
+        } = ref_ctx;
         Self {
             sim: RaritySim::new(BitSlicedSim::new(model, 1 << 12), 20, 64),
             hashes: IdVec::from_vec(vec![0; model.init_steps.len()]),
@@ -28,10 +30,10 @@ impl RaritySimRefinement {
         }
     }
 
-    pub fn run_round(&mut self, refinement_env: &mut RefinementEnv) {
-        let RefinementEnv {
+    pub fn run_round(&mut self, ref_ctx: &mut RefinementContext) {
+        let RefinementContext {
             sim_model, refine, ..
-        } = refinement_env;
+        } = ref_ctx;
         self.sim.sim_round(sim_model, |sim| {
             for (var, hash) in self.hashes.iter_mut() {
                 let state = sim.comb_state(var);

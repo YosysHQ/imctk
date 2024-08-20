@@ -6,10 +6,9 @@ use std::{
 use clap::Parser;
 use imctk_eqy_engine::{
     refinement::{
-        bmc::BmcRefinement, rarity_sim::RaritySimRefinement, EnvVarRefinement, RefinementEnv,
+        bmc::BmcRefinement, rarity_sim::RaritySimRefinement, EnvVarRefinement, RefinementContext,
     },
-    seq_sim::{self},
-    time_step::TimeStep,
+    seq_sim, TimeStep,
 };
 use imctk_ir::{env::Env, var::Lit};
 
@@ -66,7 +65,7 @@ fn main() -> color_eyre::Result<()> {
 
     let sim_model = seq_sim::model::extract_sim_model(&env, env.var_defs().repr_vars());
 
-    let mut refinement_env = RefinementEnv {
+    let mut refinement_env = RefinementContext {
         env: &mut env,
         refine: &mut refine,
         sim_model: &sim_model,
