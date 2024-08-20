@@ -5,7 +5,7 @@ pub mod bit_matrix;
 
 pub mod circuit_sat;
 
-pub mod refinement_driver;
+pub mod refinement;
 
 pub mod time_step;
 

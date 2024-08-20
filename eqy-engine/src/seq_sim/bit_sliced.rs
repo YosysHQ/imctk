@@ -4,20 +4,22 @@ use imctk_ir::var::Var;
 
 pub use crate::bit_matrix::{Word, WordVec};
 
-pub struct BitSlicedSim<'a> {
+pub struct BitSlicedSim {
     lanes: usize,
-    model: &'a SimModel,
+    reg_len: usize,
+    comb_len: usize,
 
     pub(super) reg_state: BitMatrix,
     pub(super) comb_state: Vec<WordVec>,
 }
 
-impl<'a> BitSlicedSim<'a> {
-    pub fn new(model: &'a SimModel, bit_lanes: usize) -> Self {
+impl BitSlicedSim {
+    pub fn new(model: &SimModel, bit_lanes: usize) -> Self {
         let lanes = bit_lanes.div_ceil(WordVec::BITS as usize);
         Self {
-            model,
             lanes,
+            reg_len: model.read_state.len(),
+            comb_len: model.init_steps.len(),
             reg_state: BitMatrix::zeroed(
                 model.read_state.len() + 1,
                 lanes * WordVec::BITS as usize,
@@ -25,27 +27,34 @@ impl<'a> BitSlicedSim<'a> {
             comb_state: vec![WordVec::default(); model.init_steps.len() * lanes],
         }
     }
+
+    pub fn reg_len(&self) -> usize {
+        self.reg_len
+    }
+
+    pub fn comb_len(&self) -> usize {
+        self.comb_len
+    }
+
     pub fn lanes(&self) -> usize {
         self.lanes
     }
+
     pub fn bit_lanes(&self) -> usize {
         self.lanes * WordVec::BITS as usize
     }
-    pub fn model(&self) -> &'a SimModel {
-        self.model
-    }
 
     pub fn reset_state(&mut self) -> &mut [WordVec] {
-        self.reg_state.packed_row_mut(self.model.read_state.len())
+        self.reg_state.packed_row_mut(self.reg_len)
     }
 
     pub fn reset_all(&mut self) {
         self.reset_state().fill(!WordVec::ZERO);
     }
 
-    pub fn sim(&mut self, provide_input: impl FnMut(Var, usize) -> WordVec) {
-        self.sim_comb(provide_input);
-        self.sim_regs();
+    pub fn sim(&mut self, model: &SimModel, provide_input: impl FnMut(Var, usize) -> WordVec) {
+        self.sim_comb(model, provide_input);
+        self.sim_regs(model);
     }
 
     pub fn comb_state(&self, var: Var) -> &[WordVec] {
@@ -56,15 +65,19 @@ impl<'a> BitSlicedSim<'a> {
         self.reg_state.packed_row(var.index())
     }
 
-    pub fn sim_comb(&mut self, mut provide_input: impl FnMut(Var, usize) -> WordVec) {
+    pub fn sim_comb(
+        &mut self,
+        model: &SimModel,
+        mut provide_input: impl FnMut(Var, usize) -> WordVec,
+    ) {
         #![allow(clippy::needless_range_loop)]
 
-        for (step_var, &step) in self.model.next_steps.iter() {
+        for (step_var, &step) in model.next_steps.iter() {
             let offset_y = step_var.index() * self.lanes;
 
-            let init_step = self.model.init_steps[step_var];
+            let init_step = model.init_steps[step_var];
             if step != init_step {
-                let reset_mask = self.reg_state.packed_row(self.model.read_state.len());
+                let reset_mask = self.reg_state.packed_row(model.read_state.len());
 
                 match init_step {
                     Step::Xaig(step) => {
@@ -191,8 +204,8 @@ impl<'a> BitSlicedSim<'a> {
         }
     }
 
-    pub fn sim_regs(&mut self) {
-        for (state_var, &step_var) in self.model.read_state.iter() {
+    pub fn sim_regs(&mut self, model: &SimModel) {
+        for (state_var, &step_var) in model.read_state.iter() {
             self.reg_state
                 .packed_row_mut(state_var.index())
                 .copy_from_slice(&self.comb_state[step_var.index() * self.lanes..][..self.lanes])

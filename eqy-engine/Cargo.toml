@@ -10,6 +10,7 @@ hashbrown = { version = "0.14.5", default-features = false, features = [
 ] }
 imctk = { version = "0.1.0", path = "../imctk" }
 imctk-abc = { version = "0.1.0", path = "../abc" }
+imctk-abc-sys = { version = "0.1.0", path = "../abc-sys" }
 imctk-ids = { version = "0.1.0", path = "../ids" }
 imctk-inc_refine = { version = "0.1.0", path = "../inc_refine" }
 imctk-ir = { version = "0.1.0", path = "../ir" }
@@ -25,4 +26,5 @@ zwohash = "0.1.2"
 [dev-dependencies]
 clap = { version = "4.5.13", features = ["derive"] }
 color-eyre = "0.6.3"
+flussab = "0.3.1"
 flussab-aiger = "0.1.0"

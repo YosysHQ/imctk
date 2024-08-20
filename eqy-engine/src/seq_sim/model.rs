@@ -66,6 +66,7 @@ pub enum Step {
 pub struct SimModel {
     pub init_steps: IdVec<Var, Step>,
     pub next_steps: IdVec<Var, Step>,
+    pub zero_values: IdVec<Var, bool>,
     pub sim_from_env: IdVec<Var, Option<Lit>>,
     pub env_from_sim: IdVec<Var, Lit>,
     pub inputs: Vec<Var>,
@@ -79,6 +80,7 @@ pub fn extract_sim_model(env: &Env, targets: impl IntoIterator<Item = Var>) -> S
 
     let mut init_steps: IdVec<Var, Step> = IdVec::default();
     let mut next_steps: IdVec<Var, Step> = IdVec::default();
+    let mut zero_values: IdVec<Var, bool> = IdVec::default();
 
     let mut sim_from_env: IdVec<Var, Option<Lit>> = Default::default();
     let mut env_from_sim: IdVec<Var, Lit> = Default::default();
@@ -87,10 +89,10 @@ pub fn extract_sim_model(env: &Env, targets: impl IntoIterator<Item = Var>) -> S
     let mut inputs: Vec<Var> = vec![];
     let mut steady_inputs: Vec<Var> = vec![];
     let mut read_state: IndexedIdVec<Var, Var> = Default::default();
-    // Vec<(Var, Lit)> = vec![];
 
     env_from_sim.push(Lit::FALSE);
     sim_from_env.push(Some(Lit::FALSE));
+    zero_values.push(false);
 
     let step = Step::Xaig(XaigStep::and([Lit::FALSE; 2].into()));
 
@@ -117,6 +119,11 @@ pub fn extract_sim_model(env: &Env, targets: impl IntoIterator<Item = Var>) -> S
             } else {
                 next_steps.push(step);
             }
+
+            let [zero_a, zero_b] = inputs
+                .into_values()
+                .map(|input| input.lookup(|var| zero_values[var]));
+            zero_values.push(zero_a & zero_b);
         } else if let Some(xor) = node.dyn_cast::<XorNode>() {
             let step_var = env_from_sim.push(var ^ xor.output.pol()).0;
             *sim_from_env.grow_for_key(var) = Some(step_var ^ xor.output.pol());
@@ -124,18 +131,28 @@ pub fn extract_sim_model(env: &Env, targets: impl IntoIterator<Item = Var>) -> S
             let inputs = xor.term.inputs.map(|input| sim_from_env[input].unwrap());
             let step = Step::Xaig(XaigStep::and(inputs));
             init_steps.push(step);
+
             if steady {
                 next_steps.push(Step::Other(Some(step_var.as_lit())));
             } else {
                 next_steps.push(step);
             }
+
+            let [zero_a, zero_b] = inputs
+                .into_values()
+                .map(|input| input.lookup(|var| zero_values[var]));
+            zero_values.push(zero_a ^ zero_b);
         } else if let Some(init) = node.dyn_cast::<InitNode>() {
             let step_var = env_from_sim.push(var ^ init.output.pol()).0;
             *sim_from_env.grow_for_key(var) = Some(step_var ^ init.output.pol());
 
             let input = sim_from_env[init.term.input].unwrap();
             init_steps.push(Step::Xaig(XaigStep::and([Lit::TRUE, input].into())));
+
             next_steps.push(Step::Other(Some(step_var.as_lit())));
+
+            let zero = input.lookup(|input| zero_values[input]);
+            zero_values.push(zero);
         } else if let Some(reg) = node.dyn_cast::<RegNode>() {
             let step_var = env_from_sim.push(var ^ reg.output.pol()).0;
             *sim_from_env.grow_for_key(var) = Some(step_var ^ reg.output.pol());
@@ -144,6 +161,9 @@ pub fn extract_sim_model(env: &Env, targets: impl IntoIterator<Item = Var>) -> S
             init_steps.push(Step::Xaig(XaigStep::and([Lit::TRUE, init_input].into())));
             next_steps.push(Step::Other(None));
             regs.push(step_var);
+
+            let zero = init_input.lookup(|input| zero_values[input]);
+            zero_values.push(zero);
         } else {
             let output_lit = node.output_lit().unwrap();
             let step_var = env_from_sim.push(var ^ output_lit.pol()).0;
@@ -157,6 +177,8 @@ pub fn extract_sim_model(env: &Env, targets: impl IntoIterator<Item = Var>) -> S
                 next_steps.push(Step::Other(None));
                 inputs.push(step_var);
             }
+
+            zero_values.push(false);
         }
     }
 
@@ -180,6 +202,7 @@ pub fn extract_sim_model(env: &Env, targets: impl IntoIterator<Item = Var>) -> S
     SimModel {
         init_steps,
         next_steps,
+        zero_values,
         sim_from_env,
         env_from_sim,
         inputs,

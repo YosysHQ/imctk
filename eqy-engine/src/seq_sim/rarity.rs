@@ -1,6 +1,9 @@
 use rand::{rngs::SmallRng, Rng, SeedableRng};
 
-use super::bit_sliced::{BitSlicedSim, WordVec};
+use super::{
+    bit_sliced::{BitSlicedSim, WordVec},
+    model::SimModel,
+};
 use crate::bit_matrix::BitMatrix;
 
 struct Counters {
@@ -50,8 +53,8 @@ impl Counters {
     }
 }
 
-pub struct RaritySim<'a> {
-    inner: BitSlicedSim<'a>,
+pub struct RaritySim {
+    inner: BitSlicedSim,
     transposed: BitMatrix,
     rng: rand::rngs::SmallRng,
     counters: Counters,
@@ -61,13 +64,13 @@ pub struct RaritySim<'a> {
     stuck_counter: usize,
 }
 
-impl<'a> RaritySim<'a> {
-    pub fn new(inner: BitSlicedSim<'a>, steps: usize, reduce: usize) -> Self {
+impl RaritySim {
+    pub fn new(inner: BitSlicedSim, steps: usize, reduce: usize) -> Self {
         assert!(reduce >= 2);
         assert!(steps >= 1);
         let mut new = Self {
-            transposed: BitMatrix::new(inner.model().read_state.len() + 1),
-            counters: Counters::new(inner.model().read_state.len() + 1),
+            transposed: BitMatrix::new(inner.reg_len() + 1),
+            counters: Counters::new(inner.reg_len() + 1),
             order: vec![],
             inner,
             rng: SmallRng::seed_from_u64(0),
@@ -84,10 +87,11 @@ impl<'a> RaritySim<'a> {
         self.stuck_counter = 0;
     }
 
-    pub fn sim_round(&mut self, mut callback: impl FnMut(&BitSlicedSim)) {
+    pub fn sim_round(&mut self, model: &SimModel, mut callback: impl FnMut(&BitSlicedSim)) {
         for _ in 0..self.steps {
-            self.inner
-                .sim(|_var, _lane| WordVec::from(std::array::from_fn(|_| self.rng.gen())));
+            self.inner.sim(model, |_var, _lane| {
+                WordVec::from(std::array::from_fn(|_| self.rng.gen()))
+            });
 
             callback(&self.inner);
         }
@@ -141,7 +145,7 @@ impl<'a> RaritySim<'a> {
 
         self.transposed.transpose_into(&mut self.inner.reg_state);
 
-        log::info!(
+        log::debug!(
             "seen: {:?} new pat: {:?} stuck: {}, {}",
             self.counters.seen,
             bit_lanes_with_new_patterns,
