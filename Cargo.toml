@@ -14,6 +14,7 @@ members = [
     "eqy-engine",
     "inc_refine",
     "extract",
+    "imctk",
 
     # comment to force multi-line layout
 ]
