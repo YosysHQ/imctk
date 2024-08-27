@@ -801,6 +801,7 @@ name = "table_seq"
 version = "0.1.0"
 dependencies = [
  "hashbrown",
+ "zwohash",
 ]
 
 [[package]]

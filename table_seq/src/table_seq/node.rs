@@ -324,14 +324,6 @@ impl<T> Node<T> {
         }
     }
 
-    #[allow(dead_code)]
-    #[inline(always)]
-    pub fn grow_for_new_table(&self) -> Option<SizeClass<T>> {
-        self.grow_for_size(
-            (self.table_count + 1) * size_of::<Subtable<T>>() + self.entry_count * size_of::<T>(),
-        )
-    }
-
     #[inline(always)]
     pub fn resize_for_new_table_replacing_entry_pair(&self) -> Option<SizeClass<T>> {
         #[allow(clippy::comparison_chain)]
@@ -430,7 +422,6 @@ impl<T> Node<T> {
         unsafe { source.copy_to(dest, self.table_count - gap_offset) };
     }
 
-    #[allow(dead_code)]
     #[inline(always)]
     pub unsafe fn close_table_gap_move_into(&mut self, dest_node: &mut Self, gap_offset: usize) {
         debug_assert_eq!(dest_node.entry_count, 0);
@@ -488,37 +479,6 @@ impl<T> Node<T> {
         let dest = unsafe { source.sub(1) };
         unsafe { source.copy_to(dest, self.table_count - gap_offset) };
         self.table_count += 1;
-    }
-
-    #[allow(dead_code)]
-    #[inline(always)]
-    pub unsafe fn make_table_gap_move_into(&mut self, dest_node: &mut Self, gap_offset: usize) {
-        debug_assert_eq!(dest_node.entry_count, 0);
-        debug_assert_eq!(dest_node.table_count, 0);
-        debug_assert_ne!(self.ptr, dest_node.ptr);
-
-        // move entries
-        let source = self.ptr();
-        let dest = dest_node.ptr();
-        unsafe { source.copy_to_nonoverlapping(dest, self.entry_count) };
-
-        if self.table_count > 0 {
-            // move table suffix
-            let source = unsafe { self.tables_slice_start() };
-            let dest = unsafe { dest_node.tables_slice_end().sub(self.table_count + 1) };
-            unsafe { source.copy_to_nonoverlapping(dest, self.table_count - gap_offset) };
-
-            // move table prefix
-            let source = unsafe { self.tables_slice_end().sub(gap_offset) };
-            let dest = unsafe { dest_node.tables_slice_end().sub(gap_offset) };
-            unsafe { source.copy_to_nonoverlapping(dest, gap_offset) };
-        }
-
-        dest_node.entry_count = self.entry_count;
-        dest_node.table_count = self.table_count + 1;
-
-        self.entry_count = 0;
-        self.table_count = 0;
     }
 
     #[inline(always)]
