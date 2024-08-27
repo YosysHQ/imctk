@@ -9,8 +9,6 @@ use imctk_ir::{
 };
 use imctk_util::{topo_sorted_sccs::TopoSortedSccs, vec_sink::VecSink};
 
-pub mod aiger;
-
 // TODO I'm not so sure about the module organization for extraction related utilities
 
 /// Predecessor callback for [`TopoSortedSccs`] that traverses unguarded inputs of an environment's

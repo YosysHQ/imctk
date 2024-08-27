@@ -5,7 +5,7 @@ members = [
     "derive",
     "transparent",
     "table_seq",
-    "imctk",
+    "aiger",
     "logger",
     "util",
     "ir",
@@ -13,6 +13,7 @@ members = [
     "abc",
     "eqy-engine",
     "inc_refine",
+    "extract",
 
     # comment to force multi-line layout
 ]

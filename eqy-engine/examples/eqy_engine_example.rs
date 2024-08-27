@@ -48,7 +48,7 @@ fn main() -> color_eyre::Result<()> {
 
     let mut env = Env::default();
 
-    let _seq_env_from_aiger = imctk::import::aiger::import_ordered_aig(&mut env, &parsed);
+    let _seq_env_from_aiger = imctk_aiger::import::import_ordered_aig(&mut env, &parsed);
 
     env.rebuild_egraph();
 

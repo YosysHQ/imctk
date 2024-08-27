@@ -332,7 +332,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9a3a5bfb195931eeb336b2a7b4d761daec841b97f947d34394601737a7bba5e4"
 
 [[package]]
-name = "imctk"
+name = "imctk-abc"
+version = "0.1.0"
+dependencies = [
+ "imctk-abc-sys",
+ "imctk-ids",
+ "imctk-ir",
+ "imctk-util",
+]
+
+[[package]]
+name = "imctk-abc-sys"
+version = "0.1.0"
+dependencies = [
+ "cc",
+ "libc",
+]
+
+[[package]]
+name = "imctk-aiger"
 version = "0.1.0"
 dependencies = [
  "clap",
@@ -349,24 +367,6 @@ dependencies = [
  "log",
  "table_seq",
  "zwohash",
-]
-
-[[package]]
-name = "imctk-abc"
-version = "0.1.0"
-dependencies = [
- "imctk-abc-sys",
- "imctk-ids",
- "imctk-ir",
- "imctk-util",
-]
-
-[[package]]
-name = "imctk-abc-sys"
-version = "0.1.0"
-dependencies = [
- "cc",
- "libc",
 ]
 
 [[package]]
@@ -389,9 +389,10 @@ dependencies = [
  "flussab",
  "flussab-aiger",
  "hashbrown",
- "imctk",
  "imctk-abc",
  "imctk-abc-sys",
+ "imctk-aiger",
+ "imctk-extract",
  "imctk-ids",
  "imctk-inc_refine",
  "imctk-ir",
@@ -403,6 +404,18 @@ dependencies = [
  "table_seq",
  "wide",
  "zwohash",
+]
+
+[[package]]
+name = "imctk-extract"
+version = "0.1.0"
+dependencies = [
+ "imctk-derive",
+ "imctk-ids",
+ "imctk-ir",
+ "imctk-transparent",
+ "imctk-util",
+ "log",
 ]
 
 [[package]]
