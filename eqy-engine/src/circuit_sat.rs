@@ -47,9 +47,6 @@ pub struct CircuitSat {
     sat_gates: IdVec<Var, Option<XaigStep>>,
     redundant_gates: IdVec<u32, CircuitCutGate>,
 
-    depth_limit: Option<usize>,
-    bfs_queue: IndexedIdVec<u32, Var>,
-
     input_model: Vec<Lit>,
     inner_model: Vec<Lit>,
     sat_cube_buf: Vec<Lit>,
@@ -91,9 +88,6 @@ impl Default for CircuitSat {
             env_from_sat: IdVec::from_vec(vec![Lit::FALSE]),
             sat_gates: IdVec::from_vec(vec![None]),
             redundant_gates: IdVec::default(),
-
-            depth_limit: None,
-            bfs_queue: Default::default(),
 
             input_model: vec![],
             inner_model: vec![],
@@ -324,10 +318,6 @@ impl CircuitSat {
         self.stop_on_events = stop;
     }
 
-    pub fn set_depth_limit(&mut self, limit: Option<usize>) {
-        self.depth_limit = limit;
-    }
-
     fn new_query(&mut self) {
         if self.solver_query_count == 20_000 {
             self.reset();
@@ -533,43 +523,8 @@ impl CircuitSat {
 
         solver.new_round();
 
-        if let Some(depth_limit) = self.depth_limit {
-            self.bfs_queue.clear();
-
-            for &sat_lit in self.sat_cube_buf.iter() {
-                self.bfs_queue.insert(sat_lit.var());
-            }
-
-            let mut pos = 0;
-            let mut next_depth = self.bfs_queue.len();
-            let mut depth = 0;
-            while let Some(&var) = self.bfs_queue.get(pos as u32) {
-                if pos == next_depth {
-                    depth += 1;
-                    if depth == depth_limit {
-                        break;
-                    }
-                    next_depth = self.bfs_queue.len();
-                }
-                pos += 1;
-                if let Some(equiv) = tracer.borrow_mut().gate_elims.get(&var) {
-                    self.bfs_queue.insert(equiv.var());
-                    self.bfs_queue.insert(Var::FALSE);
-                }
-                if let Some(gate) = self.sat_gates[var] {
-                    for sat_lit in gate.inputs {
-                        self.bfs_queue.insert(sat_lit.var());
-                    }
-                }
-            }
-
-            for &sat_lit in self.bfs_queue.values() {
-                solver.mark_var(sat_lit)
-            }
-        } else {
-            for &sat_lit in self.sat_cube_buf.iter() {
-                solver.mark_cone(sat_lit.var());
-            }
+        for &sat_lit in self.sat_cube_buf.iter() {
+            solver.mark_cone(sat_lit.var());
         }
 
         if self.pending_cubes.is_empty() {
