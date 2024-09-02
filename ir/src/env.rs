@@ -21,6 +21,11 @@ use super::{
     var::{Lit, Var},
 };
 
+mod multimap;
+mod node_builders;
+mod rebuild_egraph;
+
+pub use multimap::{LitMultimap, VarMultimap};
 pub use updates::EnvUpdates;
 
 /// Indicates whether a node is the primary definition or an equivalent definition of a variable or
@@ -438,8 +443,6 @@ impl Env {
     }
 }
 
-mod node_builders;
-mod rebuild_egraph;
 mod updates {
     #![allow(missing_docs)] // TODO document module
     use crate::{node::NodeId, var::Var};

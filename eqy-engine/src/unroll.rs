@@ -4,7 +4,7 @@ use std::collections::hash_map::Entry;
 
 use imctk_ids::{id_vec::IdVec, indexed_id_vec::IndexedIdVec, Id, Id32};
 use imctk_ir::{
-    env::Env,
+    env::{Env, LitMultimap},
     node::fine::circuit::{FineCircuitNodeBuilder, InitNode, Input, InputNode, RegNode},
     prelude::{NodeBuilder, Term, TermDyn},
     var::{Lit, Pol, Var},
@@ -12,7 +12,7 @@ use imctk_ir::{
 use imctk_util::vec_sink::VecSink;
 use zwohash::HashMap;
 
-use crate::{env_multimap::LitMultimap, time_step::TimeStep};
+use crate::time_step::TimeStep;
 
 /// [`Term`] representing an [`Input`] at a specific [`TimeStep`].
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]

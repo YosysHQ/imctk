@@ -12,8 +12,6 @@ pub mod refinement;
 
 pub mod unroll;
 
-pub mod env_multimap;
-
 mod time_step;
 
 pub use time_step::TimeStep;

@@ -11,7 +11,7 @@ use std::{
     ops::{BitXor, BitXorAssign},
 };
 
-use imctk_ir::{
+use crate::{
     env::Env,
     var::{Lit, Pol, Var},
 };
@@ -34,6 +34,7 @@ impl<T> Default for LitMultimap<T> {
 }
 
 impl<T> LitMultimap<T> {
+    /// Removes all entries from the collection.
     pub fn clear(&mut self) {
         self.equiv_pos = 0; // TODO it would be good if we can avoid that
         self.entries.resize(0);
@@ -41,6 +42,9 @@ impl<T> LitMultimap<T> {
 }
 
 impl<T: Hash + Eq + BitXorAssign<Pol>> LitMultimap<T> {
+    /// Inserts a value for a given literal key.
+    ///
+    /// Returns `false` when the value was already present for the given literal.
     pub fn insert(&mut self, env: &Env, lit: Lit, value: T) -> bool {
         self.merge_equivs(env);
         let lit = env.var_defs().lit_repr(lit);
@@ -48,6 +52,10 @@ impl<T: Hash + Eq + BitXorAssign<Pol>> LitMultimap<T> {
         self.insert_repr(lit, value)
     }
 
+    /// Inserts a value for a given literal key, assuming the literal is the representative for its
+    /// equivalence class.
+    ///
+    /// Returns `false` when the value was already present for the given literal.
     pub fn insert_repr(&mut self, lit: Lit, mut value: T) -> bool {
         value ^= lit.pol();
 
@@ -65,6 +73,7 @@ impl<T: Hash + Eq + BitXorAssign<Pol>> LitMultimap<T> {
             .is_none()
     }
 
+    /// Merges newly equivalent literals.
     pub fn merge_equivs(&mut self, env: &Env) {
         for &equiv_var in env.equiv_vars()[self.equiv_pos..].iter() {
             if self.entries.len() <= equiv_var.index() {
@@ -94,6 +103,7 @@ impl<T: Hash + Eq + BitXorAssign<Pol>> LitMultimap<T> {
 }
 
 impl<T> LitMultimap<T> {
+    /// Returns an iterator over the values associated with a given variable.
     pub fn var_entries(&self, var: Var) -> impl Iterator<Item = &T> {
         (self.entries.len() > var.index())
             .then(|| self.entries.subtable_iter(var.index()))
@@ -101,6 +111,7 @@ impl<T> LitMultimap<T> {
             .flatten()
     }
 
+    /// Returns an iterator over the values associated with a given literal.
     pub fn lit_entries<'a>(
         &'a self,
         lit: Lit,
@@ -121,6 +132,9 @@ pub struct VarMultimap<T> {
 }
 
 impl<T: Hash + Eq> VarMultimap<T> {
+    /// Inserts a value for a given variable key.
+    ///
+    /// Returns `false` when the value was already present for the given variable.
     pub fn insert(&mut self, env: &Env, var: Var, value: T) -> bool {
         self.merge_equivs(env);
         let var = env.var_defs().var_repr(var);
@@ -139,6 +153,7 @@ impl<T: Hash + Eq> VarMultimap<T> {
             .is_none()
     }
 
+    /// Merges newly equivalent (modulo negation) variables.
     pub fn merge_equivs(&mut self, env: &Env) {
         for &equiv_var in env.equiv_vars()[self.equiv_pos..].iter() {
             if self.entries.len() <= equiv_var.index() {
@@ -165,6 +180,7 @@ impl<T: Hash + Eq> VarMultimap<T> {
 }
 
 impl<T> VarMultimap<T> {
+    /// Returns an iterator over the values associated with a given variable.
     pub fn var_entries(&self, var: Var) -> impl Iterator<Item = &T> {
         (self.entries.len() > var.index())
             .then(|| self.entries.subtable_iter(var.index()))
