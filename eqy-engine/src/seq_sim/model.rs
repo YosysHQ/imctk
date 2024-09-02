@@ -138,7 +138,7 @@ pub fn extract_sim_model(env: &Env, targets: impl IntoIterator<Item = Var>) -> S
             *sim_from_env.grow_for_key(var) = Some(step_var ^ xor.output.pol());
 
             let inputs = xor.term.inputs.map(|input| sim_from_env[input].unwrap());
-            let step = Step::Xaig(XaigStep::and(inputs));
+            let step = Step::Xaig(XaigStep::xor(inputs));
             init_steps.push(step);
 
             if steady {
