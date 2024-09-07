@@ -5,9 +5,7 @@ use std::collections::hash_map::Entry;
 use imctk_ids::{id_vec::IdVec, indexed_id_vec::IndexedIdVec, Id, Id32};
 use imctk_ir::{
     env::{Env, LitMultimap},
-    node::fine::circuit::{
-        FineCircuitNodeBuilder, InitNode, Input, InputNode, RegNode, SteadyInputNode,
-    },
+    node::fine::circuit::{InitNode, Input, InputNode, RegNode, SteadyInputNode},
     prelude::{NodeBuilder, Term, TermDyn},
     var::{Lit, Pol, Var},
 };
@@ -103,9 +101,9 @@ impl Term for ReleaseReset {
 
 impl TermDyn for ReleaseReset {}
 
-// In Induction and Hybrid mode, the first step contains everything that's steady and the second
-// step contains the unconstrained past.
-/// Selects whether to unroll for BMC, a k-induction step or both simultaneously.
+// In Induction mode, the first step contains everything that's steady and the second step contains
+// the unconstrained past.
+/// Selects whether to unroll for BMC or k-induction.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum UnrollMode {
     /// Perform unrolling for a bounded model check (BMC).
@@ -118,13 +116,6 @@ pub enum UnrollMode {
     ///
     /// This is suitable for k-induction as well as for interval property checking.
     Induction,
-    /// Perform a hybrid BMC and k-induction step.
-    ///
-    /// This behaves like the induction mode, but multiplexes between the preceding step and the
-    /// initial state between every two unrolled time steps. The multiplexing between the initial
-    /// and preceding state is constrained such that once the initial state is left, it cannot be
-    /// entered again via those multiplexers.
-    Hybrid,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
@@ -356,10 +347,7 @@ impl Unroll {
         } else {
             match (step.id_index(), self.mode) {
                 (0, _) => self.unroll_first_bmc(source, dest, seq_var),
-                (1, UnrollMode::Hybrid | UnrollMode::Induction) => {
-                    dest.term(UnknownPast { seq: seq_var })
-                }
-                (_, UnrollMode::Hybrid) => self.unroll_hybrid(source, dest, step, seq_var),
+                (1, UnrollMode::Induction) => dest.term(UnknownPast { seq: seq_var }),
                 _ => self.unroll_generic(source, dest, step, seq_var),
             }
         };
@@ -419,46 +407,6 @@ impl Unroll {
             self.unroll(source, dest, TimeStep::FIRST, init.term.input.as_lit()) ^ output_pol
         } else {
             self.unroll_generic(source, dest, TimeStep::FIRST, seq_var)
-        }
-    }
-
-    fn unroll_hybrid(&mut self, source: &Env, dest: &mut Env, step: TimeStep, seq_var: Var) -> Lit {
-        let node = source.def_node(seq_var).unwrap();
-        let output_pol = node.output_lit().unwrap().pol();
-
-        if let Some(reg) = node.dyn_cast::<RegNode>() {
-            let prev_step = step.prev().unwrap();
-
-            if self.reset_released.is_empty() {
-                let release_step = self.reset_released.next_unused_key();
-                self.reset_released
-                    .push(dest.term(ReleaseReset { step: release_step }));
-            }
-
-            while self.reset_released.get(prev_step).is_none() {
-                let release_step = self.reset_released.next_unused_key();
-                let prev_release_step = release_step.prev().unwrap();
-
-                let prev_released = self.reset_released[prev_release_step];
-                let release_now = dest.term(ReleaseReset { step: release_step });
-                let released = dest.or([prev_released, release_now]);
-
-                self.reset_released.push(released);
-            }
-
-            let released = self.reset_released[prev_step];
-
-            let init = self.unroll(source, dest, TimeStep::FIRST, reg.term.init);
-
-            let masked_init = dest.and([init, !released]);
-
-            let prev = self.unroll(source, dest, prev_step, reg.term.next.as_lit());
-
-            let masked_prev = dest.and([prev, released]);
-
-            dest.or([masked_init, masked_prev]) ^ output_pol
-        } else {
-            self.unroll_generic(source, dest, step, seq_var)
         }
     }
 
