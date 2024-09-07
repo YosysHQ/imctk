@@ -81,7 +81,7 @@ impl Default for Order {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct Node {
     prev: Option<NodeId>,
     next: Option<NodeId>,
@@ -158,7 +158,7 @@ impl<K> Default for RefinementKeys<K> {
     }
 }
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct IncrementalRefinement<T: Id> {
     node: IdVec<NodeId, Node>,
 
