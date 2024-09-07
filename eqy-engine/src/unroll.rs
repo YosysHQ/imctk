@@ -5,7 +5,9 @@ use std::collections::hash_map::Entry;
 use imctk_ids::{id_vec::IdVec, indexed_id_vec::IndexedIdVec, Id, Id32};
 use imctk_ir::{
     env::{Env, LitMultimap},
-    node::fine::circuit::{FineCircuitNodeBuilder, InitNode, Input, InputNode, RegNode},
+    node::fine::circuit::{
+        FineCircuitNodeBuilder, InitNode, Input, InputNode, RegNode, SteadyInputNode,
+    },
     prelude::{NodeBuilder, Term, TermDyn},
     var::{Lit, Pol, Var},
 };
@@ -276,8 +278,31 @@ impl Unroll {
     ) -> impl Iterator<Item = (TimeStep, Lit)> + '_ {
         self.seq_from_comb.merge_equivs(dest);
         self.seq_from_comb
-            .lit_entries(unroll_lit)
+            .lit_entries(dest.var_defs().lit_repr(unroll_lit))
             .map(|entry| (entry.step, entry.lit))
+    }
+
+    pub fn find_seq_input(
+        &mut self,
+        source: &Env,
+        dest: &Env,
+        unroll_lit: Lit,
+    ) -> Option<(TimeStep, Lit)> {
+        self.seq_from_comb.merge_equivs(dest);
+
+        for entry in self
+            .seq_from_comb
+            .lit_entries(dest.var_defs().lit_repr(unroll_lit))
+        {
+            let Some(node) = source.def_node(entry.lit.var()) else { continue };
+            if node.dyn_cast::<InputNode>().is_some()
+                || node.dyn_cast::<SteadyInputNode>().is_some()
+            {
+                return Some((entry.step, entry.lit));
+            }
+        }
+
+        None
     }
 
     fn find_unrolled_repr_var(&self, step: TimeStep, seq_var: Var) -> Option<Lit> {
