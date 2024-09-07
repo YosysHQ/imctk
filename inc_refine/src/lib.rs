@@ -715,6 +715,10 @@ impl<T: Id> IncrementalRefinement<T> {
     }
 
     pub fn nonisolated_iter(&mut self) -> impl Iterator<Item = T> + '_ {
+        self.nonisolated_with_root_iter().map(|(item, _root)| item)
+    }
+
+    pub fn nonisolated_with_root_iter(&mut self) -> impl Iterator<Item = (T, T)> + '_ {
         let mut root_rev_iter = self.last;
 
         let mut span: Option<(NodeId, NodeId)> = None;
@@ -727,7 +731,7 @@ impl<T: Id> IncrementalRefinement<T> {
                     *iter = self.node[*iter].next.unwrap();
                     let current = *iter;
                     if current.is_leave() {
-                        return Some(Self::node_item(current));
+                        return Some((Self::node_item(current), Self::node_item(*leave)));
                     } else {
                         continue;
                     }
@@ -1321,5 +1325,29 @@ mod tests {
                 assert!(refine.is_leaf(i) && refine.parent(i).is_none());
             }
         }
+    }
+
+    #[test]
+    fn test_nonisolated_with_root_iter() {
+        let mut refine: IncrementalRefinement<u32> = Default::default();
+
+        for i in 0..10 {
+            refine.insert_item(i);
+        }
+
+        for p in [2, 3, 5] {
+            refine.refine_all(&mut Default::default(), |i| i % p == 0);
+        }
+
+        // 0 1 2 3 4 5 6 7 8 9
+        // x   x   x   x   x
+        // x     x     x     x
+        // x         x
+
+        let nonisolated_with_root = Vec::from_iter(refine.nonisolated_with_root_iter());
+        assert_eq!(
+            nonisolated_with_root,
+            [(3, 9), (9, 9), (2, 8), (4, 8), (8, 8), (1, 7), (7, 7)],
+        );
     }
 }
