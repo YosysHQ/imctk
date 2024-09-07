@@ -24,6 +24,10 @@ impl TimeStep {
         self.id_index().checked_sub(1).map(Self::from_id_index)
     }
 
+    pub fn next(self) -> Self {
+        Self::from_id_index(self.id_index() + 1)
+    }
+
     pub fn first_n(n: usize) -> IdRange<Self> {
         IdRange::from_index_range(0..n)
     }
