@@ -44,7 +44,7 @@ pub struct CircuitSat {
     input_model: Vec<Lit>,
     inner_model: Vec<Lit>,
     sat_cube_buf: Vec<Lit>,
-    in_cube: HashSet<Lit>,
+    in_cube: HashMap<Lit, Lit>,
 
     equiv_pos: usize,
 
@@ -467,24 +467,44 @@ impl CircuitSat {
                     if sat_lit == Lit::FALSE {
                         self.cube_buf.truncate(start);
                         self.sat_cube_buf.truncate(start);
+
+                        self.cube_buf.push(lit);
+                        self.sat_cube_buf.push(sat_lit);
+
+                        self.unsat_cubes.push([start, self.cube_buf.len()]);
                         continue 'cubes;
                     } else {
                         continue;
                     }
                 }
 
-                if self.in_cube.contains(&!sat_lit) {
+                if let Some(&inv_lit) = self.in_cube.get(&!sat_lit) {
                     self.cube_buf.truncate(start);
                     self.sat_cube_buf.truncate(start);
+
+                    self.cube_buf.push(inv_lit);
+                    self.cube_buf.push(lit);
+
+                    self.sat_cube_buf.push(!sat_lit);
+                    self.sat_cube_buf.push(sat_lit);
+
+                    self.unsat_cubes.push([start, self.cube_buf.len()]);
                     continue 'cubes;
                 }
 
-                if self.in_cube.insert(sat_lit) {
+                self.in_cube.entry(sat_lit).or_insert_with(|| {
                     self.cube_buf.push(repr_lit);
                     self.sat_cube_buf.push(sat_lit);
-                }
+                    lit
+                });
             }
             let end = self.cube_buf.len();
+            if start == end {
+                self.sat_cube = Some([0; 2]);
+                self.input_model.clear();
+                self.inner_model.clear();
+                return Some(true);
+            }
             self.pending_cubes.push_back([start, end]);
         }
 
