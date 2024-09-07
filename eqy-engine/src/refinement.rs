@@ -65,7 +65,7 @@ impl EnvVarRefinement {
 pub struct RefinementContext<'a> {
     pub env: &'a mut Env,
     pub refine: &'a mut EnvVarRefinement,
-    pub sim_model: &'a SimModel,
+    pub sim_model: &'a mut SimModel,
 }
 
 impl<'a> RefinementContext<'a> {

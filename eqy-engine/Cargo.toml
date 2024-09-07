@@ -23,9 +23,8 @@ rand = { version = "0.8.5", features = ["small_rng"] }
 table_seq = { version = "0.1.0", path = "../table_seq" }
 wide = "0.7.26"
 zwohash = "0.1.2"
-
-[dev-dependencies]
 clap = { version = "4.5.13", features = ["derive"] }
 color-eyre = "0.6.3"
 flussab = "0.3.1"
 flussab-aiger = "0.1.0"
+serde_json = "1.0.128"
