@@ -12,6 +12,8 @@ pub mod refinement;
 
 pub mod unroll;
 
+pub mod fragment;
+
 mod time_step;
 
 pub use time_step::TimeStep;
