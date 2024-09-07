@@ -17,3 +17,6 @@ pub mod fragment;
 mod time_step;
 
 pub use time_step::TimeStep;
+
+#[allow(unsafe_code)]
+pub mod pdr_wrapper;
