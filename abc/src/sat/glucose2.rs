@@ -103,10 +103,6 @@ impl<Mode: SolverMode> Solver<'_, Mode> {
             unsafe { abc::imctk_abc_glucose2_new_var(self.ptr) };
         }
     }
-    fn valid_var(&self, var: Var) -> bool {
-        let nvars = unsafe { abc::imctk_abc_glucose2_nvars(self.ptr) } as usize;
-        var.index() < nvars
-    }
 
     pub fn add_clause(&mut self, lits: &[Lit]) {
         self.state = State::Setup;
@@ -227,18 +223,22 @@ impl<Mode: SolverMode> Solver<'_, Mode> {
 
     pub fn mark_cone(&mut self, var: Var) {
         self.state = State::Setup;
-        if Mode::JFTR == 0 || !self.valid_var(var) {
+        if Mode::JFTR == 0 {
             return;
         }
+
+        self.ensure_var(var);
 
         unsafe { abc::imctk_abc_glucose2_mark_cone(self.ptr, var.index() as c_int) }
     }
 
     pub fn mark_var(&mut self, var: Var) {
         self.state = State::Setup;
-        if Mode::JFTR == 0 || !self.valid_var(var) {
+        if Mode::JFTR == 0 {
             return;
         }
+
+        self.ensure_var(var);
 
         unsafe { abc::imctk_abc_glucose2_mark_var(self.ptr, var.index() as c_int) }
     }
