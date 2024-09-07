@@ -355,6 +355,23 @@ impl CircuitSat {
 
         let result = self.query_inner(&mut solver, &tracer, env, cubes);
 
+        let mut new_units = false;
+        let mut event_pos = 0;
+        {
+            let tracer = tracer.borrow_mut();
+            while let Some(&event) = tracer.events.get(event_pos) {
+                event_pos += 1;
+                if let Some(unit) = event {
+                    env.equiv([unit.lookup(|var| self.env_from_sat[var]), Lit::TRUE]);
+                    new_units = true;
+                }
+            }
+        }
+
+        if new_units {
+            env.rebuild_egraph();
+        }
+
         {
             let mut tracer = tracer.borrow_mut();
             tracer.events.clear();
@@ -524,8 +541,6 @@ impl CircuitSat {
 
         solver.produce_inner_model(true);
 
-        let mut event_pos = 0;
-
         loop {
             let Some(current_cube) = self.pending_cubes.pop_front() else {
                 break Some(false);
@@ -558,18 +573,6 @@ impl CircuitSat {
                 let end_conflicts = solver.conflicts();
                 *conflicts_left =
                     (*conflicts_left).saturating_sub((end_conflicts - start_conflicts) as usize);
-            }
-
-            let mut new_units = false;
-            {
-                let tracer = tracer.borrow_mut();
-                while let Some(&event) = tracer.events.get(event_pos) {
-                    event_pos += 1;
-                    if let Some(unit) = event {
-                        env.equiv([unit.lookup(|var| self.env_from_sat[var]), Lit::TRUE]);
-                        new_units = true;
-                    }
-                }
             }
 
             match round_result {
@@ -608,10 +611,6 @@ impl CircuitSat {
                 None => {
                     self.pending_cubes.push_back(current_cube);
                 }
-            }
-
-            if new_units {
-                self.refresh_env(solver, tracer, env);
             }
 
             if round_result == Some(true) {
