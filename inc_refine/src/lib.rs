@@ -631,9 +631,6 @@ impl<T: Id> IncrementalRefinement<T> {
         let mut root_rev_iter = self.last;
 
         while let Some(current) = root_rev_iter {
-            if !current.is_leave() {
-                println!("{:?}", self);
-            }
             debug_assert!(
                 current.is_leave(),
                 "{current:?} {:?}",
@@ -701,15 +698,14 @@ impl<T: Id> IncrementalRefinement<T> {
         };
         let leave = enter.other_end();
 
-        std::iter::from_fn(move || loop {
+        std::iter::from_fn(move || {
             if iter == leave {
-                return None;
+                None
             } else {
                 let current = iter;
+                assert!(current.is_enter());
                 iter = self.node[current.other_end()].next.unwrap();
-                if current.is_leave() {
-                    return Some(Self::node_item(current));
-                }
+                Some(Self::node_item(current))
             }
         })
     }
@@ -1349,5 +1345,47 @@ mod tests {
             nonisolated_with_root,
             [(3, 9), (9, 9), (2, 8), (4, 8), (8, 8), (1, 7), (7, 7)],
         );
+    }
+
+    #[test]
+    fn test_force_order_fixup() {
+        let mut refine: IncrementalRefinement<u32> = Default::default();
+
+        let bits = 8;
+
+        for i in 0..1 << bits {
+            refine.insert_item(i);
+        }
+
+        let root_a = 1 << bits;
+        let root_b = root_a + 1;
+        refine.insert_item(root_a);
+        refine.insert_item(root_b);
+
+        for b in (0..bits).rev() {
+            refine.refine_subtree(&mut Default::default(), root_a, |v| (v >> b) & 1 != 0);
+        }
+        refine.remove_item(root_a);
+        let mut expected_roots = Vec::from_iter(refine.child_iter(root_b));
+        refine.remove_item(root_b);
+        println!("{:?}", refine);
+        let mut roots = Vec::from_iter(refine.nonleaf_root_iter());
+        for i in 0..1 << bits {
+            if refine.is_isolated(i) && refine.is_root(i) {
+                roots.push(i);
+            }
+        }
+        roots.sort();
+        expected_roots.sort();
+        assert_eq!(roots, expected_roots);
+        assert_eq!(roots.len(), 9);
+
+        for &root in roots.iter() {
+            let contained = Vec::from_iter(refine.postorder_descendants_iter(root));
+            let mask = contained.len() as u32;
+            for &item in contained.iter() {
+                assert_eq!((item ^ root) & !mask, 0);
+            }
+        }
     }
 }
