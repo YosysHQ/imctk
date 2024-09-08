@@ -1,3 +1,5 @@
+#![allow(unexpected_cfgs)] // for coverage_nightly
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 #![deny(unsafe_code)]
 
 #[allow(unsafe_code)] // Required for calling directly into abc
@@ -54,6 +56,7 @@ struct Args {
     jsonl_output: bool,
 }
 
+#[cfg_attr(coverage_nightly, coverage(off))]
 fn main() -> color_eyre::Result<()> {
     let args = Args::parse();
 
@@ -78,7 +81,6 @@ fn main() -> color_eyre::Result<()> {
 
     let seq_env_from_aiger = imctk_aiger::import::import_ordered_aig(&mut env, &parsed);
 
-    log::info!("");
     log::info!("# Stats");
     for (node_type, count) in env.nodes().node_type_stats() {
         log::info!("{}: {}", node_type.name(), count);

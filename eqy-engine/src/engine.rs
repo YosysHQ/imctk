@@ -6,7 +6,7 @@ use std::{
 use crate::{
     circuit_sat::CircuitSat,
     fragment::ExtractedFragment,
-    pdr_wrapper::{solve_with_pdr, PdrOptions, PdrResult},
+    pdr_wrapper::{solve_with_pdr, PdrCex, PdrOptions, PdrResult},
     refinement::{
         bmc::BmcRefinement, rarity_sim::RaritySimRefinement, EnvVarRefinement, RefinementContext,
     },
@@ -14,7 +14,8 @@ use crate::{
     unroll::{Unroll, UnrollMode},
     TimeStep,
 };
-use imctk_ids::{indexed_id_vec::IndexedIdVec, Id};
+use imctk_extract::select_primary_defs;
+use imctk_ids::{id_vec::IdVec, indexed_id_vec::IndexedIdVec, Id};
 use imctk_ir::{
     env::Env,
     node::fine::circuit::FineCircuitNodeBuilder,
@@ -172,7 +173,7 @@ pub fn run_eqy_engine(
             stats.counter += 1;
             if stats.counter % 10000 == 0 {
                 log::info!("{stats}");
-                log::info!("pdr: {}", ctx.refine.stats());
+                log::info!("windowed: {}", ctx.refine.stats());
             }
             let pair = pair.map(|lit| ctx.env.lit_repr(lit));
             if pair[0] == pair[1] {
@@ -288,59 +289,23 @@ pub fn run_eqy_engine(
                     ctx.sync_equivs();
                 }
                 Some(PdrResult::Cex(mut cex)) => {
+                    cex.minimize(&extracted.frag_env, frag_delta);
                     stats.cex += 1;
 
                     let cex_frame = cex.inputs.next_unused_key().prev().unwrap();
 
-                    let mut frag_bmc = Unroll::new(UnrollMode::Bmc);
-                    let mut frag_bmc_env = Env::default();
-                    let mut frag_sat = CircuitSat::default();
-
-                    let mut frag_inputs = vec![];
-
-                    for (time, inputs) in cex.inputs.iter() {
-                        for &input_lit in inputs.iter() {
-                            frag_inputs.push(frag_bmc.unroll(
-                                &extracted.frag_env,
-                                &mut frag_bmc_env,
-                                time,
-                                input_lit,
-                            ));
-                        }
-                    }
-
-                    let bmc_target = frag_bmc.unroll(
-                        &extracted.frag_env,
-                        &mut frag_bmc_env,
-                        cex_frame,
-                        frag_delta,
-                    );
-
-                    let sat_result = frag_sat
-                        .query_cube(
-                            &mut frag_bmc_env,
-                            frag_inputs.iter().copied().chain([!bmc_target]),
-                        )
-                        .unwrap();
-
-                    assert!(!sat_result);
-
                     let mut full_lits = vec![];
 
-                    for &lit in frag_sat.unsat_cubes().flatten() {
-                        if lit == !bmc_target {
-                            continue;
+                    for (time, inputs) in cex.inputs.iter() {
+                        for &frag_lit in inputs.iter() {
+                            let full_lit = frag_lit.lookup(|var| extracted.full_from_frag[&var]);
+                            full_lits.push(full_bmc.unroll(
+                                ctx.env,
+                                &mut full_bmc_env,
+                                time,
+                                full_lit,
+                            ));
                         }
-
-                        let (time, frag_lit) = frag_bmc
-                            .find_seq_input(&extracted.frag_env, &frag_bmc_env, lit)
-                            .unwrap_or_else(|| {
-                                log::info!("{lit} not found");
-                                panic!();
-                            });
-
-                        let full_lit = frag_lit.lookup(|var| extracted.full_from_frag[&var]);
-                        full_lits.push(full_bmc.unroll(ctx.env, &mut full_bmc_env, time, full_lit));
                     }
 
                     full_sat.cumulative_conflict_limit(Some(1000));
@@ -363,10 +328,7 @@ pub fn run_eqy_engine(
                         for &lit in full_sat.input_model() {
                             let (time, full_lit) = full_bmc
                                 .find_seq_input(ctx.env, &full_bmc_env, lit)
-                                .unwrap_or_else(|| {
-                                    log::info!("{lit} not found");
-                                    panic!();
-                                });
+                                .unwrap();
 
                             let sim_lit =
                                 full_lit.lookup(|var| ctx.sim_model.sim_from_env[var].unwrap());
@@ -380,8 +342,28 @@ pub fn run_eqy_engine(
                                 let sim_lit =
                                     lit.lookup(|var| ctx.sim_model.sim_from_env[var].unwrap());
                                 if sim.lit_value(ctx.sim_model, frame, sim_lit) {
-                                    cex.inputs.truncate(frame.id_index() + 1);
-                                    return Some(PdrResult::Cex(cex));
+                                    let mut full_cex_inputs =
+                                        <IdVec<TimeStep, HashSet<Lit>>>::default();
+                                    full_cex_inputs
+                                        .resize_with(frame.id_index() + 1, Default::default);
+
+                                    for frame in TimeStep::first_n(frame.id_index() + 1) {
+                                        for (sim_var, &env_lit) in ctx.sim_model.env_from_sim.iter()
+                                        {
+                                            if let Some(value) = sim.input_lit_value(
+                                                ctx.sim_model,
+                                                frame,
+                                                sim_var.as_lit(),
+                                            ) {
+                                                full_cex_inputs[frame]
+                                                    .insert(ctx.env.lit_repr(env_lit ^ !value));
+                                            }
+                                        }
+                                    }
+
+                                    return Some(PdrResult::Cex(PdrCex {
+                                        inputs: full_cex_inputs,
+                                    }));
                                 }
                             }
                         }
@@ -409,22 +391,25 @@ pub fn run_eqy_engine(
         }
         log::info!("{stats} [final]");
         log::info!("windowed: {}", ctx.refine.stats());
+
+        select_primary_defs(ctx.env);
     }
 
     let pdr_option = PdrOptions {
         abc_output: true,
         run_scorr: true,
         run_dc2: true,
+        pre_bmc: 1,
         ..PdrOptions::default()
     };
 
     log::info!("{} full pdr {0}", sep('=', 6));
 
-    let (result, _pdr_stats) = solve_with_pdr(
-        ctx.env,
-        target_properties.iter().copied(),
-        &pdr_option,
-    );
+    let target_properties =
+        Vec::from_iter(target_properties.iter().map(|&lit| ctx.env.lit_repr(lit)));
+
+    let (result, _pdr_stats) =
+        solve_with_pdr(ctx.env, target_properties.iter().copied(), &pdr_option);
 
     result
 }
@@ -436,4 +421,220 @@ fn sep(c: char, len: usize) -> impl Debug + Display {
         }
         Ok(())
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use imctk_ir::{
+        node::fine::circuit::{Input, SteadyInput},
+        prelude::NodeBuilder,
+    };
+    use rand::seq::SliceRandom;
+    use seq_sim::model::extract_sim_model;
+
+    use super::*;
+
+    #[test]
+    fn test_example_pass() {
+        imctk_logger::test_setup("trace");
+        let mut env = Env::default();
+
+        let data = include_bytes!("../tests/aiger/fuzzmiter.aig");
+
+        let (seq_env_from_aiger, aig) =
+            imctk_aiger::import::import_binary_aiger(&mut env, &mut data.as_slice()).unwrap();
+
+        env.rebuild_egraph();
+
+        let target_properties = Vec::from_iter(
+            aig.outputs
+                .iter()
+                .chain(aig.bad_state_properties.iter())
+                .map(|&lit| env.lit_repr(lit.lookup(|var| seq_env_from_aiger[var]))),
+        );
+
+        let result = run_eqy_engine(
+            &mut env,
+            &target_properties,
+            EngineOptions {
+                rarity_sim_rounds: 5,
+                bmc_depth: 5,
+                window: 3..5,
+            },
+        );
+
+        assert!(matches!(result, Some(PdrResult::Unreachable)));
+    }
+
+    #[test]
+    fn test_example_fail() {
+        imctk_logger::test_setup("trace");
+        let mut env = Env::default();
+
+        let data = include_bytes!("../tests/aiger/fuzzmiter2.aig");
+
+        let (seq_env_from_aiger, aig) =
+            imctk_aiger::import::import_binary_aiger(&mut env, &mut data.as_slice()).unwrap();
+
+        env.rebuild_egraph();
+
+        let target_properties = Vec::from_iter(
+            aig.outputs
+                .iter()
+                .chain(aig.bad_state_properties.iter())
+                .map(|&lit| env.lit_repr(lit.lookup(|var| seq_env_from_aiger[var]))),
+        );
+
+        let result = run_eqy_engine(
+            &mut env,
+            &target_properties,
+            EngineOptions {
+                rarity_sim_rounds: 5,
+                bmc_depth: 5,
+                window: 3..5,
+            },
+        );
+
+        let Some(PdrResult::Cex(cex)) = result else { panic!() };
+
+        let sim_model = extract_sim_model(&env, env.var_defs().repr_vars());
+
+        let mut sim = OnDemandSeqSim::default();
+        let cex_frame = cex.inputs.next_unused_key().prev().unwrap();
+        for (time, cex_inputs) in cex.inputs {
+            for input in cex_inputs {
+                let sim_input = input.lookup(|var| sim_model.sim_from_env[var].unwrap());
+
+                sim.fix_input_lit_value(&sim_model, time, sim_input, true)
+                    .unwrap();
+            }
+        }
+
+        assert!(target_properties.iter().any(|&prop| sim.lit_value(
+            &sim_model,
+            cex_frame,
+            env.lit_repr(prop)
+                .lookup(|var| sim_model.sim_from_env[var].unwrap())
+        )));
+    }
+
+    #[test]
+    fn random_circuits() {
+        imctk_logger::test_setup("trace");
+        let mut rng = SmallRng::seed_from_u64(1);
+        for i in 0..200 {
+            let scale = i / 16 + 1;
+            let mut env = Env::default();
+
+            let mut lits = vec![];
+
+            for i in 0..rng.gen_range(4..16) {
+                lits.push(env.term(Input::from_id_index(i)));
+            }
+
+            let mut inputs = lits.clone();
+            let mut steady_inputs = <IdVec<SteadyInput, Lit>>::default();
+
+            lits.push(Lit::FALSE);
+
+            let mut reg_next_lits = vec![];
+
+            for _ in 0..rng.gen_range(4 * scale..64 * scale) {
+                if rng.gen_ratio(1, 8) {
+                    let reg_next = env.fresh_var_with_max_level_bound().as_lit();
+                    reg_next_lits.push(reg_next);
+                    let init = if rng.gen() {
+                        let init = env.term(steady_inputs.next_unused_key());
+                        steady_inputs.push(init);
+                        init
+                    } else {
+                        *lits.choose(&mut rng).unwrap()
+                    };
+                    lits.push(env.reg(init, reg_next ^ rng.gen::<bool>()));
+                } else {
+                    let inputs: [Lit; 2] = std::array::from_fn(|_| {
+                        *lits.choose(&mut rng).unwrap() ^ rng.gen::<bool>()
+                    });
+
+                    lits.push(if rng.gen() {
+                        env.and(inputs)
+                    } else {
+                        env.xor(inputs)
+                    })
+                }
+            }
+
+            for &lit in reg_next_lits.iter() {
+                env.equiv([lit, *lits.choose(&mut rng).unwrap()]);
+            }
+
+            env.rebuild_egraph();
+
+            let prop = env.lit_repr(*lits.choose(&mut rng).unwrap());
+
+            if prop.is_const() {
+                continue;
+            }
+
+            if let Some(PdrResult::Cex(cex)) = run_eqy_engine(
+                &mut env,
+                &[prop],
+                EngineOptions {
+                    rarity_sim_rounds: rng.gen_range(0..10),
+                    bmc_depth: rng.gen_range(0..5),
+                    window: 3..rng.gen_range(3..5),
+                },
+            ) {
+                let mut sim = OnDemandSeqSim::default();
+                let cex_frame = cex.inputs.next_unused_key().prev().unwrap();
+
+                env.rebuild_egraph();
+
+                let prop = env.lit_repr(prop);
+                for input in inputs.iter_mut() {
+                    *input = env.lit_repr(*input);
+                }
+
+                for input in steady_inputs.values_mut() {
+                    *input = env.lit_repr(*input);
+                }
+
+                let sim_model = extract_sim_model(
+                    &env,
+                    [prop.var()]
+                        .into_iter()
+                        .chain(inputs.iter().map(|&lit| lit.var()))
+                        .chain(steady_inputs.values().iter().map(|&lit| lit.var())),
+                );
+
+                for (time, cex_inputs) in cex.inputs {
+                    for input in cex_inputs {
+                        let orig_input = input.lookup(|var| {
+                            let node = env.def_node(var).unwrap();
+                            let term = node.dyn_term().unwrap();
+                            let pol = node.output_lit().unwrap().pol();
+
+                            if let Some(&input) = term.dyn_cast::<Input>() {
+                                inputs[input.id_index()] ^ pol
+                            } else {
+                                assert_eq!(time, TimeStep::FIRST);
+                                steady_inputs[*term.dyn_cast::<SteadyInput>().unwrap()] ^ pol
+                            }
+                        });
+                        let sim_input =
+                            orig_input.lookup(|var| sim_model.sim_from_env[var].unwrap());
+
+                        sim.fix_input_lit_value(&sim_model, time, sim_input, true)
+                            .unwrap();
+                    }
+                }
+
+                assert!(sim.lit_value(
+                    &sim_model,
+                    cex_frame,
+                    prop.lookup(|var| sim_model.sim_from_env[var].unwrap())
+                ));
+            }
+        }
+    }
 }
