@@ -184,6 +184,8 @@ pub fn solve_with_pdr(
 
     let mut steady_inputs_used = vec![];
 
+    // SAFETY: This is based on existing API usage patterns found in the ABC codebase and thus
+    // presumed to follow ABC's API requirements.
     unsafe {
         use imctk_abc_sys as abc;
 

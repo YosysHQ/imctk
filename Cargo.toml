@@ -19,6 +19,13 @@ members = [
     # comment to force multi-line layout
 ]
 
+[workspace.lints.rust]
+unsafe_op_in_unsafe_fn = "warn"
+missing_docs = "warn"
+
+[workspace.lints.clippy]
+undocumented_unsafe_blocks = "warn"
+
 [profile.release]
 debug = true
 

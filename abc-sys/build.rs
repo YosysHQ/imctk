@@ -1,3 +1,4 @@
+#![allow(missing_docs)] // build script
 use std::path::PathBuf;
 
 static SRC_FILES: &[&str] = &[

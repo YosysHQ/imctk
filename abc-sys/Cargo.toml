@@ -3,6 +3,9 @@ name = "imctk-abc-sys"
 version = "0.1.0"
 edition = "2021"
 
+# We're not using the workspace lints as this crate contains only
+# auto-generated bindings for which most lints need to be disabled
+
 [dependencies]
 libc = "0.2.155"
 

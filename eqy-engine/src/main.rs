@@ -1,3 +1,4 @@
+#![allow(missing_docs)] // bin crate
 #![allow(unexpected_cfgs)] // for coverage_nightly
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 #![deny(unsafe_code)]

@@ -3,6 +3,9 @@ name = "imctk-aiger"
 version = "0.1.0"
 edition = "2021"
 
+[lints]
+workspace = true
+
 [dependencies]
 flussab = "0.3.1"
 flussab-aiger = "0.1.0"
