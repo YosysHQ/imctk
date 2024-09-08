@@ -593,3 +593,22 @@ impl VarOrLit for Lit {
         from_lit_pol(pol)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn polarities() {
+        let v = Var::from_index(1);
+
+        let l0 = v.as_lit();
+        assert!(l0.is_pos());
+        assert!(l0.as_pos().is_pos());
+        assert!(l0.as_neg().is_neg());
+        let l1 = v.as_neg_lit();
+        assert!(l1.is_neg());
+        assert!(l1.as_pos().is_pos());
+        assert!(l1.as_neg().is_neg());
+    }
+}

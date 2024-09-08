@@ -475,3 +475,62 @@ impl Env {
             .find_term(self.nodes(), term)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use zwohash::HashMap;
+
+    use crate::node::fine::circuit::{FineCircuitNodeBuilder, Input};
+
+    use super::*;
+
+    #[test]
+    fn duplicate_with_var_map() {
+        let mut env = Env::default();
+
+        let a = env.term(Input::from_id_index(0));
+        let b = env.term(Input::from_id_index(1));
+        let c = env.term(Input::from_id_index(2));
+        let d = env.term(Input::from_id_index(3));
+
+        let y = env.and([a, b]);
+
+        let z = env.fresh_var_with_max_level_bound().as_lit();
+
+        let y_def_id = env.def_node_with_id(y.var()).unwrap().0;
+
+        let var_map =
+            HashMap::from_iter([(a, c), (b, d), (y, z)].map(|(a, b)| (a.var(), b ^ a.pol())));
+
+        env.duplicate_node_with_var_map(y_def_id, |_env, var| var_map[&var]);
+
+        assert_eq!(env.and([c, d]), z);
+
+        let y2 = env.xor([a, b]);
+
+        let z2 = env.xor([c, d]);
+
+        let y2_def_id = env.def_node_with_id(y2.var()).unwrap().0;
+
+        assert_eq!(
+            z2.var(),
+            env.duplicate_term_with_var_map(y2_def_id, |_env, var| var_map[&var])
+                .var()
+        );
+    }
+
+    #[test]
+    fn remove_nodes() {
+        let mut env = Env::default();
+
+        let a = env.term(Input::from_id_index(0));
+        let b = env.term(Input::from_id_index(1));
+        let y = env.and([a, b]);
+        let id = env.def_node_with_id(y.var()).unwrap().0;
+        env.raw_nodes().discard_node(id);
+        let y2 = env.and([a, b]);
+        assert_ne!(y, y2);
+        let y3 = env.and([a, b]);
+        assert_eq!(y2, y3);
+    }
+}

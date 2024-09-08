@@ -156,7 +156,7 @@ impl Term for Xor {
 
     fn reduce_node(&mut self, output: Lit, builder: &mut impl NodeBuilder) -> bool {
         if output.is_const() {
-            let [a, b] = self.inputs.into_values();
+            let [a, b] = self.inputs.into();
             builder.equiv([a.as_lit(), b ^ output.pol()]);
             true
         } else {

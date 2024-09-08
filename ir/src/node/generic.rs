@@ -792,3 +792,72 @@ impl<T: Term> NodeDyn for TermNode<T> {
         Some(&self.term)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::prelude::NodeBuilderDyn;
+
+    use super::*;
+
+    #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+    struct TestInput(u32);
+
+    impl Term for TestInput {
+        type Output = Var;
+
+        const NAME: &'static str = "TestInput";
+
+        fn input_var_iter(&self) -> impl Iterator<Item = Var> + '_ {
+            [].into_iter()
+        }
+
+        fn apply_var_map(
+            &mut self,
+            _var_map: impl FnMut(Var) -> Lit,
+        ) -> <Self::Output as VarOrLit>::Pol {
+        }
+    }
+
+    impl TermDyn for TestInput {}
+
+    #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+    struct TestTerm(Var);
+
+    impl Term for TestTerm {
+        type Output = Var;
+
+        const NAME: &'static str = "TestInput";
+
+        fn input_var_iter(&self) -> impl Iterator<Item = Var> + '_ {
+            [self.0].into_iter()
+        }
+
+        fn apply_var_map(
+            &mut self,
+            mut var_map: impl FnMut(Var) -> Lit,
+        ) -> <Self::Output as VarOrLit>::Pol {
+            let var = var_map(self.0);
+            assert!(var.is_pos());
+            self.0 = var.var();
+        }
+    }
+
+    impl TermDyn for TestTerm {}
+
+    #[test]
+    fn test_term() {
+        let mut env = Env::default();
+
+        let a = env.term(TestInput(0));
+        let b = env.term(TestInput(1));
+
+        let c = env.term(TestTerm(a));
+        let d = env.term(TestTerm(b));
+
+        env.equiv([a.as_lit(), b.as_lit()]);
+
+        env.rebuild_egraph();
+
+        assert_eq!(env.var_defs().var_repr(c), env.var_defs().var_repr(d));
+    }
+}
