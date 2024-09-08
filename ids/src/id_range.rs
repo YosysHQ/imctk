@@ -97,3 +97,18 @@ impl<I: Id> IntoIterator for &IdRange<I> {
         (*self).into_iter()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::Id8;
+
+    use super::*;
+
+    #[test]
+    fn forwarded_methods() {
+        let std_range = Id8::MIN_ID..Id8::MAX_ID;
+        let id_range = IdRange::from(std_range);
+        assert!(!id_range.is_empty());
+        assert_eq!(id_range.len(), Id8::MAX_ID_INDEX);
+    }
+}
