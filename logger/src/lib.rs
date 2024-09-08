@@ -3,7 +3,11 @@
 #![warn(clippy::undocumented_unsafe_blocks)]
 #![warn(missing_docs)]
 
-use std::{cell::RefCell, fmt, sync::atomic::AtomicUsize};
+use std::{
+    cell::RefCell,
+    fmt,
+    sync::atomic::{AtomicBool, AtomicUsize},
+};
 
 #[derive(Debug)]
 struct RssStats {
@@ -143,18 +147,55 @@ const MEMORY_PEAK_STYLE: anstyle::Style =
 const TARGET_STYLE: anstyle::Style =
     anstyle::Style::new().fg_color(Some(anstyle::Color::Ansi(anstyle::AnsiColor::Magenta)));
 
+static LOGGER_SETUP: AtomicBool = AtomicBool::new(false);
+
 /// Perform the default logging setup used by imctk examples
 pub fn setup() {
+    common_setup(None, env_logger::Target::Stderr);
+}
+
+/// Perform the logging setup using a given default log config
+pub fn test_setup(config: &str) {
+    struct TestTarget;
+
+    impl std::io::Write for TestTarget {
+        fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+            print!("{}", String::from_utf8_lossy(buf));
+            Ok(buf.len())
+        }
+
+        fn flush(&mut self) -> std::io::Result<()> {
+            std::io::stdout().flush()
+        }
+    }
+
+    common_setup(Some(config), env_logger::Target::Pipe(Box::new(TestTarget)));
+}
+
+fn common_setup(force_config: Option<&str>, target: env_logger::Target) {
+    if LOGGER_SETUP.fetch_or(true, std::sync::atomic::Ordering::Relaxed) {
+        return;
+    }
+
     let start_time = std::time::Instant::now();
     let peak = AtomicUsize::new(RssStats::now().max.0);
 
     let last_target = std::sync::Mutex::new(String::new());
 
-    env_logger::Builder::from_env(
-        env_logger::Env::new()
-            .filter_or("IMCTK_LOG", "info")
-            .write_style("IMCTK_LOG_STYLE"),
-    )
+    if let Some(force_config) = force_config {
+        let mut builder = env_logger::Builder::new();
+        builder
+            .parse_filters(force_config)
+            .write_style(env_logger::WriteStyle::Always);
+        builder
+    } else {
+        env_logger::Builder::from_env(
+            env_logger::Env::new()
+                .filter_or("IMCTK_LOG", "info")
+                .write_style("IMCTK_LOG_STYLE"),
+        )
+    }
+    .target(target)
     .format(move |buf, record| {
         use std::io::Write;
 
