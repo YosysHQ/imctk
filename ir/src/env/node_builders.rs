@@ -86,7 +86,7 @@ impl RawEnvNodes {
                     level_bound = level_bound.max(self.0.var_defs.level_bound(var) + 1);
                 }
 
-                if level_bound < old_level_bound {
+                if level_bound <= old_level_bound {
                     log::trace!("def update node");
                     self.0
                         .index
@@ -164,7 +164,7 @@ impl RawEnvNodes {
                     true
                 });
 
-                if level_bound < old_level_bound {
+                if level_bound <= old_level_bound {
                     log::trace!("def update dyn node");
                     self.0
                         .index
@@ -247,7 +247,7 @@ impl RawEnvNodes {
                     level_bound = level_bound.max(self.0.var_defs.level_bound(var) + 1);
                 }
 
-                if level_bound < old_level_bound {
+                if level_bound <= old_level_bound {
                     log::trace!("def update term");
                     self.0
                         .make_primary_def_with_level_bound(node_id, level_bound);
@@ -294,7 +294,7 @@ impl RawEnvNodes {
                     true
                 });
 
-                if level_bound < old_level_bound {
+                if level_bound <= old_level_bound {
                     self.0
                         .make_primary_def_with_level_bound(node_id, level_bound);
                 }
@@ -363,7 +363,7 @@ impl RawEnvNodes {
                         level_bound = level_bound.max(self.0.var_defs.level_bound(var) + 1);
                     }
 
-                    if level_bound < old_level_bound {
+                    if level_bound <= old_level_bound {
                         self.0
                             .make_primary_def_with_level_bound(found_node.node_id, level_bound);
                     }
@@ -412,7 +412,7 @@ impl RawEnvNodes {
                         true
                     });
 
-                    if level_bound < old_level_bound {
+                    if level_bound <= old_level_bound {
                         self.0
                             .make_primary_def_with_level_bound(found_node.node_id, level_bound);
                     }
@@ -854,5 +854,222 @@ impl Env {
             _ => (),
         }
         self.var_defs.var_defs[var].clear_def()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use imctk_util::give;
+
+    use crate::node::fine::circuit::{And, AndNode, FineCircuitNodeBuilder, Input, Xor, XorNode};
+
+    use super::*;
+
+    #[test]
+    fn test_multiple_defs_handling() {
+        let mut env = Env::default();
+
+        let a = env.term(Input::from_id_index(0));
+        let b = env.term(Input::from_id_index(1));
+        let c = env.term(Input::from_id_index(2));
+
+        let y = env.and([a, b]);
+
+        env.node(XorNode {
+            output: y,
+            term: Xor {
+                inputs: [a.var(), b.var()].into(),
+            },
+        });
+
+        assert!(env
+            .def_node(y.var())
+            .unwrap()
+            .dyn_cast::<AndNode>()
+            .is_some());
+
+        env.build_defs().node(XorNode {
+            output: y,
+            term: Xor {
+                inputs: [a.var(), b.var()].into(),
+            },
+        });
+
+        assert!(
+            env.def_node(y.var())
+                .unwrap()
+                .dyn_cast::<XorNode>()
+                .is_some(),
+            "{:?}",
+            env.def_node(y.var())
+        );
+
+        env.build_defs().node(AndNode {
+            output: y,
+            term: And {
+                inputs: [b, c].into(),
+            },
+        });
+
+        assert!(
+            env.def_node(y.var())
+                .unwrap()
+                .dyn_cast::<AndNode>()
+                .is_some(),
+            "{:?}",
+            env.def_node(y.var())
+        );
+
+        let def_id = env.def_node_with_id(y.var()).unwrap().0;
+
+        env.raw_nodes().discard_node(def_id);
+
+        env.node(XorNode {
+            output: y,
+            term: Xor {
+                inputs: [a.var(), c.var()].into(),
+            },
+        });
+
+        assert!(
+            env.def_node(y.var())
+                .unwrap()
+                .dyn_cast::<XorNode>()
+                .is_some(),
+            "{:?}",
+            env.def_node(y.var())
+        );
+
+        let z = env.build_defs().term(And {
+            inputs: [a, b].into(),
+        });
+
+        assert_eq!(z, y);
+
+        assert!(
+            env.def_node(y.var())
+                .unwrap()
+                .dyn_cast::<AndNode>()
+                .is_some(),
+            "{:?}",
+            env.def_node(y.var())
+        );
+    }
+
+    #[test]
+    fn test_dyn_multiple_defs_handling() {
+        let mut env = Env::default();
+
+        let a = env.term(Input::from_id_index(0));
+        let b = env.term(Input::from_id_index(1));
+        let c = env.term(Input::from_id_index(2));
+
+        give!(
+            term: DynTerm = And {
+                inputs: [a, b].into()
+            }
+        );
+
+        let y = env.dyn_term(term);
+
+        give!(
+            node: DynNode = XorNode {
+                output: y,
+                term: Xor {
+                    inputs: [a.var(), b.var()].into(),
+                },
+            }
+        );
+
+        env.dyn_node(node);
+
+        assert!(env
+            .def_node(y.var())
+            .unwrap()
+            .dyn_cast::<AndNode>()
+            .is_some());
+
+        give!(
+            node: DynNode = XorNode {
+                output: y,
+                term: Xor {
+                    inputs: [a.var(), b.var()].into(),
+                },
+            }
+        );
+
+        env.build_defs().dyn_node(node);
+
+        assert!(
+            env.def_node(y.var())
+                .unwrap()
+                .dyn_cast::<XorNode>()
+                .is_some(),
+            "{:?}",
+            env.def_node(y.var())
+        );
+
+        give!(
+            node: DynNode = AndNode {
+                output: y,
+                term: And {
+                    inputs: [b, c].into(),
+                },
+            }
+        );
+
+        env.build_defs().dyn_node(node);
+
+        assert!(
+            env.def_node(y.var())
+                .unwrap()
+                .dyn_cast::<AndNode>()
+                .is_some(),
+            "{:?}",
+            env.def_node(y.var())
+        );
+
+        let def_id = env.def_node_with_id(y.var()).unwrap().0;
+
+        env.raw_nodes().discard_node(def_id);
+
+        give!(
+            node: DynNode = XorNode {
+                output: y,
+                term: Xor {
+                    inputs: [a.var(), c.var()].into(),
+                },
+            }
+        );
+
+        env.dyn_node(node);
+
+        assert!(
+            env.def_node(y.var())
+                .unwrap()
+                .dyn_cast::<XorNode>()
+                .is_some(),
+            "{:?}",
+            env.def_node(y.var())
+        );
+
+        give!(
+            term: DynTerm = And {
+                inputs: [a, b].into(),
+            }
+        );
+
+        let z = env.build_defs().dyn_term(term);
+
+        assert_eq!(z, y);
+
+        assert!(
+            env.def_node(y.var())
+                .unwrap()
+                .dyn_cast::<AndNode>()
+                .is_some(),
+            "{:?}",
+            env.def_node(y.var())
+        );
     }
 }
