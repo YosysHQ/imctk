@@ -56,10 +56,6 @@ impl XaigStep {
     pub fn is_and(&self) -> bool {
         self.inputs[0] <= self.inputs[1]
     }
-
-    pub fn is_xor(&self) -> bool {
-        !self.is_and()
-    }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -78,8 +74,6 @@ pub struct SimModel {
     pub zero_values: IdVec<Var, bool>,
     pub sim_from_env: IdVec<Var, Option<Lit>>,
     pub env_from_sim: IdVec<Var, Lit>,
-    pub inputs: Vec<Var>,
-    pub steady_inputs: Vec<Var>,
     pub read_state: IdVec<Var, Var>,
 }
 
@@ -214,8 +208,6 @@ pub fn extract_sim_model(env: &Env, targets: impl IntoIterator<Item = Var>) -> S
         zero_values,
         sim_from_env,
         env_from_sim,
-        inputs,
-        steady_inputs,
         read_state: read_state.into_id_vec(),
     }
 }

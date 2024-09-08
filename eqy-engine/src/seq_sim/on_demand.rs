@@ -1,5 +1,5 @@
 use imctk_ids::Id;
-use imctk_ir::var::{Lit, Pol, Var};
+use imctk_ir::var::{Lit, Var};
 use rand::{rngs::SmallRng, Rng, SeedableRng};
 use zwohash::HashMap;
 
@@ -9,7 +9,6 @@ use super::model::SimModel;
 
 pub struct OnDemandSeqSim {
     cached: HashMap<(TimeStep, Var), bool>,
-    induction_mode: bool,
     rng: SmallRng,
 }
 
@@ -17,7 +16,6 @@ impl Default for OnDemandSeqSim {
     fn default() -> Self {
         Self {
             cached: Default::default(),
-            induction_mode: Default::default(),
             rng: SmallRng::seed_from_u64(0),
         }
     }
@@ -26,10 +24,6 @@ impl Default for OnDemandSeqSim {
 impl OnDemandSeqSim {
     pub fn reset(&mut self) {
         self.cached.clear();
-    }
-
-    pub fn set_induction_mode(&mut self, enable: bool) {
-        self.induction_mode = enable
     }
 
     pub fn fix_lit_value(&mut self, time: TimeStep, lit: Lit, value: bool) -> Option<bool> {
@@ -49,19 +43,15 @@ impl OnDemandSeqSim {
             return None;
         }
 
-        if self.induction_mode && time.id_index() == 1 {
-            Some(self.fix_lit_value(time, lit, value))
+        let steps = if time.id_index() == 0 {
+            &model.init_steps
         } else {
-            let steps = if time.id_index() == 0 {
-                &model.init_steps
-            } else {
-                &model.next_steps
-            };
+            &model.next_steps
+        };
 
-            match steps[lit.var()] {
-                Step::Other(None) => Some(self.fix_lit_value(time, lit, value)),
-                _ => None,
-            }
+        match steps[lit.var()] {
+            Step::Other(None) => Some(self.fix_lit_value(time, lit, value)),
+            _ => None,
         }
     }
 
@@ -70,33 +60,16 @@ impl OnDemandSeqSim {
             return None;
         }
 
-        if self.induction_mode && time.id_index() == 1 {
-            Some(self.lit_value(model, time, lit))
+        let steps = if time.id_index() == 0 {
+            &model.init_steps
         } else {
-            let steps = if time.id_index() == 0 {
-                &model.init_steps
-            } else {
-                &model.next_steps
-            };
+            &model.next_steps
+        };
 
-            match steps[lit.var()] {
-                Step::Other(None) => Some(self.lit_value(model, time, lit)),
-                _ => None,
-            }
+        match steps[lit.var()] {
+            Step::Other(None) => Some(self.lit_value(model, time, lit)),
+            _ => None,
         }
-    }
-
-    pub fn cached_lit_value(&self, time: TimeStep, lit: Lit) -> Option<bool> {
-        self.cached_var_value(time, lit.var())
-            .map(|value| value ^ lit.pol())
-    }
-
-    pub fn cached_var_value(&self, time: TimeStep, var: Var) -> Option<bool> {
-        if var == Var::FALSE {
-            return Some(false);
-        }
-
-        self.cached.get(&(time, var)).copied()
     }
 
     pub fn lit_value(&mut self, model: &SimModel, time: TimeStep, lit: Lit) -> bool {
@@ -112,43 +85,33 @@ impl OnDemandSeqSim {
             return cached;
         }
 
-        let value = if self.induction_mode && time.id_index() == 1 {
-            self.rng.gen()
+        let steps = if time.id_index() == 0 {
+            &model.init_steps
         } else {
-            let steps = if time.id_index() == 0 {
-                &model.init_steps
-            } else {
-                &model.next_steps
-            };
+            &model.next_steps
+        };
 
-            match steps[var] {
-                Step::Xaig(xaig) => {
-                    let [a, b] = xaig
-                        .inputs
-                        .map(|input_lit| self.lit_value(model, time, input_lit));
-                    if xaig.is_and() {
-                        a & b
-                    } else {
-                        a ^ b
-                    }
+        let value = match steps[var] {
+            Step::Xaig(xaig) => {
+                let [a, b] = xaig
+                    .inputs
+                    .map(|input_lit| self.lit_value(model, time, input_lit));
+                if xaig.is_and() {
+                    a & b
+                } else {
+                    a ^ b
                 }
-                Step::Other(None) => self.rng.gen(),
-                Step::Other(Some(reg)) => self.lit_value(
-                    model,
-                    time.prev().unwrap(),
-                    model.read_state[reg.var()] ^ reg.pol(),
-                ),
             }
+            Step::Other(None) => self.rng.gen(),
+            Step::Other(Some(reg)) => self.lit_value(
+                model,
+                time.prev().unwrap(),
+                model.read_state[reg.var()] ^ reg.pol(),
+            ),
         };
 
         self.cached.insert((time, var), value);
 
         value
-    }
-
-    pub fn values(&self) -> impl Iterator<Item = (TimeStep, Lit)> + '_ {
-        self.cached
-            .iter()
-            .map(|(&(step, var), &value)| (step, var ^ Pol::pos_if(value)))
     }
 }

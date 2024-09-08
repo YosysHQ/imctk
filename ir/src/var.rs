@@ -250,8 +250,6 @@ impl Lit {
         self.pol() == Pol::Neg
     }
 
-    /// FIXME description for the generic version
-    ///
     /// This is equivalent to `f(self.var()) ^ self.pol()`.
     #[inline(always)]
     pub fn lookup<T, U>(self, f: impl FnOnce(Var) -> T) -> U

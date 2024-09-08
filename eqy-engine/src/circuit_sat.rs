@@ -36,7 +36,6 @@ pub struct CircuitSat {
     sat_from_env: IdVec<Var, Option<Lit>>,
     env_from_sat: IdVec<Var, Lit>,
     sat_gates: IdVec<Var, Option<XaigStep>>,
-    redundant_gates: IdVec<u32, CircuitCutGate>,
 
     input_model: Vec<Lit>,
     inner_model: Vec<Lit>,
@@ -74,7 +73,6 @@ impl Default for CircuitSat {
             sat_from_env: IdVec::from_vec(vec![Some(Lit::FALSE)]),
             env_from_sat: IdVec::from_vec(vec![Lit::FALSE]),
             sat_gates: IdVec::from_vec(vec![None]),
-            redundant_gates: IdVec::default(),
 
             input_model: vec![],
             inner_model: vec![],
@@ -172,7 +170,6 @@ impl CircuitSat {
         self.sat_from_env.clear();
         self.env_from_sat.clear();
         self.sat_gates.clear();
-        self.redundant_gates.clear();
         self.sat_from_env.push(Some(Lit::FALSE));
         self.env_from_sat.push(Lit::FALSE);
         self.sat_gates.push(None);
@@ -528,57 +525,10 @@ impl CircuitSat {
         &self.input_model
     }
 
-    pub fn inner_model(&self) -> &[Lit] {
-        assert!(self.sat_cube.is_some());
-        &self.inner_model
-    }
-
-    pub fn sat_cube(&self) -> &[Lit] {
-        let [cube_start, cube_end] = self.sat_cube.unwrap();
-        &self.cube_buf[cube_start..cube_end]
-    }
-
     pub fn unsat_cubes(&self) -> impl Iterator<Item = &[Lit]> {
         self.unsat_cubes
             .iter()
             .map(|&[start, end]| &self.cube_buf[start..end])
-    }
-}
-
-#[derive(Clone, Debug, Default)]
-pub struct CircuitCut {
-    pub env_from_cut: IdVec<Var, Lit>,
-    pub gates: Vec<CircuitCutGate>,
-    pub equivs: Vec<[Lit; 2]>,
-    pub units: Vec<Lit>,
-    pub failed_cube: Vec<Lit>,
-}
-
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
-pub struct CircuitCutGate {
-    pub output: Lit,
-    pub gate: XaigStep,
-}
-
-impl CircuitCutGate {
-    pub fn apply_var_map(&mut self, mut var_map: impl FnMut(Var) -> Lit) {
-        self.output = self.output.lookup(&mut var_map);
-
-        let inputs = self.gate.inputs.map(|input| input.lookup(&mut var_map));
-        if self.gate.is_and() {
-            self.gate = XaigStep::and(inputs.into());
-        } else {
-            self.gate = XaigStep::xor(inputs.into());
-        }
-    }
-
-    pub fn is_constraining(&self) -> bool {
-        self.output.is_const()
-            || self.gate.inputs[0].is_const()
-            || self.gate.inputs[1].is_const()
-            || self.output.var() == self.gate.inputs[0].var()
-            || self.output.var() == self.gate.inputs[1].var()
-            || self.gate.inputs[0].var() == self.gate.inputs[1].var()
     }
 }
 

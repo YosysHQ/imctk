@@ -107,10 +107,6 @@ impl RefineSim {
         self.equiv_pos = env.equiv_vars().len();
     }
 
-    pub fn ensure_var(&mut self, env: &Env, env_var: Var) {
-        self.import_repr_var(env, env.var_defs().var_repr(env_var));
-    }
-
     fn import_lit(&mut self, env: &Env, env_lit: Lit) -> Lit {
         env.var_defs()
             .lit_repr(env_lit)

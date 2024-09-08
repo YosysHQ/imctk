@@ -151,22 +151,6 @@ impl Unroll {
         );
     }
 
-    pub fn unroll_defer_spec(
-        &mut self,
-        source: &Env,
-        dest: &mut Env,
-        step: TimeStep,
-        seq_lit: Lit,
-    ) -> Lit {
-        if seq_lit.is_const() {
-            seq_lit
-        } else {
-            let seq_lit = source.var_defs().lit_repr(seq_lit);
-
-            self.unroll_repr_var_uncached(source, dest, step, seq_lit.var()) ^ seq_lit.pol()
-        }
-    }
-
     pub fn unroll(&mut self, source: &Env, dest: &mut Env, step: TimeStep, seq_lit: Lit) -> Lit {
         if seq_lit.is_const() {
             seq_lit
@@ -185,17 +169,6 @@ impl Unroll {
             self.find_unrolled_repr_var(step, seq_lit.var())
                 .map(|lit| lit ^ seq_lit.pol())
         }
-    }
-
-    pub fn find_seq(
-        &mut self,
-        dest: &Env,
-        unroll_lit: Lit,
-    ) -> impl Iterator<Item = (TimeStep, Lit)> + '_ {
-        self.seq_from_comb.merge_equivs(dest);
-        self.seq_from_comb
-            .lit_entries(dest.var_defs().lit_repr(unroll_lit))
-            .map(|entry| (entry.step, entry.lit))
     }
 
     pub fn find_seq_input(

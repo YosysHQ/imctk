@@ -3,26 +3,24 @@
 #![deny(unsafe_code)]
 
 #[allow(unsafe_code)] // Required for calling directly into abc
-pub mod pdr_wrapper;
+mod pdr_wrapper;
 
-pub mod comb_sim;
-pub mod seq_sim;
+mod comb_sim;
+mod seq_sim;
 
-pub mod bit_matrix;
+mod bit_matrix;
 
-pub mod circuit_sat;
+mod circuit_sat;
 
-pub mod refinement;
+mod refinement;
 
-pub mod unroll;
+mod unroll;
 
-pub mod fragment;
+mod fragment;
 
-pub mod engine;
+mod engine;
 
 mod time_step;
-
-pub use time_step::TimeStep;
 
 use std::{ffi::OsString, mem::take};
 
@@ -37,6 +35,7 @@ use imctk_ir::{
     var::{Lit, Var},
 };
 use serde_json::json;
+use time_step::TimeStep;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]

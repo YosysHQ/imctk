@@ -7,7 +7,7 @@ use super::model::{SimModel, Step};
 use crate::bit_matrix::BitMatrix;
 use imctk_ir::var::Var;
 
-pub use crate::bit_matrix::{Word, WordVec};
+pub use crate::bit_matrix::WordVec;
 
 /// Bit-sliced sequential circuit simulation engine.
 ///
@@ -15,7 +15,6 @@ pub use crate::bit_matrix::{Word, WordVec};
 pub struct BitSlicedSim {
     lanes: usize,
     reg_len: usize,
-    comb_len: usize,
 
     pub(super) reg_state: BitMatrix,
     pub(super) comb_state: Vec<WordVec>,
@@ -27,7 +26,6 @@ impl BitSlicedSim {
         Self {
             lanes,
             reg_len: model.read_state.len(),
-            comb_len: model.init_steps.len(),
             reg_state: BitMatrix::zeroed(
                 model.read_state.len() + 1,
                 lanes * WordVec::BITS as usize,
@@ -38,18 +36,6 @@ impl BitSlicedSim {
 
     pub fn reg_len(&self) -> usize {
         self.reg_len
-    }
-
-    pub fn comb_len(&self) -> usize {
-        self.comb_len
-    }
-
-    pub fn lanes(&self) -> usize {
-        self.lanes
-    }
-
-    pub fn bit_lanes(&self) -> usize {
-        self.lanes * WordVec::BITS as usize
     }
 
     pub fn reset_state(&mut self) -> &mut [WordVec] {
@@ -67,10 +53,6 @@ impl BitSlicedSim {
 
     pub fn comb_state(&self, var: Var) -> &[WordVec] {
         &self.comb_state[var.index() * self.lanes..][..self.lanes]
-    }
-
-    pub fn reg_state(&self, var: Var) -> &[WordVec] {
-        self.reg_state.packed_row(var.index())
     }
 
     pub fn sim_comb(
