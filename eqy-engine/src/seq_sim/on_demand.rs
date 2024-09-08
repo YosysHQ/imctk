@@ -65,6 +65,27 @@ impl OnDemandSeqSim {
         }
     }
 
+    pub fn input_lit_value(&mut self, model: &SimModel, time: TimeStep, lit: Lit) -> Option<bool> {
+        if lit.is_const() {
+            return None;
+        }
+
+        if self.induction_mode && time.id_index() == 1 {
+            Some(self.lit_value(model, time, lit))
+        } else {
+            let steps = if time.id_index() == 0 {
+                &model.init_steps
+            } else {
+                &model.next_steps
+            };
+
+            match steps[lit.var()] {
+                Step::Other(None) => Some(self.lit_value(model, time, lit)),
+                _ => None,
+            }
+        }
+    }
+
     pub fn cached_lit_value(&self, time: TimeStep, lit: Lit) -> Option<bool> {
         self.cached_var_value(time, lit.var())
             .map(|value| value ^ lit.pol())
