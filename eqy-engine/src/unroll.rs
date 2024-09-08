@@ -1,7 +1,5 @@
 //! Unrolling of a sequential circuits for BMC, k-induction or similar.
 
-use std::collections::hash_map::Entry;
-
 use imctk_ids::{id_vec::IdVec, indexed_id_vec::IndexedIdVec, Id, Id32};
 use imctk_ir::{
     env::{Env, LitMultimap},
@@ -10,7 +8,6 @@ use imctk_ir::{
     var::{Lit, Pol, Var},
 };
 use imctk_util::vec_sink::VecSink;
-use zwohash::HashMap;
 
 use crate::time_step::TimeStep;
 
@@ -74,33 +71,6 @@ impl Term for UnknownPast {
 
 impl TermDyn for UnknownPast {}
 
-/// [`Term`] representing an unconstrained value that allows the circuit to leave the initial state.
-/// This is used to implement unrolling for a simultaneous BMC base case and k-induction step.
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
-pub struct ReleaseReset {
-    pub step: TimeStep,
-}
-
-impl Term for ReleaseReset {
-    type Output = Lit;
-
-    const NAME: &'static str = "ReleaseReset";
-
-    fn input_var_iter(&self) -> impl Iterator<Item = Var> + '_ {
-        [].into_iter()
-    }
-
-    fn apply_var_map(&mut self, _var_map: impl FnMut(Var) -> Lit) -> Pol {
-        Pol::Pos
-    }
-
-    fn is_steady(&self, _input_steady: impl Fn(Var) -> bool) -> bool {
-        true
-    }
-}
-
-impl TermDyn for ReleaseReset {}
-
 // In Induction mode, the first step contains everything that's steady and the second step contains
 // the unconstrained past.
 /// Selects whether to unroll for BMC or k-induction.
@@ -148,14 +118,7 @@ pub struct Unroll {
     comb_from_seen: IdVec<TimeStep, IdVec<Id32, Option<Lit>>>,
     seq_from_comb: LitMultimap<SeqFromCombEntry>,
 
-    reset_released: IdVec<TimeStep, Lit>,
-
     mode: UnrollMode,
-
-    spec_reduce_classes: Option<HashMap<Var, Lit>>,
-    class_reprs: HashMap<(TimeStep, Var), (Lit, Lit)>,
-
-    spec_reductions: Vec<(TimeStep, [Lit; 2], [Lit; 2])>,
 
     var_stack: Vec<Var>,
 }
@@ -167,12 +130,6 @@ impl Unroll {
             comb_from_seen: Default::default(),
             seq_from_comb: Default::default(),
 
-            reset_released: Default::default(),
-
-            spec_reduce_classes: Default::default(),
-            class_reprs: Default::default(),
-            spec_reductions: Default::default(),
-
             mode,
 
             var_stack: vec![],
@@ -181,38 +138,6 @@ impl Unroll {
         new.init();
 
         new
-    }
-
-    pub fn enable_spec_reduction(&mut self, classes: HashMap<Var, Lit>) {
-        self.reset_keeping_classes(self.mode);
-
-        if let Some(&false_class) = classes.get(&Var::FALSE) {
-            self.class_reprs.insert(
-                (TimeStep::FIRST, false_class.var()),
-                (Lit::FALSE, Lit::FALSE ^ false_class.pol()),
-            );
-        }
-        self.spec_reduce_classes = Some(classes);
-    }
-
-    pub fn spec_reductions(&self) -> &[(TimeStep, [Lit; 2], [Lit; 2])] {
-        &self.spec_reductions
-    }
-
-    pub fn reset_keeping_classes(&mut self, mode: UnrollMode) {
-        self.seen_from_seq.clear();
-        self.comb_from_seen.clear();
-        self.seq_from_comb.clear();
-
-        self.reset_released.clear();
-
-        self.class_reprs.clear();
-        self.spec_reductions.clear();
-
-        self.mode = mode;
-
-        self.var_stack.clear();
-        self.init();
     }
 
     fn init(&mut self) {
@@ -238,7 +163,7 @@ impl Unroll {
         } else {
             let seq_lit = source.var_defs().lit_repr(seq_lit);
 
-            self.unroll_repr_var_uncached_inner(source, dest, step, seq_lit.var()) ^ seq_lit.pol()
+            self.unroll_repr_var_uncached(source, dest, step, seq_lit.var()) ^ seq_lit.pol()
         }
     }
 
@@ -335,7 +260,7 @@ impl Unroll {
         unrolled_lit
     }
 
-    fn unroll_repr_var_uncached_inner(
+    fn unroll_repr_var_uncached(
         &mut self,
         source: &Env,
         dest: &mut Env,
@@ -360,39 +285,6 @@ impl Unroll {
                 lit: seq_var.as_lit(),
             },
         );
-
-        unrolled_lit
-    }
-
-    fn unroll_repr_var_uncached(
-        &mut self,
-        source: &Env,
-        dest: &mut Env,
-        step: TimeStep,
-        seq_var: Var,
-    ) -> Lit {
-        let unrolled_lit = self.unroll_repr_var_uncached_inner(source, dest, step, seq_var);
-
-        if let Some(classes) = &self.spec_reduce_classes {
-            if let Some(&class) = classes.get(&seq_var) {
-                match self.class_reprs.entry((step, class.var())) {
-                    Entry::Occupied(entry) => {
-                        let &(class_repr, class_repr_unrolled) = entry.get();
-
-                        self.spec_reductions.push((
-                            step,
-                            [seq_var ^ class.pol(), class_repr],
-                            [unrolled_lit ^ class.pol(), class_repr_unrolled],
-                        ));
-
-                        return class_repr_unrolled ^ class.pol();
-                    }
-                    Entry::Vacant(entry) => {
-                        entry.insert((seq_var ^ class.pol(), unrolled_lit ^ class.pol()));
-                    }
-                }
-            }
-        }
 
         unrolled_lit
     }
