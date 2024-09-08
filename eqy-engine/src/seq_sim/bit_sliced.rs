@@ -155,11 +155,14 @@ impl BitSlicedSim {
                             }
                         }
                     }
-                    Step::Other(Some(state_var)) => {
-                        let state_input_slice = self.reg_state.packed_row(state_var.index());
+                    Step::Other(Some(state_lit)) => {
+                        let state_input_slice = self.reg_state.packed_row(state_lit.index());
+                        let state_mask =
+                            WordVec::splat((state_lit.is_pos() as u64).wrapping_sub(1));
 
                         for w in 0..self.lanes {
-                            self.comb_state[offset_y + w] |= state_input_slice[w] & !reset_mask[w];
+                            self.comb_state[offset_y + w] |=
+                                (state_input_slice[w] ^ state_mask) & !reset_mask[w];
                         }
                     }
                     Step::Other(None) => {
@@ -198,9 +201,14 @@ impl BitSlicedSim {
                             }
                         }
                     }
-                    Step::Other(Some(state_var)) => {
-                        self.comb_state[step_var.index() * self.lanes..][..self.lanes]
-                            .copy_from_slice(self.reg_state.packed_row(state_var.index()));
+                    Step::Other(Some(state_lit)) => {
+                        let state_input_slice = self.reg_state.packed_row(state_lit.index());
+                        let state_mask =
+                            WordVec::splat((state_lit.is_pos() as u64).wrapping_sub(1));
+
+                        for w in 0..self.lanes {
+                            self.comb_state[offset_y + w] = state_input_slice[w] ^ state_mask;
+                        }
                     }
                     Step::Other(None) => {
                         for w in 0..self.lanes {
