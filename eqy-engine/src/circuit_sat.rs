@@ -610,3 +610,120 @@ impl ProofTracer for Tracer {
 
     fn conflict(&mut self, _conflict_lits: &[Lit], _tags: &[u32], _units: &[Lit]) {}
 }
+
+#[cfg(test)]
+mod tests {
+    use imctk_extract::{duplicate, duplicate_partial};
+    use imctk_ids::Id;
+    use imctk_ir::{
+        node::fine::circuit::{FineCircuitNodeBuilder, Input},
+        prelude::NodeBuilder,
+    };
+    use rand::{rngs::SmallRng, seq::SliceRandom, Rng, SeedableRng};
+
+    use crate::{
+        bit_matrix::{Word, WordVec},
+        comb_sim::refine_sim::RefineSim,
+    };
+
+    use super::*;
+
+    #[test]
+    fn test_random_circuits() {
+        let mut rng = SmallRng::seed_from_u64(0);
+        for _ in 0..8 {
+            let mut env = Env::default();
+
+            let mut lits = vec![];
+
+            for i in 0..rng.gen_range(4..16) {
+                lits.push(env.term(Input::from_id_index(i)));
+            }
+
+            let inputs = lits.clone();
+
+            for _ in 0..rng.gen_range(4..64) {
+                let inputs: [Lit; 2] =
+                    std::array::from_fn(|_| *lits.choose(&mut rng).unwrap() ^ rng.gen::<bool>());
+
+                lits.push(if rng.gen() {
+                    env.and(inputs)
+                } else {
+                    env.xor(inputs)
+                })
+            }
+
+            let mut sim = RefineSim::default();
+            let mut sat = CircuitSat::default();
+
+            for b in 0..WordVec::BITS as usize {
+                let mut cube = vec![];
+                let (mut reduce, _env_from_reduce, reduce_from_env) = duplicate(&mut env);
+                for &lit in inputs.iter() {
+                    let values = sim.get_value(&env, lit);
+                    let bit = values.as_array_ref()[b / Word::BITS as usize]
+                        >> (b % Word::BITS as usize)
+                        & 1
+                        != 0;
+                    let input = lit ^ !bit;
+                    cube.push(input);
+                    reduce.equiv([input.lookup(|var| reduce_from_env[var].unwrap()), Lit::TRUE]);
+                }
+                reduce.rebuild_egraph();
+
+                for &lit in lits.iter() {
+                    let values = sim.get_value(&env, lit);
+
+                    let bit = values.as_array_ref()[b / Word::BITS as usize]
+                        >> (b % Word::BITS as usize)
+                        & 1
+                        != 0;
+                    let output = lit ^ !bit;
+
+                    assert!(!sat
+                        .query_cube(&mut env, cube.iter().copied().chain([!output]))
+                        .unwrap());
+                    assert!(sat
+                        .query_cube(&mut env, cube.iter().copied().chain([output]))
+                        .unwrap());
+
+                    assert_eq!(
+                        reduce.lit_repr(output.lookup(|var| reduce_from_env[var].unwrap())),
+                        Lit::TRUE
+                    );
+
+                    if b % 16 == 0 {
+                        let (mut reduce_partial, _env_from_reduce, reduce_partial_from_env) =
+                            duplicate_partial(
+                                &mut env,
+                                cube.iter().map(|&lit| lit.var()).chain([output.var()]),
+                            );
+
+                        reduce_partial.equiv([
+                            output.lookup(|var| reduce_partial_from_env[var].unwrap()),
+                            Lit::TRUE,
+                        ]);
+
+                        reduce_partial.rebuild_egraph();
+
+                        for input in cube.iter() {
+                            reduce_partial.equiv([
+                                input.lookup(|var| reduce_partial_from_env[var].unwrap()),
+                                Lit::TRUE,
+                            ]);
+                        }
+
+                        reduce_partial.rebuild_egraph();
+
+                        assert_eq!(
+                            reduce_partial.lit_repr(
+                                output.lookup(|var| reduce_partial_from_env[var].unwrap())
+                            ),
+                            Lit::TRUE
+                        );
+                    }
+                }
+            }
+        }
+    }
+}
