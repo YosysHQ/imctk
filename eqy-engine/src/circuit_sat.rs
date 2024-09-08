@@ -17,10 +17,7 @@ use imctk_abc::sat::glucose2::ProofTracer;
 use imctk_ids::id_vec::IdVec;
 use imctk_ir::{
     env::Env,
-    node::fine::{
-        circuit::{AndNode, XorNode},
-        constraints::BinClause,
-    },
+    node::fine::circuit::{AndNode, XorNode},
     prelude::NodeBuilderDyn,
     var::{Lit, Var},
 };
@@ -146,8 +143,6 @@ impl CircuitSat {
 
                 self.sat_from_env[var] = Some(sat_lit);
 
-                // TODO make this configurable
-                self.add_redundant_overlapping_nodes_to_solver(solver, env, var);
                 return sat_lit ^ output_pol;
             } else if let Some(xor) = node.dyn_cast::<XorNode>() {
                 let inputs = xor.term.inputs;
@@ -163,8 +158,6 @@ impl CircuitSat {
 
                 self.sat_from_env[var] = Some(sat_lit);
 
-                // TODO make this configurable
-                self.add_redundant_overlapping_nodes_to_solver(solver, env, var);
                 return sat_lit ^ output_pol;
             }
         }
@@ -173,101 +166,6 @@ impl CircuitSat {
         self.sat_gates.push(None);
         self.sat_from_env[var] = Some(sat_lit);
         sat_lit ^ output_pol
-    }
-
-    fn add_redundant_overlapping_nodes_to_solver(
-        &mut self,
-        solver: &mut InnerSolver,
-        env: &Env,
-        var: Var,
-    ) {
-        'outer: for node_id in env
-            .defs_index()
-            .find_non_primary_defs_unordered(var)
-            .chain(env.uses_index().find_uses_unordered(var))
-        {
-            let node = env.nodes().get_dyn(node_id).unwrap();
-            if let Some(and) = node.dyn_cast::<AndNode>() {
-                let inputs = and.term.inputs.into_values();
-                if !matches!(self.sat_from_env.get(and.output.var()), Some(Some(_))) {
-                    continue 'outer;
-                }
-                for input in inputs.into_iter() {
-                    if !matches!(self.sat_from_env.get(input.var()), Some(Some(_))) {
-                        continue 'outer;
-                    }
-                }
-
-                let [a, b] = inputs.map(|input_lit| self.add_to_solver(solver, env, input_lit));
-                let y = and.output.lookup(|var| self.sat_from_env[var].unwrap());
-
-                let tag = self
-                    .redundant_gates
-                    .push(CircuitCutGate {
-                        output: y,
-                        gate: XaigStep::and([a, b].into()),
-                    })
-                    .0
-                    ^ (!0 >> 1);
-
-                assert_eq!(tag & (0b1 << 31), 0);
-
-                solver.add_tagged_clause(&[!a, !b, y], tag);
-                solver.add_tagged_clause(&[a, !y], tag);
-                solver.add_tagged_clause(&[b, !y], tag);
-            } else if let Some(xor) = node.dyn_cast::<XorNode>() {
-                let inputs = xor.term.inputs.into_values();
-                if !matches!(self.sat_from_env.get(xor.output.var()), Some(Some(_))) {
-                    continue 'outer;
-                }
-                for input in inputs.into_iter() {
-                    if !matches!(self.sat_from_env.get(input), Some(Some(_))) {
-                        continue 'outer;
-                    }
-                }
-
-                let [a, b] =
-                    inputs.map(|input_var| self.add_to_solver(solver, env, input_var.as_lit()));
-                let y = xor.output.lookup(|var| self.sat_from_env[var].unwrap());
-
-                let tag = self
-                    .redundant_gates
-                    .push(CircuitCutGate {
-                        output: y,
-                        gate: XaigStep::xor([a, b].into()),
-                    })
-                    .0
-                    ^ (!0 >> 1);
-
-                assert_eq!(tag & (0b1 << 31), 0);
-
-                solver.add_tagged_clause(&[!y, a, b], tag);
-                solver.add_tagged_clause(&[y, !a, b], tag);
-                solver.add_tagged_clause(&[y, a, !b], tag);
-                solver.add_tagged_clause(&[!y, !a, !b], tag);
-            } else if let Some(bin_clause) = node.dyn_cast::<BinClause>() {
-                let inputs = bin_clause.inputs.into_values();
-                for input in inputs.into_iter() {
-                    if !matches!(self.sat_from_env.get(input.var()), Some(Some(_))) {
-                        continue 'outer;
-                    }
-                }
-                let [a, b] = inputs.map(|input_lit| self.add_to_solver(solver, env, input_lit));
-
-                let tag = self
-                    .redundant_gates
-                    .push(CircuitCutGate {
-                        output: Lit::FALSE,
-                        gate: XaigStep::and([!a, !b].into()),
-                    })
-                    .0
-                    ^ (!0 >> 1);
-
-                assert_eq!(tag & (0b1 << 31), 0);
-
-                solver.add_tagged_clause(&[a, b], tag);
-            }
-        }
     }
 
     pub fn reset(&mut self) {
