@@ -259,8 +259,7 @@ impl ExtractedFragment {
         let initial_frag_target = frag_target;
 
         loop {
-            let (result, _pdr_stats) =
-                solve_with_pdr(&self.frag_env, [frag_target], |_| true, options);
+            let (result, _pdr_stats) = solve_with_pdr(&self.frag_env, [frag_target], options);
 
             let Some(PdrResult::Cex(cex)) = &result else {
                 return result;

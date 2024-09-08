@@ -24,19 +24,13 @@ pub struct ExtractedAig {
 /// Extracts an AIGER compatible sequential AIG for the given sequence of output literals.
 ///
 /// This will tranparently expand imctk Xor terms into an equivalent network of 3 AIG And gates.
-pub fn extract_aiger(
-    env: &Env,
-    outputs: impl IntoIterator<Item = Lit>,
-    mut expand: impl FnMut(Var) -> bool,
-) -> ExtractedAig {
+pub fn extract_aiger(env: &Env, outputs: impl IntoIterator<Item = Lit>) -> ExtractedAig {
     // TODO keep expand and/or have alternative for compacting inputs?
 
     let mut outputs = Vec::from_iter(outputs.into_iter().map(|lit| env.var_defs().lit_repr(lit)));
 
     let mut order_inputs: Vec<Var> = vec![];
-    let mut order_unexpanded_inputs: Vec<Var> = vec![];
     let mut order_steady_inputs: Vec<Var> = vec![];
-    let mut order_unexpanded_steady_inputs: Vec<Var> = vec![];
 
     let mut order_const_init_regs: Vec<Var> = vec![];
     let mut order_steady_init_regs: Vec<Var> = vec![];
@@ -93,17 +87,6 @@ pub fn extract_aiger(
                 visited[current] = None;
                 incoming_stack_level = incoming_stack.len();
 
-                if !expand(current) {
-                    if env.var_defs().is_steady(current) {
-                        order_unexpanded_steady_inputs.push(current);
-                        reg_count += 1;
-                    } else {
-                        order_unexpanded_inputs.push(current);
-                    }
-                    visited[current] = Some(true);
-                    traversal_return!();
-                }
-
                 let node = env
                     .def_node(current)
                     .expect("undefined var during AIGER extraction");
@@ -114,11 +97,6 @@ pub fn extract_aiger(
                     let init_var = reg.term.init.var();
                     if init_var == Var::FALSE {
                         order_const_init_regs.push(current);
-                        reg_count += 1;
-                        visited[current] = Some(true);
-                        traversal_return!();
-                    } else if !expand(init_var) && env.var_defs().is_steady(init_var) {
-                        order_unexpanded_init_regs.push(current);
                         reg_count += 1;
                         visited[current] = Some(true);
                         traversal_return!();
@@ -189,10 +167,6 @@ pub fn extract_aiger(
         init_repr_for_steady.insert(var, var.as_lit());
     }
 
-    for &var in order_unexpanded_steady_inputs.iter() {
-        init_repr_for_steady.insert(var, var.as_lit());
-    }
-
     for regs in [&mut order_steady_init_regs, &mut order_unexpanded_init_regs] {
         regs.retain(|&var| {
             let reg = env.def_node(var).unwrap().dyn_cast::<RegNode>().unwrap();
@@ -213,7 +187,7 @@ pub fn extract_aiger(
     uses_emulated_reg_init |= !order_early_emulated_init_regs.is_empty();
     reg_count += uses_emulated_reg_init as usize;
 
-    let input_count = (order_inputs.len() + order_unexpanded_inputs.len()).max(
+    let input_count = order_inputs.len().max(
         max_input
             .map(|input| input.id_index() + 1)
             .unwrap_or_default(),
@@ -239,22 +213,6 @@ pub fn extract_aiger(
         let aiger_input = Var::from_index(1 + input_index);
         inputs[input_index] = true;
         aig_from_env[var] = Some(aiger_input ^ input.output.pol());
-    }
-
-    let mut unused_inputs = Vec::from_iter(
-        inputs
-            .iter()
-            .enumerate()
-            .rev()
-            .flat_map(|(input_index, &used)| (!used).then_some(input_index)),
-    );
-
-    for &var in order_unexpanded_inputs.iter() {
-        let input_index = unused_inputs.pop().unwrap();
-
-        let aiger_input = Var::from_index(1 + input_index).as_lit();
-        inputs[input_index] = true;
-        aig_from_env[var] = Some(aiger_input)
     }
 
     let mut latches: Vec<OrderedLatch<Lit>> = vec![];
@@ -311,16 +269,6 @@ pub fn extract_aiger(
             .flat_map(|(latch_index, latch)| latch.initialization.is_some().then_some(latch_index)),
     );
 
-    for &var in order_unexpanded_steady_inputs.iter() {
-        let latch_index = unused_latches.pop().unwrap();
-
-        let aiger_latch_output = Var::from_index(latch_offset + latch_index).as_lit();
-
-        latches[latch_index].initialization = None;
-        latches[latch_index].next_state = var.as_lit();
-        aig_from_env[var] = Some(aiger_latch_output);
-    }
-
     for &var in order_unexpanded_init_regs.iter() {
         let reg = env.def_node(var).unwrap().dyn_cast::<RegNode>().unwrap();
 
@@ -369,7 +317,12 @@ pub fn extract_aiger(
             let aig_init = reg
                 .term
                 .init
-                .lookup(|var| init_repr_for_steady.get(&var).unwrap())
+                .lookup(|var| {
+                    init_repr_for_steady
+                        .get(&var)
+                        .copied()
+                        .unwrap_or(var.as_lit())
+                })
                 .lookup(|var| aig_from_env[var].unwrap());
 
             let latch_index = unused_latches.pop().unwrap();
@@ -428,7 +381,12 @@ pub fn extract_aiger(
                 .term
                 .input
                 .as_lit()
-                .lookup(|var| init_repr_for_steady.get(&var).unwrap())
+                .lookup(|var| {
+                    init_repr_for_steady
+                        .get(&var)
+                        .copied()
+                        .unwrap_or(var.as_lit())
+                })
                 .lookup(|var| aig_from_env[var].unwrap());
             let latch_index = unused_latches.pop().unwrap();
 
@@ -476,5 +434,84 @@ pub fn extract_aiger(
         aig,
         aig_from_env,
         init_repr_for_steady,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use imctk_ir::{
+        node::fine::circuit::{FineCircuitNodeBuilder, Input, SteadyInput},
+        prelude::{NodeBuilder, NodeBuilderDyn},
+    };
+
+    use crate::import::{import_ordered_aig, ExistingAigerVarMap};
+
+    use super::*;
+
+    #[test]
+    fn test_roundtrip() {
+        for (va, vb) in [false, true]
+            .into_iter()
+            .flat_map(|va| [false, true].map(|vb| (va, vb)))
+        {
+            let mut env = Env::default();
+
+            let a = env.term(SteadyInput::from_id_index(0));
+            let b = env.term(Input::from_id_index(0));
+            let c = env.and([a, b]);
+            let d = env.reg(c, b);
+            let e = env.xor([c, d]);
+            let f = env.init(e);
+            let g = env.xor([f, b]);
+
+            let extracted = extract_aiger(&env, [g]);
+
+            let mut restored = Env::default();
+
+            let mut var_map = ExistingAigerVarMap::default();
+
+            for (env_var, &aig_lit) in extracted.aig_from_env.iter() {
+                let Some(aig_lit) = aig_lit else { continue };
+                *var_map.var_map.grow_for_key(aig_lit.var()) = Some(env_var ^ aig_lit.pol());
+            }
+
+            let _import_map = import_ordered_aig(&mut restored, &extracted.aig);
+
+            env.equiv([a, Lit::FALSE ^ va]);
+            env.equiv([b, Lit::FALSE ^ vb]);
+            env.rebuild_egraph();
+            let mut env_g = env.lit_repr(g);
+            if let Some(init_node) = env
+                .def_node(env_g.var())
+                .and_then(|node| node.dyn_cast::<InitNode>())
+            {
+                if let Some(reg_node) = env
+                    .def_node(init_node.term.input)
+                    .unwrap()
+                    .dyn_cast::<RegNode>()
+                {
+                    env_g = reg_node.term.init ^ init_node.output.pol() ^ env_g.pol();
+                }
+            }
+
+            println!("{:?}", env_g);
+
+            for node in env.nodes().iter() {
+                println!("{node:?}")
+            }
+            println!("---");
+
+            restored.equiv([a, Lit::FALSE ^ va]);
+            restored.equiv([b, Lit::FALSE ^ vb]);
+            restored.rebuild_egraph();
+            let restored_g = restored.lit_repr(g);
+            println!("{:?}", restored_g);
+            for node in restored.nodes().iter() {
+                println!("{node:?}")
+            }
+            println!("===");
+
+            assert_eq!(env_g, restored_g);
+        }
     }
 }

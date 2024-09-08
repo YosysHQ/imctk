@@ -423,7 +423,6 @@ pub fn run_eqy_engine(
     let (result, _pdr_stats) = solve_with_pdr(
         ctx.env,
         target_properties.iter().copied(),
-        |_| true,
         &pdr_option,
     );
 

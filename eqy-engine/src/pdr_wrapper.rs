@@ -126,7 +126,6 @@ pub struct PdrOptions {
 pub fn solve_with_pdr(
     env: &Env,
     targets: impl IntoIterator<Item = Lit>,
-    expand: impl FnMut(Var) -> bool,
     options: &PdrOptions,
 ) -> (Option<PdrResult>, PdrStats) {
     let mut stats = PdrStats::default();
@@ -181,7 +180,7 @@ pub fn solve_with_pdr(
         }
     }
 
-    let aiger = imctk_aiger::extract::extract_aiger(env, targets.iter().copied(), expand);
+    let aiger = imctk_aiger::extract::extract_aiger(env, targets.iter().copied());
 
     let mut steady_inputs_used = vec![];
 
