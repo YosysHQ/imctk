@@ -1073,7 +1073,7 @@ fn main() {
 
     let mut cc_c = cc.clone();
     let mut cc_cpp = cc;
-    cc_cpp.cpp(true);
+    cc_cpp.cpp(true).std("c++17");
 
     cc_cpp.files(SRC_FILES.iter().filter(|&f| f.ends_with(".cpp")));
     cc_c.files(SRC_FILES.iter().filter(|&f| f.ends_with(".c")));

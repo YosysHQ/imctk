@@ -7,8 +7,8 @@ echo "cargo::rerun-if-changed=codegen.sh"
 
 if [ -f src/generated/bindings.d -a -f src/generated/bindings.sha256 ]; then
     for file in $(cat src/generated/bindings.d); do
-        openssl dgst -sha256 $file
-    done | cmp src/generated/bindings.sha256 && {
+        openssl sha256 $file
+    done | cmp src/generated/bindings.sha256 - && {
         for file in $(cat src/generated/bindings.d); do
             echo "cargo::rerun-if-changed=$file"
         done
@@ -34,13 +34,15 @@ bindgen \
     -- -I abc/src -D ABC_USE_STDINT_H \
     > src/generated/bindings.rs
 
-sed -Ee 's!(^.*?:| /[^ ]+)!!g' -i src/generated/bindings.d
+mv src/generated/bindings.d src/generated/bindings.d.tmp
+sed -Ee 's!(^[^:]*:| /[^ ]+)!!g' < src/generated/bindings.d.tmp > src/generated/bindings.d
+rm src/generated/bindings.d.tmp
 
 echo >> src/generated/bindings.d
 echo "codegen.sh" >> src/generated/bindings.d
 
 for file in $(cat src/generated/bindings.d); do
-    openssl dgst -sha256 $file
+    openssl sha256 $file
 done > src/generated/bindings.sha256
 for file in $(cat src/generated/bindings.d); do
     echo "cargo::rerun-if-changed=$file"
