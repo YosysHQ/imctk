@@ -188,3 +188,156 @@ impl<T> VarMultimap<T> {
             .flatten()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use zwohash::HashSet;
+
+    use crate::prelude::NodeBuilderDyn;
+
+    use super::*;
+
+    #[test]
+    fn lit_multimap() {
+        let mut env = Env::default();
+
+        let mut a = env.fresh_var().as_lit();
+        let mut b = env.fresh_var().as_lit();
+        let mut c = env.fresh_var().as_lit();
+
+        let mut map = <LitMultimap<Lit>>::default();
+
+        let l = |index: usize| Var::from_index(index).as_lit();
+
+        map.insert(&env, a, l(0));
+        map.insert(&env, b, l(1));
+        map.insert(&env, b, l(2));
+        map.insert(&env, c, l(3));
+        map.insert(&env, c, l(4));
+        map.insert(&env, c, l(5));
+
+        map.merge_equivs(&env);
+
+        assert_eq!(
+            HashSet::from_iter(map.lit_entries(a)),
+            HashSet::from_iter([l(0)])
+        );
+        assert_eq!(
+            HashSet::from_iter(map.lit_entries(b)),
+            HashSet::from_iter([l(1), l(2)])
+        );
+        assert_eq!(
+            HashSet::from_iter(map.lit_entries(c)),
+            HashSet::from_iter([l(3), l(4), l(5)])
+        );
+
+        env.equiv([a, !c]);
+
+        map.merge_equivs(&env);
+
+        [a, b, c] = [a, b, c].map(|lit| env.lit_repr(lit));
+
+        assert_eq!(
+            HashSet::from_iter(map.lit_entries(a)),
+            HashSet::from_iter([l(0), !l(3), !l(4), !l(5)])
+        );
+        assert_eq!(
+            HashSet::from_iter(map.lit_entries(b)),
+            HashSet::from_iter([l(1), l(2)])
+        );
+        assert_eq!(
+            HashSet::from_iter(map.lit_entries(c)),
+            HashSet::from_iter([!l(0), l(3), l(4), l(5)])
+        );
+
+        env.equiv([a, b]);
+
+        map.merge_equivs(&env);
+
+        [a, b, c] = [a, b, c].map(|lit| env.lit_repr(lit));
+
+        assert_eq!(
+            HashSet::from_iter(map.lit_entries(a)),
+            HashSet::from_iter([l(0), l(1), l(2), !l(3), !l(4), !l(5)])
+        );
+        assert_eq!(
+            HashSet::from_iter(map.lit_entries(b)),
+            HashSet::from_iter([l(0), l(1), l(2), !l(3), !l(4), !l(5)])
+        );
+        assert_eq!(
+            HashSet::from_iter(map.lit_entries(c)),
+            HashSet::from_iter([!l(0), !l(1), !l(2), l(3), l(4), l(5)])
+        );
+    }
+
+    #[test]
+    fn var_multimap() {
+        let mut env = Env::default();
+
+        let mut a = env.fresh_var();
+        let mut b = env.fresh_var();
+        let mut c = env.fresh_var();
+
+        let mut map = <VarMultimap<u32>>::default();
+
+        map.insert(&env, a, 0);
+        map.insert(&env, b, 1);
+        map.insert(&env, b, 2);
+        map.insert(&env, c, 3);
+        map.insert(&env, c, 4);
+        map.insert(&env, c, 5);
+
+        map.merge_equivs(&env);
+
+        assert_eq!(
+            HashSet::from_iter(map.var_entries(a).copied()),
+            HashSet::from_iter([0])
+        );
+        assert_eq!(
+            HashSet::from_iter(map.var_entries(b).copied()),
+            HashSet::from_iter([1, 2])
+        );
+        assert_eq!(
+            HashSet::from_iter(map.var_entries(c).copied()),
+            HashSet::from_iter([3, 4, 5])
+        );
+
+        env.equiv([a.as_lit(), c.as_lit()]);
+
+        map.merge_equivs(&env);
+
+        [a, b, c] = [a, b, c].map(|var| env.lit_repr(var.as_lit()).var());
+
+        assert_eq!(
+            HashSet::from_iter(map.var_entries(a).copied()),
+            HashSet::from_iter([0, 3, 4, 5])
+        );
+        assert_eq!(
+            HashSet::from_iter(map.var_entries(b).copied()),
+            HashSet::from_iter([1, 2])
+        );
+        assert_eq!(
+            HashSet::from_iter(map.var_entries(c).copied()),
+            HashSet::from_iter([0, 3, 4, 5])
+        );
+
+        env.equiv([a.as_lit(), b.as_lit()]);
+
+        map.merge_equivs(&env);
+
+        [a, b, c] = [a, b, c].map(|var| env.lit_repr(var.as_lit()).var());
+
+        assert_eq!(
+            HashSet::from_iter(map.var_entries(a).copied()),
+            HashSet::from_iter([0, 1, 2, 3, 4, 5])
+        );
+        assert_eq!(
+            HashSet::from_iter(map.var_entries(b).copied()),
+            HashSet::from_iter([0, 1, 2, 3, 4, 5])
+        );
+        assert_eq!(
+            HashSet::from_iter(map.var_entries(c).copied()),
+            HashSet::from_iter([0, 1, 2, 3, 4, 5])
+        );
+    }
+}
