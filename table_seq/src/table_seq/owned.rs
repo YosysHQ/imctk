@@ -18,6 +18,7 @@ pub(crate) struct OwnedSubtableSmall<T> {
 impl<T> Default for OwnedSubtableSmall<T> {
     fn default() -> Self {
         Self {
+            // SAFETY: [MaybeUninit<T>; N] is always init
             values: unsafe { MaybeUninit::uninit().assume_init() },
             hashes: [0; SMALL_SUBTABLE_CAPACITY],
             len: 0,
@@ -27,6 +28,7 @@ impl<T> Default for OwnedSubtableSmall<T> {
 }
 impl<T> Drop for OwnedSubtableSmall<T> {
     fn drop(&mut self) {
+        // SAFETY: only drops the known initialized prefix of entries
         unsafe {
             std::ptr::slice_from_raw_parts_mut(self.values.as_mut_ptr().cast::<T>(), self.len())
                 .drop_in_place()
@@ -35,19 +37,26 @@ impl<T> Drop for OwnedSubtableSmall<T> {
 }
 
 impl<T> OwnedSubtableSmall<T> {
+    /// # Safety
+    /// Callers need to ensure that there is spare capacity in this owned subtable.
     pub unsafe fn push_with_hash_unchecked(&mut self, value: T, hash: u8) {
         debug_assert!((self.len as usize) < SMALL_SUBTABLE_CAPACITY);
+        // SAFETY: we require spare capacity making this safe
         unsafe {
             self.values
                 .get_unchecked_mut(self.len as usize)
                 .write(value)
         };
+        // SAFETY: we require spare capacity making this safe
         unsafe { *self.hashes.get_unchecked_mut(self.len as usize) = hash };
         self.len += 1;
     }
 
+    /// # Safety
+    /// Callers need to ensure that there is spare capacity in this owned subtable.
     pub unsafe fn push_unchecked(&mut self, value: T) {
         debug_assert!((self.len as usize) < SMALL_SUBTABLE_CAPACITY);
+        // SAFETY: we require spare capacity making this safe
         unsafe {
             self.values
                 .get_unchecked_mut(self.len as usize)
@@ -62,6 +71,8 @@ impl<T> OwnedSubtableSmall<T> {
             None
         } else {
             self.len -= 1;
+            // SAFETY: this was in bounds with our previous length, but not with the new length, so
+            // we can read it taking ownership
             Some(unsafe {
                 self.values
                     .get_unchecked_mut(self.len as usize)
@@ -79,10 +90,12 @@ impl<T> OwnedSubtableSmall<T> {
     }
 
     pub fn entries(&self) -> &[T] {
+        // SAFETY: we create the slice covering only known initialized entries
         unsafe { std::slice::from_raw_parts(self.values.as_ptr().cast::<T>(), self.len()) }
     }
 
     pub fn entries_mut(&mut self) -> &mut [T] {
+        // SAFETY: we create the slice covering only known initialized entries
         unsafe { std::slice::from_raw_parts_mut(self.values.as_mut_ptr().cast::<T>(), self.len()) }
     }
 }
@@ -113,6 +126,7 @@ impl<T> Default for OwnedSubtable<T> {
 impl<T> OwnedSubtable<T> {
     pub(crate) fn single(value: T) -> Self {
         let mut values: OwnedSubtableSmall<T> = Default::default();
+        // SAFETY: we know there's spare capacity for at least one entry in an empty new subtable
         unsafe { values.push_unchecked(value) };
         Self {
             inner: OwnedSubtableInner::Small(values),
@@ -122,8 +136,11 @@ impl<T> OwnedSubtable<T> {
     pub(crate) fn pair(pair: [T; 2]) -> Self {
         let [first, second] = pair;
         let mut values: OwnedSubtableSmall<T> = Default::default();
-        unsafe { values.push_unchecked(first) };
-        unsafe { values.push_unchecked(second) };
+        // SAFETY: we know there's spare capacity for at least two entries in an empty new subtable
+        unsafe {
+            values.push_unchecked(first);
+            values.push_unchecked(second);
+        };
         Self {
             inner: OwnedSubtableInner::Small(values),
         }

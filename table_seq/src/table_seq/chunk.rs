@@ -29,8 +29,15 @@ impl<T> Default for Chunk<T> {
 }
 
 impl<T> Chunk<T> {
+    /// # Safety
+    /// Callers need to ensure that the metadata for this chunk is correct and up to date and that
+    /// the passed allocator is the correct one for this chunk's node (if the chunk is non-empty,
+    /// otherwise it isn't considered to have a node).
     #[inline(always)]
     pub unsafe fn node(&self, allocator: &NodeAllocator<T>) -> Node<T> {
+        debug_assert!(!self.meta.is_empty());
+        // SAFETY: safe since we forward the node validity requirements and read the correct entry
+        // and table counts from the metadata (which we require to be up to date)
         unsafe { allocator.node(self.node, self.meta.entry_count(), self.meta.table_count()) }
     }
 }

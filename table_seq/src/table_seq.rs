@@ -1,6 +1,9 @@
 //! Indexed sequence of low-level hash tables with explicit hashing and associated helper types.
 use core::fmt;
-use std::{marker::PhantomData, mem::ManuallyDrop};
+use std::{
+    marker::PhantomData,
+    mem::{ManuallyDrop, MaybeUninit},
+};
 
 use hashbrown::HashTable;
 
@@ -156,6 +159,8 @@ impl<T> TableSeq<T> {
 
         if subtables < self.subtables {
             for chunk_index in chunks..self.chunks.len() {
+                // SAFETY: we know these chunks were valid before the call to resize and would be
+                // out of bounds for the new size, so we can safely drop them
                 unsafe { self.drop_chunk(chunk_index) }
             }
 
@@ -249,17 +254,23 @@ impl<T> TableSeq<T> {
                 continue;
             }
 
+            // SAFETY: see inline comments
             unsafe {
                 let old_chunk_alloc = &mut self.allocators[allocator_index];
                 let new_chunk_alloc = &mut new_allocators[allocator_index & 1];
                 let size_class = chunk.node.size_class();
+                // correct allocator for the existing node
                 let old_node_ptr = old_chunk_alloc.ptr(chunk.node);
 
                 let new_node_ref = new_chunk_alloc.alloc(size_class);
+                // correct allocator for the just allocated node
                 let new_node_ptr = new_chunk_alloc.ptr(new_node_ref);
+
+                // copying contents between two nodes of the same size class, using the correct size
+                // for that size class
                 old_node_ptr
-                    .cast::<u8>()
-                    .copy_to(new_node_ptr.cast::<u8>(), size_class.size());
+                    .cast::<MaybeUninit<u8>>()
+                    .copy_to(new_node_ptr.cast::<MaybeUninit<u8>>(), size_class.size());
 
                 chunk.node = new_node_ref;
 
@@ -271,6 +282,8 @@ impl<T> TableSeq<T> {
                             let old_table_alloc = &mut self.allocators[allocator_index ^ 1];
                             let new_table_alloc = &mut new_allocators[(allocator_index & 1) ^ 1];
 
+                            // since each table references a further node we also need to move the
+                            // corresponding node
                             table.move_node(old_table_alloc, new_table_alloc);
                         }
                     }
@@ -307,6 +320,10 @@ impl<T> TableSeq<T> {
         hasher: impl Fn(&T) -> u64,
     ) -> (&mut T, Option<T>) {
         assert!(subtable < self.subtables);
+        // SAFETY: with the subtable checked to be in bounds, every unsafe call contained below
+        // either requires just the global data structure invariants to hold or has documented
+        // requirements that pair up with the immediately preceding or following operations.
+        // TODO reduce unsafe scope and go into more detail
         unsafe {
             let chunk_slot = (subtable & CHUNK_MASK) as u32;
             let chunk_index = subtable >> CHUNK_SHIFT;
@@ -468,6 +485,10 @@ impl<T> TableSeq<T> {
         hasher: impl Fn(&T) -> u64,
     ) -> &mut T {
         assert!(subtable < self.subtables);
+        // SAFETY: with the subtable checked to be in bounds, every unsafe call contained below
+        // either requires just the global data structure invariants to hold or has documented
+        // requirements that pair up with the immediately preceding or following operations.
+        // TODO reduce unsafe scope and go into more detail
         unsafe {
             let chunk_slot = (subtable & CHUNK_MASK) as u32;
             let chunk_index = subtable >> CHUNK_SHIFT;
@@ -591,6 +612,10 @@ impl<T> TableSeq<T> {
     /// entries from other subtables.
     pub fn find(&self, subtable: usize, hash: u64, mut eq: impl FnMut(&T) -> bool) -> Option<&T> {
         assert!(subtable < self.subtables);
+        // SAFETY: with the subtable checked to be in bounds, every unsafe call contained below
+        // either requires just the global data structure invariants to hold or has documented
+        // requirements that pair up with the immediately preceding or following operations.
+        // TODO reduce unsafe scope and go into more detail
         unsafe {
             let chunk_slot = (subtable & CHUNK_MASK) as u32;
             let chunk_index = subtable >> CHUNK_SHIFT;
@@ -666,6 +691,10 @@ impl<T> TableSeq<T> {
         mut eq: impl FnMut(&T) -> bool,
     ) -> Option<&mut T> {
         assert!(subtable < self.subtables);
+        // SAFETY: with the subtable checked to be in bounds, every unsafe call contained below
+        // either requires just the global data structure invariants to hold or has documented
+        // requirements that pair up with the immediately preceding or following operations.
+        // TODO reduce unsafe scope and go into more detail
         unsafe {
             let chunk_slot = (subtable & CHUNK_MASK) as u32;
             let chunk_index = subtable >> CHUNK_SHIFT;
@@ -750,6 +779,10 @@ impl<T> TableSeq<T> {
         hasher: impl Fn(&T) -> u64,
     ) -> Option<T> {
         assert!(subtable < self.subtables);
+        // SAFETY: with the subtable checked to be in bounds, every unsafe call contained below
+        // either requires just the global data structure invariants to hold or has documented
+        // requirements that pair up with the immediately preceding or following operations.
+        // TODO reduce unsafe scope and go into more detail
         unsafe {
             let chunk_slot = (subtable & CHUNK_MASK) as u32;
             let chunk_index = subtable >> CHUNK_SHIFT;
@@ -881,6 +914,10 @@ impl<T> TableSeq<T> {
     // TODO examples/doctests
     pub fn clear_subtable(&mut self, subtable: usize) {
         assert!(subtable < self.subtables);
+        // SAFETY: with the subtable checked to be in bounds, every unsafe call contained below
+        // either requires just the global data structure invariants to hold or has documented
+        // requirements that pair up with the immediately preceding or following operations.
+        // TODO reduce unsafe scope and go into more detail
         unsafe {
             let chunk_slot = (subtable & CHUNK_MASK) as u32;
             let chunk_index = subtable >> CHUNK_SHIFT;
@@ -970,6 +1007,10 @@ impl<T> TableSeq<T> {
     // TODO examples/doctests
     pub fn take_subtable(&mut self, subtable: usize) -> OwnedSubtable<T> {
         assert!(subtable < self.subtables);
+        // SAFETY: with the subtable checked to be in bounds, every unsafe call contained below
+        // either requires just the global data structure invariants to hold or has documented
+        // requirements that pair up with the immediately preceding or following operations.
+        // TODO reduce unsafe scope and go into more detail
         unsafe {
             let chunk_slot = (subtable & CHUNK_MASK) as u32;
             let chunk_index = subtable >> CHUNK_SHIFT;
@@ -1060,6 +1101,10 @@ impl<T> TableSeq<T> {
     // TODO examples/doctests
     pub fn subtable_len(&self, subtable: usize) -> usize {
         assert!(subtable < self.subtables);
+        // SAFETY: with the subtable checked to be in bounds, every unsafe call contained below
+        // either requires just the global data structure invariants to hold or has documented
+        // requirements that pair up with the immediately preceding or following operations.
+        // TODO reduce unsafe scope and go into more detail
         unsafe {
             let chunk_slot = (subtable & CHUNK_MASK) as u32;
             let chunk_index = subtable >> CHUNK_SHIFT;
@@ -1108,6 +1153,10 @@ impl<T> TableSeq<T> {
     // TODO examples/doctests
     pub fn subtable_iter(&self, subtable: usize) -> SubtableIter<T> {
         assert!(subtable < self.subtables);
+        // SAFETY: with the subtable checked to be in bounds, every unsafe call contained below
+        // either requires just the global data structure invariants to hold or has documented
+        // requirements that pair up with the immediately preceding or following operations.
+        // TODO reduce unsafe scope and go into more detail
         unsafe {
             let chunk_slot = (subtable & CHUNK_MASK) as u32;
             let chunk_index = subtable >> CHUNK_SHIFT;
@@ -1165,6 +1214,10 @@ impl<T> TableSeq<T> {
     // TODO examples/doctests
     pub fn subtable_iter_mut(&mut self, subtable: usize) -> SubtableIterMut<T> {
         assert!(subtable < self.subtables);
+        // SAFETY: with the subtable checked to be in bounds, every unsafe call contained below
+        // either requires just the global data structure invariants to hold or has documented
+        // requirements that pair up with the immediately preceding or following operations.
+        // TODO reduce unsafe scope and go into more detail
         unsafe {
             let chunk_slot = (subtable & CHUNK_MASK) as u32;
             let chunk_index = subtable >> CHUNK_SHIFT;
@@ -1217,20 +1270,31 @@ impl<T> TableSeq<T> {
 }
 
 impl<T> TableSeq<T> {
+    /// # Safety
+    /// Callers need to ensure that the `chunk_index` is in bounds and need to ensure that it will
+    /// not be considered in bounds before allowing further operations on the `TableSeq`.
     unsafe fn drop_chunk(&mut self, chunk_index: usize) {
+        // SAFETY: we require chunk_index to be in bounds
         let chunk = unsafe { self.chunks.get_unchecked_mut(chunk_index) };
         if !chunk.meta.is_empty() {
             let allocator_index = chunk_index >> (ALLOCATOR_SHIFT - CHUNK_SHIFT);
+            // SAFETY: we require chunk_index to be in bounds, making the allocator_index also in
+            // bounds
             let chunk_alloc = unsafe { self.allocators.get_unchecked_mut(allocator_index) };
+            // SAFETY: the node for a non empty chunk is valid in the correct allocator
             let node = unsafe { chunk.node(chunk_alloc) };
             self.entries -= node.entry_count();
             if node.table_count() > 0 {
+                // SAFETY: in bounds since chunk_index is in bounds
                 let table_alloc = unsafe { self.allocators.get_unchecked_mut(allocator_index ^ 1) };
+                // SAFETY: safe to call on a valid node
                 let table_slice = unsafe { node.tables_raw() };
+                // SAFETY: safe to dereference on a valid node
                 for table in unsafe { (*table_slice).iter_mut() } {
                     match table {
                         Subtable::Small(table) => {
                             self.entries -= table.len();
+                            // SAFETY: safe to call with the correct allocator
                             unsafe { table.drop_and_dealloc(table_alloc) };
                         }
                         Subtable::Large(table) => {
@@ -1238,8 +1302,11 @@ impl<T> TableSeq<T> {
                         }
                     }
                 }
+                // SAFETY: safe to drop for a valid node
                 unsafe { table_slice.drop_in_place() };
             }
+
+            // SAFETY: safe to drop for a valid node
             unsafe { node.entries_raw().drop_in_place() };
         }
     }
@@ -1248,6 +1315,8 @@ impl<T> TableSeq<T> {
 impl<T> Drop for TableSeq<T> {
     fn drop(&mut self) {
         for chunk_index in 0..self.chunks.len() {
+            // SAFETY: chunk_index is in bounds since we're iterating over exactly the valid values
+            // for it.
             unsafe { self.drop_chunk(chunk_index) };
         }
     }
