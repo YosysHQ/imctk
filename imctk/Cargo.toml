@@ -3,6 +3,11 @@ name = "imctk"
 version = "0.1.0"
 edition = "2021"
 
+authors = ["YosysHQ"]
+description = "Placeholder for the Incremental Model Checking Toolkit currently under development"
+repository = "https://github.com/YosysHQ/imctk/"
+license = "MIT OR Apache-2.0"
+
 [lints]
 workspace = true
 
