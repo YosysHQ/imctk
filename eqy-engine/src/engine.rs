@@ -180,8 +180,8 @@ pub fn run_eqy_engine(
                 stats.congruence += 1;
                 continue;
             }
-            if !(ctx.refine.contains(pair[0].var(), pair[1].var())
-                || ctx.refine.contains(pair[1].var(), pair[0].var()))
+            if !(ctx.refine.is_ancestor_of(pair[0].var(), pair[1].var())
+                || ctx.refine.is_ancestor_of(pair[1].var(), pair[0].var()))
             {
                 stats.cex += 1;
                 continue;
