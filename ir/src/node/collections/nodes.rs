@@ -345,94 +345,13 @@ impl<T: Node> KnownNodeChunk<T> {
         (index, unsafe { &mut *ptr })
     }
 
-    pub fn remove(&mut self, index: usize) -> Option<T> {
-        if !self.take_present(index) {
-            return None;
-        }
-
-        // SAFETY: the `take_present` check rejects out-of-bounds indices
-        let ptr = unsafe { self.slot_ptr(index) };
-
-        // SAFETY: the `take_present` check rejects empty slots
-        let node = unsafe { (ptr as *mut T).read() };
-
-        // SAFETY: this writes the `_next` field of the slot union
-        unsafe { (ptr as *mut u16).write(self.next) };
-
-        self.next = index as u16;
-        self.len -= 1;
-
-        Some(node)
-    }
-
     pub fn into_dynamic(self) -> DynNodeChunk {
-        // SAFETY: Every KnownNodeChunk<T> is a valid DynNodeChunk
-        unsafe { std::mem::transmute(self) }
-    }
-
-    #[allow(dead_code)] // TODO remove when this is used
-    pub fn as_dynamic(&self) -> &DynNodeChunk {
-        // SAFETY: Every KnownNodeChunk<T> is a valid DynNodeChunk
-        unsafe { std::mem::transmute(self) }
-    }
-
-    #[allow(dead_code)] // TODO remove when this is used
-    pub fn as_dynamic_mut(&mut self) -> &mut DynNodeChunk {
         // SAFETY: Every KnownNodeChunk<T> is a valid DynNodeChunk
         unsafe { std::mem::transmute(self) }
     }
 }
 
 impl DynNodeChunk {
-    #[allow(dead_code)] // TODO remove when this is used
-    pub fn into_known<T: Node>(self) -> Result<KnownNodeChunk<T>, Self> {
-        if self.vtable.has_type::<T>() {
-            // SAFETY: Every DynNodeChunk with the correct vtable is a valid KnownNodeChunk<T>
-            Ok(unsafe { std::mem::transmute::<Self, KnownNodeChunk<T>>(self) })
-        } else {
-            Err(self)
-        }
-    }
-
-    #[allow(dead_code)] // TODO remove when this is used
-    pub fn as_known<T: Node>(&self) -> Option<&KnownNodeChunk<T>> {
-        if self.vtable.has_type::<T>() {
-            // SAFETY: Every DynNodeChunk with the correct vtable is a valid KnownNodeChunk<T>
-            Some(unsafe { std::mem::transmute::<&Self, &KnownNodeChunk<T>>(self) })
-        } else {
-            None
-        }
-    }
-
-    pub fn as_known_mut<T: Node>(&mut self) -> Option<&mut KnownNodeChunk<T>> {
-        if self.vtable.has_type::<T>() {
-            // SAFETY: Every DynNodeChunk with the correct vtable is a valid KnownNodeChunk<T>
-            Some(unsafe { std::mem::transmute::<&mut Self, &mut KnownNodeChunk<T>>(self) })
-        } else {
-            None
-        }
-    }
-
-    #[allow(dead_code)] // TODO remove when this is used
-    /// # Safety
-    /// The caller has to ensure that the node type `T` matches the dynamic node type of this chunk.
-    pub unsafe fn into_known_unchecked<T: Node>(self) -> KnownNodeChunk<T> {
-        debug_assert!(self.vtable.has_type::<T>());
-        // SAFETY: Every DynNodeChunk with the correct vtable is a valid KnownNodeChunk<T>, which is
-        // a documented safety requirement for calling this
-        unsafe { std::mem::transmute(self) }
-    }
-
-    #[allow(dead_code)] // TODO remove when this is used
-    /// # Safety
-    /// The caller has to ensure that the node type `T` matches the dynamic node type of this chunk.
-    pub unsafe fn as_known_unchecked<T: Node>(&self) -> &KnownNodeChunk<T> {
-        debug_assert!(self.vtable.has_type::<T>());
-        // SAFETY: Every DynNodeChunk with the correct vtable is a valid KnownNodeChunk<T>, which is
-        // a documented safety requirement for calling this
-        unsafe { std::mem::transmute(self) }
-    }
-
     /// # Safety
     /// The caller has to ensure that the node type `T` matches the dynamic node type of this chunk.
     pub unsafe fn as_known_unchecked_mut<T: Node>(&mut self) -> &mut KnownNodeChunk<T> {
@@ -660,45 +579,6 @@ impl Nodes {
         let (chunk_index, chunk_slot) = split_id(node_id);
 
         self.chunks.get_mut(chunk_index)?.get_mut(chunk_slot)
-    }
-
-    /// Removes the [`Node`] with a given [`NodeId`] and a statically known node type.
-    ///
-    /// On success, this will return the removed node. Otherwise, returns a
-    /// [`NodeError::NotPresent`] when there is no such node or a [`NodeError::UnexpectedNodeType`]
-    /// when the specified node has a different [`NodeType`].
-    ///
-    /// See [`discard`][`Self::discard`] for a method that removes nodes of arbitrary node types,
-    /// dropping the removed node in-place.
-    pub fn remove<T: Node>(&mut self, node_id: NodeId) -> Result<T, NodeError> {
-        let (chunk_index, chunk_slot) = split_id(node_id);
-        if let Some(chunk) = self.chunks.get_mut(chunk_index) {
-            match chunk.as_known_mut::<T>() {
-                Some(chunk) => match chunk.remove(chunk_slot) {
-                    Some(node) => {
-                        self.len -= 1;
-                        // SAFETY: the type_index value of a chunk is always in bounds
-                        let type_data =
-                            unsafe { self.types.get_unchecked_mut(chunk.type_index as usize) };
-                        type_data.len -= 1;
-                        chunk.check_spare_capacity(chunk_index, type_data);
-                        Ok(node)
-                    }
-                    None => Err(NodeError::NotPresent),
-                },
-                None => {
-                    if chunk.is_present(chunk_slot) {
-                        Err(NodeError::UnexpectedNodeType {
-                            found_type: chunk.vtable.node_type(),
-                        })
-                    } else {
-                        Err(NodeError::NotPresent)
-                    }
-                }
-            }
-        } else {
-            Err(NodeError::NotPresent)
-        }
     }
 
     /// Removes the [`Node`] with a given [`NodeId`], passing an ownership-transferring dynamically

@@ -298,20 +298,6 @@ impl EnvIndex {
         self.pending_nodes.push(node_id);
     }
 
-    #[allow(dead_code)] // TODO remove when this is used
-    pub fn remove_node<T: Node>(
-        &mut self,
-        nodes: &Nodes,
-        node_id: NodeId,
-        node: &T,
-        node_role: NodeRole,
-    ) {
-        self.structural_hash_index
-            .remove_node(nodes, node_id, node, node_role);
-        self.defs_index.remove_node((), node_id, node, node_role);
-        self.uses_index.remove_node((), node_id, node, node_role);
-    }
-
     pub fn remove_dyn_node(
         &mut self,
         nodes: &Nodes,

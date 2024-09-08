@@ -6,8 +6,6 @@ use std::{
     ops::Deref,
 };
 
-use imctk_util::give_take::give;
-
 use crate::{
     var::{Lit, VarOrLit},
     wide_ptr::WidePtr,
@@ -205,8 +203,6 @@ pub(super) trait GenericNodeType {
 
     fn has_type<T: Node>(&self) -> bool;
 
-    fn node_type(&self) -> NodeType;
-
     /// Returns `std::mem::size_of::<ChunkSlot<T>>()`.
     fn slot_size(&self) -> usize;
     /// Returns `std::mem::align_of::<ChunkSlot<T>>()`.
@@ -266,10 +262,6 @@ impl GenericNodeType for DynNodeType {
         self.0 == NodeType::of::<T>()
     }
 
-    fn node_type(&self) -> NodeType {
-        self.0
-    }
-
     fn slot_size(&self) -> usize {
         self.slot_size
     }
@@ -311,10 +303,6 @@ impl<T: Node> GenericNodeType for KnownNodeType<T> {
 
     fn has_type<U: Node>(&self) -> bool {
         NodeType::of::<T>() == NodeType::of::<U>()
-    }
-
-    fn node_type(&self) -> NodeType {
-        NodeType::of::<T>()
     }
 
     fn slot_size(&self) -> usize {
@@ -371,27 +359,6 @@ pub(super) trait GenericTermType {
     unsafe fn cast_mut_ptr(&self, ptr: *mut u8) -> *mut Self::RefTarget;
 }
 
-#[allow(dead_code)] // TODO remove when this is used
-/// The [`GenericNodeType`] implementation for a statically known node type.
-#[repr(transparent)]
-pub(crate) struct KnownTermType<T>(TermType, PhantomData<T>);
-
-#[allow(dead_code)] // TODO remove when this is used
-impl<T: Term> KnownTermType<T> {
-    pub const fn new() -> Self {
-        KnownTermType(TermType::of::<T>(), PhantomData)
-    }
-}
-
-#[allow(dead_code)] // TODO remove when this is used
-impl<T> Deref for KnownTermType<T> {
-    type Target = TermTypeVTable;
-
-    fn deref(&self) -> &Self::Target {
-        self.0 .0
-    }
-}
-
 /// The [`GenericTermType`] implementation that dispatches through the [`TermType`] vtable.
 #[repr(transparent)]
 pub(super) struct DynTermType(pub TermType);
@@ -443,44 +410,6 @@ impl GenericTermType for DynTermType {
                 vtable: self.dyn_vtable,
             })
         }
-    }
-}
-
-#[allow(dead_code)] // TODO remove when this is used
-impl<T: Term> GenericTermType for KnownTermType<T> {
-    type RefTarget = T;
-    type GenericTermNodeType = KnownNodeType<TermNode<T>>;
-    type GenericTermWrapperType = KnownNodeType<TermWrapper<T>>;
-
-    unsafe fn build_term_node<R>(
-        &self,
-        output: Lit,
-        term: *mut u8,
-        f: impl FnOnce(*mut u8) -> R,
-    ) -> R {
-        let term = term as *mut T;
-
-        let node = TermNode {
-            output: <T::Output as VarOrLit>::build_var_or_lit(output, |lit| lit.var(), |lit| lit),
-            // SAFETY: it's documented that we take ownership of the pointed to term
-            term: unsafe { term.read() },
-        };
-
-        give!(node = node);
-
-        f(node.into_raw_ptr() as *mut u8)
-    }
-
-    fn term_node(&self) -> Self::GenericTermNodeType {
-        KnownNodeType::new()
-    }
-
-    fn term_wrapper(&self) -> Self::GenericTermWrapperType {
-        KnownNodeType::new()
-    }
-
-    unsafe fn cast_mut_ptr(&self, ptr: *mut u8) -> *mut Self::RefTarget {
-        ptr as *mut T
     }
 }
 

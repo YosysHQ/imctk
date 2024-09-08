@@ -249,39 +249,6 @@ impl ExtractedFragment {
         extracted
     }
 
-    pub fn solve_with_pdr_eager(
-        &mut self,
-        mut frag_target: Lit,
-        options: &PdrOptions,
-    ) -> Option<PdrResult> {
-        let mut merge_heap = <BinaryHeap<(u32, Lit)>>::default();
-        merge_heap.clear();
-        merge_heap.push((
-            !self.frag_env.var_defs().level_bound(frag_target.var()),
-            frag_target,
-        ));
-
-        for &frag_condition in self.conditions.iter() {
-            merge_heap.push((
-                !self.frag_env.var_defs().level_bound(frag_condition.var()),
-                frag_condition,
-            ));
-        }
-
-        while merge_heap.len() > 1 {
-            let a = merge_heap.pop().unwrap().1;
-            let b = merge_heap.pop().unwrap().1;
-            let lit = self.frag_env.and([a, b]);
-            merge_heap.push((!self.frag_env.var_defs().level_bound(lit.var()), lit));
-        }
-
-        frag_target = merge_heap.pop().unwrap_or((0, Lit::TRUE)).1;
-
-        let (result, _pdr_stats) = solve_with_pdr(&self.frag_env, [frag_target], |_| true, options);
-
-        result
-    }
-
     pub fn solve_with_pdr_lazy(
         &mut self,
         mut frag_target: Lit,
@@ -317,23 +284,7 @@ impl ExtractedFragment {
                         frag_input_lit.lookup(|var| sim_model.sim_from_env[var].unwrap());
                     let prev = sim
                         .fix_input_lit_value(sim_model, frame, sim_input_lit, true)
-                        .unwrap_or_else(|| {
-                            for node_id in self
-                                .frag_env
-                                .defs_index()
-                                .find_non_primary_defs_unordered(frag_input_lit.var())
-                            {
-                                log::error!(
-                                    "{node_id:?}: {:?}",
-                                    self.frag_env.nodes().get_dyn(node_id)
-                                );
-                            }
-
-                            panic!(
-                                "not an input {frag_input_lit} {sim_input_lit} {:?}",
-                                self.frag_env.def_node(frag_input_lit.var())
-                            );
-                        });
+                        .unwrap();
                     assert!(prev.is_none());
                 }
             }

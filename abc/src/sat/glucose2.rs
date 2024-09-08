@@ -329,19 +329,6 @@ impl<T: ProofTracer> ProofTracer for &'_ RefCell<T> {
     }
 }
 
-impl<T: ProofTracer> ProofTracer for &'_ mut T {
-    fn learnt_clause(&mut self, clause_lits: &[Lit], tags: &[u32], units: &[Lit]) -> u32 {
-        (*self).learnt_clause(clause_lits, tags, units)
-    }
-
-    fn learnt_unit(&mut self, unit: Lit, tag: u32, units: &[Lit]) {
-        (*self).learnt_unit(unit, tag, units)
-    }
-
-    fn conflict(&mut self, conflict_lits: &[Lit], tags: &[u32], units: &[Lit]) {
-        (*self).conflict(conflict_lits, tags, units)
-    }
-}
 struct AbortOnUnwind;
 
 impl Drop for AbortOnUnwind {

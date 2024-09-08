@@ -1,15 +1,13 @@
 //! Combinational circuit simulation for equivalence class refinement
-use std::mem::replace;
-
 use imctk_ids::id_vec::IdVec;
 use imctk_ir::{
     env::Env,
     node::fine::circuit::{AndNode, XorNode},
-    var::{Lit, Pol, Var},
+    var::{Lit, Var},
 };
 use rand::{rngs::SmallRng, Rng, SeedableRng};
 
-use crate::bit_matrix::{Word, WordVec};
+use crate::bit_matrix::WordVec;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 enum NodeOp {
@@ -25,7 +23,6 @@ struct SimNode {
     zero_phase: bool,
     inputs: [Lit; 2],
     timestamp: u32,
-    hash: u64,
 }
 
 impl SimNode {
@@ -62,7 +59,6 @@ impl Default for RefineSim {
                 inputs: [Lit::FALSE; 2],
                 zero_phase: false,
                 timestamp: 0,
-                hash: 0,
             }]),
             value: IdVec::from_vec(vec![WordVec::ZERO]),
             inputs: Default::default(),
@@ -153,7 +149,6 @@ impl RefineSim {
                     zero_phase,
                     inputs: sim_inputs,
                     timestamp: a_timestamp.min(b_timestamp),
-                    hash: 0,
                 })
                 .0;
             self.value.push(value);
@@ -184,7 +179,6 @@ impl RefineSim {
                     zero_phase,
                     inputs: sim_inputs,
                     timestamp: a_timestamp.min(b_timestamp),
-                    hash: 0,
                 })
                 .0;
             self.value.push(value);
@@ -203,7 +197,6 @@ impl RefineSim {
                 zero_phase: false,
                 inputs: [Lit::FALSE; 2],
                 timestamp: self.timestamp,
-                hash: 0,
             })
             .0;
 
@@ -228,7 +221,12 @@ impl RefineSim {
         if !self.dirty {
             self.dirty = true;
             self.timestamp += 1;
-            if self.timestamp == u32::MAX {
+            #[cfg(coverage_nightly)]
+            let limit = 4;
+            #[cfg(not(coverage_nightly))]
+            let limit = u32::MAX;
+
+            if self.timestamp == limit {
                 self.reset_timestamps();
             }
         }
@@ -243,11 +241,6 @@ impl RefineSim {
 
     pub fn get_input(&mut self, env: &Env, lit: Lit) -> WordVec {
         let sim_lit = self.import_lit(env, lit);
-        assert!(self.sim_node[sim_lit.var()].is_input());
-        self.value[sim_lit.var()] ^ WordVec::splat(0u64 ^ sim_lit.pol())
-    }
-    pub fn get_imported_input(&self, lit: Lit) -> WordVec {
-        let sim_lit = self.sim_from_env[lit.var()].unwrap() ^ lit.pol();
         assert!(self.sim_node[sim_lit.var()].is_input());
         self.value[sim_lit.var()] ^ WordVec::splat(0u64 ^ sim_lit.pol())
     }
@@ -267,12 +260,6 @@ impl RefineSim {
         self.compute_lit(sim_lit)
     }
 
-    pub fn get_precomputed_value(&mut self, lit: Lit) -> WordVec {
-        assert!(!self.dirty && !self.batch_dirty);
-        let sim_lit = self.sim_from_env[lit.var()].unwrap() ^ lit.pol();
-        self.value[sim_lit.var()] ^ WordVec::splat(0u64 ^ sim_lit.pol())
-    }
-
     pub fn get_pol_invariant_value(&mut self, env: &Env, var: Var) -> WordVec {
         if self.dirty {
             self.timestamp += 1;
@@ -282,37 +269,6 @@ impl RefineSim {
         let sim_lit = self.import_lit(env, var.as_lit());
         let sim_repr_lit = sim_lit.var() ^ self.sim_node[sim_lit.var()].zero_phase;
         self.compute_lit(sim_repr_lit)
-    }
-
-    pub fn get_hash(&self, var: Var) -> u64 {
-        assert!(!self.dirty && !self.batch_dirty);
-        let sim_var = self.sim_from_env[var].unwrap().var();
-        self.sim_node[sim_var].hash
-    }
-
-    pub fn clear_hash(&mut self, var: Var) {
-        assert!(!self.dirty && !self.batch_dirty);
-        let sim_var = self.sim_from_env[var].unwrap().var();
-        self.sim_node[sim_var].hash = 0;
-    }
-
-    pub fn clear_all_hashes(&mut self) {
-        for (_sim_var, node) in self.sim_node.iter_mut() {
-            node.hash = 0;
-        }
-        self.dirty = true;
-    }
-
-    pub fn get_precomputed_pol_invariant_value(&mut self, var: Var) -> WordVec {
-        assert!(!self.dirty && !self.batch_dirty);
-        let sim_var = self.sim_from_env[var].unwrap().var();
-        self.value[sim_var] ^ WordVec::splat(0u64 ^ Pol::neg_if(self.sim_node[sim_var].zero_phase))
-    }
-
-    pub fn get_precomputed_pol_invariant_value_word(&mut self, var: Var, word: usize) -> Word {
-        assert!(!self.dirty && !self.batch_dirty);
-        let sim_var = self.sim_from_env[var].unwrap().var();
-        self.value[sim_var].as_array_ref()[word] ^ Pol::neg_if(self.sim_node[sim_var].zero_phase)
     }
 
     fn compute_lit(&mut self, sim_lit: Lit) -> WordVec {
@@ -339,70 +295,5 @@ impl RefineSim {
         }
 
         value ^ WordVec::splat(0u64 ^ sim_lit.pol())
-    }
-
-    pub fn batch_sim(&mut self) {
-        if !self.dirty && !self.batch_dirty {
-            return;
-        }
-        for (sim_var, node) in self.sim_node.iter_mut() {
-            node.timestamp = self.timestamp;
-            let [a, b] = node
-                .inputs
-                .map(|lit| self.value[lit.var()] ^ WordVec::splat(0u64 ^ lit.pol()));
-            match node.op {
-                NodeOp::ConstFalse | NodeOp::Input => (),
-
-                NodeOp::And => self.value[sim_var] = a & b,
-                NodeOp::Xor => self.value[sim_var] = a ^ b,
-            }
-        }
-        self.dirty = false;
-        self.batch_dirty = false;
-    }
-
-    pub fn update_hashes(&mut self) {
-        self.batch_sim();
-
-        for (sim_var, node) in self.sim_node.iter_mut() {
-            let mask = WordVec::splat(0u64 ^ Pol::neg_if(node.zero_phase));
-            for word in (self.value[sim_var] ^ mask).as_array_ref() {
-                node.hash = node.hash.wrapping_mul(0x2545f4914f6cdd1d) ^ word;
-            }
-        }
-    }
-
-    pub fn batch_sim_changes(&mut self, mut change: impl FnMut(Lit, WordVec, WordVec)) {
-        assert!(
-            !self.batch_dirty,
-            "batch_sim_changes doesn't support the incremental state, rerun batch_sim_changes first"
-        );
-        if !self.dirty {
-            return;
-        }
-
-        for (sim_var, node) in self.sim_node.iter_mut() {
-            node.timestamp = self.timestamp;
-            let [a, b] = node
-                .inputs
-                .map(|lit| self.value[lit.var()] ^ WordVec::splat(0u64 ^ lit.pol()));
-            let value = match node.op {
-                NodeOp::ConstFalse | NodeOp::Input => continue,
-                NodeOp::And => a & b,
-                NodeOp::Xor => a ^ b,
-            };
-            let old_value = replace(&mut self.value[sim_var], value);
-
-            change(self.env_from_sim[sim_var], old_value, value);
-        }
-        self.dirty = false;
-    }
-
-    pub fn import_order(&self) -> &[Lit] {
-        self.env_from_sim.values()
-    }
-
-    pub fn inputs(&self) -> impl Iterator<Item = Lit> + '_ {
-        self.inputs.iter().map(|&var| self.env_from_sim[var])
     }
 }
