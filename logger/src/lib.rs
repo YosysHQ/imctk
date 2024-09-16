@@ -53,6 +53,13 @@ impl RssStats {
     fn now() -> Self {
         #[cfg(not(miri))]
         {
+            #[cfg(target_os = "windows")]
+            {
+                Self {
+                    current: MemoryAmount(0),
+                    max: MemoryAmount(0),
+                }
+            }
             #[cfg(target_os = "macos")]
             {
                 // SAFETY: rusage is plain old data so all zeros is valid

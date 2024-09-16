@@ -1063,6 +1063,7 @@ fn main() {
 
     cc.warnings(false)
         .define("ABC_USE_STDINT_H", "1")
+        .define("WIN32_NO_DLL", "")
         .flag_if_supported("-Wno-unused-function")
         .flag_if_supported("-Wno-write-strings")
         .flag_if_supported("-Wno-sign-compare")
