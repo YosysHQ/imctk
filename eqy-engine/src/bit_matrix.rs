@@ -42,23 +42,16 @@ impl BitMatrix {
         self.rows
     }
 
-    pub fn columns(&self) -> usize {
-        self.columns
-    }
-
-    pub fn push_zero_row(&mut self) {
+    #[cfg(test)]
+    fn push_zero_row(&mut self) {
         let old_size = self.rows * self.stride;
         self.rows += 1;
         self.words.truncate(old_size);
         self.words.resize(old_size + self.stride, WordVec::ZERO);
     }
 
-    pub fn truncate_rows(&mut self, rows: usize) {
-        self.rows = self.rows.min(rows);
-        self.words.truncate(self.rows * self.stride);
-    }
-
-    pub fn bit(&self, row: usize, col: usize) -> bool {
+    #[cfg(test)]
+    fn bit(&self, row: usize, col: usize) -> bool {
         assert!(row < self.rows);
         assert!(col < self.columns);
 
@@ -67,7 +60,8 @@ impl BitMatrix {
             != 0
     }
 
-    pub fn set_bit(&mut self, row: usize, col: usize, bit: bool) {
+    #[cfg(test)]
+    fn set_bit(&mut self, row: usize, col: usize, bit: bool) {
         let word = &mut self.words[row * self.stride + col / VEC_BITS].as_array_mut()
             [(col % VEC_BITS) / WORD_BITS];
         let mask = 1 << (col % WORD_BITS);
@@ -92,12 +86,6 @@ impl BitMatrix {
             src * self.stride..(src + 1) * self.stride,
             dest * self.stride,
         )
-    }
-
-    pub fn transposed(&self) -> Self {
-        let mut tmp = Self::new(self.rows);
-        self.transpose_into(&mut tmp);
-        tmp
     }
 
     pub fn transpose_into(&self, target: &mut Self) {

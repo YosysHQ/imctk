@@ -24,9 +24,7 @@ Gia_Man_t *Cec5_ManSimulateTest(Gia_Man_t *p, Cec_ParFra_t *pPars, int fCbs,
 
                                 int adaRecycle);
 
-Abc_Ntk_t *Abc_NtkFromAigPhase(Aig_Man_t *pMan);
-
-int Abc_NtkDarPdr(Abc_Ntk_t *pNtk, Pdr_Par_t *pPars);
+void imctk_abc_line_buffer_stdout();
 
 #ifdef __cplusplus
 }

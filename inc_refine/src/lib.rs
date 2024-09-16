@@ -55,7 +55,6 @@ use std::{
     hash::Hash,
     marker::PhantomData,
     mem::{swap, take},
-    time::Duration,
 };
 
 use imctk_ids::{id_vec::IdVec, Id, Id32};
@@ -81,7 +80,7 @@ impl Default for Order {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct Node {
     prev: Option<NodeId>,
     next: Option<NodeId>,
@@ -146,6 +145,9 @@ struct NodeRange {
     last: NodeId,
 }
 
+/// Temporary storage needed for refinement.
+///
+/// The [`Default`] trait implementation is the only public API provided by this type.
 pub struct RefinementKeys<K> {
     by_key: HashMap<K, NodeRange>,
 }
@@ -158,7 +160,8 @@ impl<K> Default for RefinementKeys<K> {
     }
 }
 
-#[derive(Default)]
+/// Incremental partition refinement data structure.
+#[derive(Clone, Default)]
 pub struct IncrementalRefinement<T: Id> {
     node: IdVec<NodeId, Node>,
 
@@ -172,9 +175,6 @@ pub struct IncrementalRefinement<T: Id> {
     item_count: usize,
     tmp: Vec<OrderNodeId>,
     _phantom: PhantomData<T>,
-
-    pub stats: [usize; 32],
-    pub stats2: [Duration; 32],
 }
 
 impl<T: Id> IncrementalRefinement<T> {
@@ -191,7 +191,10 @@ impl<T: Id> IncrementalRefinement<T> {
     fn bump_timestamp(&mut self) {
         self.current_timestamp += 2;
         if self.current_timestamp + 1 == u32::MAX {
-            todo!("reset timestamps");
+            self.current_timestamp = 2;
+            for skip_timestamp in self.timestamp.values_mut() {
+                *skip_timestamp &= 1;
+            }
         }
     }
 
@@ -216,6 +219,7 @@ impl<T: Id> IncrementalRefinement<T> {
         self.node[node_id].skip_timestamp = 0;
     }
 
+    /// Starts tracking a given item as part of the incremental partition.
     pub fn insert_item(&mut self, id: T) -> bool {
         let enter = Self::enter_id(id);
         let leave = enter.other_end();
@@ -237,6 +241,7 @@ impl<T: Id> IncrementalRefinement<T> {
         true
     }
 
+    /// Stops tracking a given item as part of the incremental partition.
     pub fn remove_item(&mut self, id: T) -> bool {
         let enter = Self::enter_id(id);
         let Some(node) = self.node.get(enter) else { return false };
@@ -253,12 +258,16 @@ impl<T: Id> IncrementalRefinement<T> {
         true
     }
 
+    /// Returns whether a given item is tracked as part of the incremental partition.
     pub fn contains_item(&self, id: T) -> bool {
         let enter = Self::enter_id(id);
         let Some(node) = self.node.get(enter) else { return false };
         node.next.is_some()
     }
 
+    /// Returns the representative item for the root class containing the given item.
+    ///
+    /// Panics when the given item is not currently tracked.
     pub fn root(&mut self, id: T) -> T {
         let root = self.root_scan(id);
         self.root_update(id, root);
@@ -275,7 +284,7 @@ impl<T: Id> IncrementalRefinement<T> {
             };
 
             if let Some(candidate) = self.get_skip(enter_first_sibling, true) {
-                if self.contains(Self::node_item(candidate), id) {
+                if self.is_ancestor_of(Self::node_item(candidate), id) {
                     id = Self::node_item(candidate)
                 } else {
                     id = Self::node_item(parent)
@@ -296,7 +305,7 @@ impl<T: Id> IncrementalRefinement<T> {
             };
 
             if let Some(candidate) = self.get_skip(enter_first_sibling, true) {
-                if self.contains(Self::node_item(candidate), id) {
+                if self.is_ancestor_of(Self::node_item(candidate), id) {
                     id = Self::node_item(candidate)
                 } else {
                     id = Self::node_item(parent)
@@ -309,6 +318,9 @@ impl<T: Id> IncrementalRefinement<T> {
         }
     }
 
+    /// Returns the representative item among the siblings of a given item.
+    ///
+    /// Panics when the given item is not currently tracked.
     pub fn first_sibling(&mut self, id: T) -> T {
         let enter = Self::enter_id(id);
         let Some(node) = self.node.get(enter) else { panic!("item not present") };
@@ -385,7 +397,7 @@ impl<T: Id> IncrementalRefinement<T> {
         }
     }
 
-    pub fn first_in_leaf_run(&mut self, id: T) -> T {
+    fn first_in_leaf_run(&mut self, id: T) -> T {
         let enter = Self::enter_id(id);
         let Some(node) = self.node.get(enter) else { panic!("item not present") };
         if node.next.is_none() {
@@ -476,6 +488,10 @@ impl<T: Id> IncrementalRefinement<T> {
         }
     }
 
+    /// Returns the parent item of the given item.
+    ///
+    /// Returns `None` when the class containing the given item is a root class. Panics when the
+    /// given item is not currently tracked.
     pub fn parent(&mut self, id: T) -> Option<T> {
         let first_sibling = self.first_sibling(id);
         self.node[Self::enter_id(first_sibling)]
@@ -483,6 +499,9 @@ impl<T: Id> IncrementalRefinement<T> {
             .map(Self::node_item)
     }
 
+    /// Counts the number of items below the given item.
+    ///
+    /// Panics when the given item is not currently tracked.
     pub fn descendant_count(&mut self, id: T) -> usize {
         let mut count = 0;
 
@@ -502,6 +521,9 @@ impl<T: Id> IncrementalRefinement<T> {
         count / 2
     }
 
+    /// Counts the number of items directly below the given item.
+    ///
+    /// Panics when the given item is not currently tracked.
     pub fn child_count(&self, id: T) -> usize {
         let mut count = 0;
 
@@ -522,6 +544,9 @@ impl<T: Id> IncrementalRefinement<T> {
         count
     }
 
+    /// Returns whether the given item is a leaf item.
+    ///
+    /// Panics when the given item is not currently tracked.
     pub fn is_leaf(&self, id: T) -> bool {
         let enter = Self::enter_id(id);
         let Some(node) = self.node.get(enter) else { panic!("item not present") };
@@ -531,6 +556,9 @@ impl<T: Id> IncrementalRefinement<T> {
         node.next == Some(enter.other_end())
     }
 
+    /// Returns whether the given item is a root item.
+    ///
+    /// Panics when the given item is not currently tracked.
     pub fn is_root(&mut self, id: T) -> bool {
         let enter = Self::enter_id(id);
         let Some(node) = self.node.get(enter) else { panic!("item not present") };
@@ -541,10 +569,15 @@ impl<T: Id> IncrementalRefinement<T> {
         self.node[Self::enter_id(first_sibling)].prev.is_none()
     }
 
+    /// Returns whether the given item is isolated, i.e. both a root and leaf item.
+    ///
+    /// Panics when the given item is not currently tracked.
     pub fn is_isolated(&mut self, id: T) -> bool {
         self.is_leaf(id) && self.is_root(id)
     }
 
+    /// Returns the number of items that are siblings, ancestors or siblings of an ancestor of the
+    /// given item.
     pub fn ancestral_sibling_count(&mut self, id: T) -> usize {
         let mut count = 1; // For the root itself
 
@@ -564,6 +597,7 @@ impl<T: Id> IncrementalRefinement<T> {
         count
     }
 
+    /// Returns the number of root items in the incremental partition.
     pub fn root_count(&self) -> usize {
         let mut count = 0;
         let mut root_iter = self.first;
@@ -577,7 +611,10 @@ impl<T: Id> IncrementalRefinement<T> {
         count
     }
 
-    pub fn contains(&self, outer: T, inner: T) -> bool {
+    /// Returns whether `outer` is an ancestor of `inner`.
+    ///
+    /// Panics when either given item is not currently tracked.
+    pub fn is_ancestor_of(&self, outer: T, inner: T) -> bool {
         let enter_outer = Self::enter_id(outer);
         let Some(outer_node) = self.node.get(enter_outer) else {
             panic!("item {outer:?} not present");
@@ -597,12 +634,18 @@ impl<T: Id> IncrementalRefinement<T> {
         outer_node.order < inner_node.order && inner_node.order < self.node[leave_outer].order
     }
 
+    /// Make two items equivalent.
+    ///
+    /// This will remove the ancestor item and insert it directly below the descendant item.
+    ///
+    /// Panics when either given item is not currently tracked or when neither of the given item is
+    /// an ancestor of the other item.
     pub fn equiv(&mut self, items: [T; 2]) {
         let inner;
         let outer;
-        if self.contains(items[0], items[1]) {
+        if self.is_ancestor_of(items[0], items[1]) {
             [outer, inner] = items
-        } else if self.contains(items[1], items[0]) {
+        } else if self.is_ancestor_of(items[1], items[0]) {
             [inner, outer] = items
         } else {
             panic!("items {items:?} are non-overlapping");
@@ -626,14 +669,12 @@ impl<T: Id> IncrementalRefinement<T> {
         self.timestamp[outer] = self.current_timestamp;
     }
 
+    /// Counts the number of root items that are not leaf items.
     pub fn nonleaf_root_count(&mut self) -> usize {
         let mut count = 0;
         let mut root_rev_iter = self.last;
 
         while let Some(current) = root_rev_iter {
-            if !current.is_leave() {
-                println!("{:?}", self);
-            }
             debug_assert!(
                 current.is_leave(),
                 "{current:?} {:?}",
@@ -653,6 +694,7 @@ impl<T: Id> IncrementalRefinement<T> {
         count
     }
 
+    /// Returns an iterator over the root items that are not leaf items.
     pub fn nonleaf_root_iter(&mut self) -> impl Iterator<Item = T> + '_ {
         let mut root_rev_iter = self.last;
 
@@ -672,6 +714,9 @@ impl<T: Id> IncrementalRefinement<T> {
         })
     }
 
+    /// Returns an iterator that traverses the descendants of the given item in post-order.
+    ///
+    /// Panics when the given item is not currently tracked.
     pub fn postorder_descendants_iter(&self, id: T) -> impl Iterator<Item = T> + '_ {
         let enter = Self::enter_id(id);
         let Some(node) = self.node.get(enter) else { panic!("item not present") };
@@ -693,6 +738,9 @@ impl<T: Id> IncrementalRefinement<T> {
         })
     }
 
+    /// Returns an item over the direct children of a given item.
+    ///
+    /// Panics when the given item is not currently tracked.
     pub fn child_iter(&self, id: T) -> impl Iterator<Item = T> + '_ {
         let enter = Self::enter_id(id);
         let Some(node) = self.node.get(enter) else { panic!("item not present") };
@@ -701,20 +749,25 @@ impl<T: Id> IncrementalRefinement<T> {
         };
         let leave = enter.other_end();
 
-        std::iter::from_fn(move || loop {
+        std::iter::from_fn(move || {
             if iter == leave {
-                return None;
+                None
             } else {
                 let current = iter;
+                assert!(current.is_enter());
                 iter = self.node[current.other_end()].next.unwrap();
-                if current.is_leave() {
-                    return Some(Self::node_item(current));
-                }
+                Some(Self::node_item(current))
             }
         })
     }
 
+    /// Returns an iterator over all non-isolated items.
     pub fn nonisolated_iter(&mut self) -> impl Iterator<Item = T> + '_ {
+        self.nonisolated_with_root_iter().map(|(item, _root)| item)
+    }
+
+    /// Returns an iterator over all non-isolated items together with their corresponding root item.
+    pub fn nonisolated_with_root_iter(&mut self) -> impl Iterator<Item = (T, T)> + '_ {
         let mut root_rev_iter = self.last;
 
         let mut span: Option<(NodeId, NodeId)> = None;
@@ -727,7 +780,7 @@ impl<T: Id> IncrementalRefinement<T> {
                     *iter = self.node[*iter].next.unwrap();
                     let current = *iter;
                     if current.is_leave() {
-                        return Some(Self::node_item(current));
+                        return Some((Self::node_item(current), Self::node_item(*leave)));
                     } else {
                         continue;
                     }
@@ -754,10 +807,15 @@ impl<T: Id> IncrementalRefinement<T> {
         })
     }
 
+    /// Returns the number of currently tracked items.
     pub fn item_count(&self) -> usize {
         self.item_count
     }
 
+    /// Refines all items using the partition defined by the return value of the `key` closure.
+    ///
+    /// Users need to ensure that the `key` closure is deterministic. If this condition is violated
+    /// the behavior is memory-safe but otherwise undefined.
     pub fn refine_all<K>(&mut self, keys: &mut RefinementKeys<K>, mut key: impl FnMut(T) -> K)
     where
         K: Eq + Hash,
@@ -790,6 +848,17 @@ impl<T: Id> IncrementalRefinement<T> {
         self.check_linked_list_nesting_and_order();
     }
 
+    /// Refines all items contained strictly below a given item using the partition defined by the
+    /// return value of the `key` closure.
+    ///
+    /// The class of items not contained strictly below the given item is considered unknown, i.e.
+    /// the given item and any of its ancestors will still be considered potentially equal to the
+    /// items strictly below the given item.
+    ///
+    /// Users need to ensure that the `key` closure is deterministic. If this condition is violated
+    /// the behavior is memory-safe but otherwise undefined.
+    ///
+    /// Panics when the given item is not currently tracked.
     pub fn refine_subtree<K>(
         &mut self,
         keys: &mut RefinementKeys<K>,
@@ -904,6 +973,8 @@ impl<T: Id> IncrementalRefinement<T> {
         }
     }
 
+    /// Refines the incremental partition by making the listed items distinct from any non-listed
+    /// items.
     pub fn refine_items(&mut self, items: impl IntoIterator<Item = T>) {
         self.tmp.clear();
         let mut nodes_to_move = take(&mut self.tmp);
@@ -1319,6 +1390,72 @@ mod tests {
 
             for i in 0u32..1 << bits {
                 assert!(refine.is_leaf(i) && refine.parent(i).is_none());
+            }
+        }
+    }
+
+    #[test]
+    fn test_nonisolated_with_root_iter() {
+        let mut refine: IncrementalRefinement<u32> = Default::default();
+
+        for i in 0..10 {
+            refine.insert_item(i);
+        }
+
+        for p in [2, 3, 5] {
+            refine.refine_all(&mut Default::default(), |i| i % p == 0);
+        }
+
+        // 0 1 2 3 4 5 6 7 8 9
+        // x   x   x   x   x
+        // x     x     x     x
+        // x         x
+
+        let nonisolated_with_root = Vec::from_iter(refine.nonisolated_with_root_iter());
+        assert_eq!(
+            nonisolated_with_root,
+            [(3, 9), (9, 9), (2, 8), (4, 8), (8, 8), (1, 7), (7, 7)],
+        );
+    }
+
+    #[test]
+    fn test_force_order_fixup() {
+        let mut refine: IncrementalRefinement<u32> = Default::default();
+
+        let bits = 8;
+
+        for i in 0..1 << bits {
+            refine.insert_item(i);
+        }
+
+        let root_a = 1 << bits;
+        let root_b = root_a + 1;
+        refine.insert_item(root_a);
+        refine.insert_item(root_b);
+
+        for b in (0..bits).rev() {
+            refine.refine_subtree(&mut Default::default(), root_a, |v| (v >> b) & 1 != 0);
+        }
+        refine.remove_item(root_a);
+        let mut expected_roots = Vec::from_iter(refine.child_iter(root_b));
+        refine.remove_item(root_b);
+        println!("{:?}", refine);
+        let mut roots = Vec::from_iter(refine.nonleaf_root_iter());
+        for i in 0..1 << bits {
+            if refine.is_isolated(i) && refine.is_root(i) {
+                roots.push(i);
+            }
+        }
+        roots.sort();
+        expected_roots.sort();
+        assert_eq!(roots, expected_roots);
+        assert_eq!(roots.len(), 9);
+
+        for &root in roots.iter() {
+            let contained = Vec::from_iter(refine.postorder_descendants_iter(root));
+            let mask = contained.len() as u32;
+            for &item in contained.iter() {
+                assert_eq!((item ^ root) & !mask, 0);
             }
         }
     }

@@ -4,7 +4,7 @@
 //! Xor gates and stores the combinational part of the circuit in topologically sorted order. This
 //! makes it a static representation, unlike an [environment][Env], but offers significant
 //! performance benefits when running simulation for multiple time steps.
-use imctk::extract::extract_topo_sorted_primary_defs;
+use imctk_extract::extract_topo_sorted_primary_defs;
 use imctk_ids::{id_vec::IdVec, indexed_id_vec::IndexedIdVec};
 use imctk_ir::{
     env::Env,
@@ -56,10 +56,6 @@ impl XaigStep {
     pub fn is_and(&self) -> bool {
         self.inputs[0] <= self.inputs[1]
     }
-
-    pub fn is_xor(&self) -> bool {
-        !self.is_and()
-    }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -78,8 +74,6 @@ pub struct SimModel {
     pub zero_values: IdVec<Var, bool>,
     pub sim_from_env: IdVec<Var, Option<Lit>>,
     pub env_from_sim: IdVec<Var, Lit>,
-    pub inputs: Vec<Var>,
-    pub steady_inputs: Vec<Var>,
     pub read_state: IdVec<Var, Var>,
 }
 
@@ -138,7 +132,7 @@ pub fn extract_sim_model(env: &Env, targets: impl IntoIterator<Item = Var>) -> S
             *sim_from_env.grow_for_key(var) = Some(step_var ^ xor.output.pol());
 
             let inputs = xor.term.inputs.map(|input| sim_from_env[input].unwrap());
-            let step = Step::Xaig(XaigStep::and(inputs));
+            let step = Step::Xaig(XaigStep::xor(inputs));
             init_steps.push(step);
 
             if steady {
@@ -214,8 +208,6 @@ pub fn extract_sim_model(env: &Env, targets: impl IntoIterator<Item = Var>) -> S
         zero_values,
         sim_from_env,
         env_from_sim,
-        inputs,
-        steady_inputs,
         read_state: read_state.into_id_vec(),
     }
 }

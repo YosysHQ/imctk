@@ -1,18 +1,15 @@
 //! Unrolling of a sequential circuits for BMC, k-induction or similar.
 
-use std::collections::hash_map::Entry;
-
 use imctk_ids::{id_vec::IdVec, indexed_id_vec::IndexedIdVec, Id, Id32};
 use imctk_ir::{
-    env::Env,
-    node::fine::circuit::{FineCircuitNodeBuilder, InitNode, Input, InputNode, RegNode},
+    env::{Env, LitMultimap},
+    node::fine::circuit::{InitNode, Input, InputNode, RegNode, SteadyInputNode},
     prelude::{NodeBuilder, Term, TermDyn},
     var::{Lit, Pol, Var},
 };
 use imctk_util::vec_sink::VecSink;
-use zwohash::HashMap;
 
-use crate::{env_multimap::LitMultimap, time_step::TimeStep};
+use crate::time_step::TimeStep;
 
 /// [`Term`] representing an [`Input`] at a specific [`TimeStep`].
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -74,36 +71,9 @@ impl Term for UnknownPast {
 
 impl TermDyn for UnknownPast {}
 
-/// [`Term`] representing an unconstrained value that allows the circuit to leave the initial state.
-/// This is used to implement unrolling for a simultaneous BMC base case and k-induction step.
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
-pub struct ReleaseReset {
-    pub step: TimeStep,
-}
-
-impl Term for ReleaseReset {
-    type Output = Lit;
-
-    const NAME: &'static str = "ReleaseReset";
-
-    fn input_var_iter(&self) -> impl Iterator<Item = Var> + '_ {
-        [].into_iter()
-    }
-
-    fn apply_var_map(&mut self, _var_map: impl FnMut(Var) -> Lit) -> Pol {
-        Pol::Pos
-    }
-
-    fn is_steady(&self, _input_steady: impl Fn(Var) -> bool) -> bool {
-        true
-    }
-}
-
-impl TermDyn for ReleaseReset {}
-
-// In Induction and Hybrid mode, the first step contains everything that's steady and the second
-// step contains the unconstrained past.
-/// Selects whether to unroll for BMC, a k-induction step or both simultaneously.
+// In Induction mode, the first step contains everything that's steady and the second step contains
+// the unconstrained past.
+/// Selects whether to unroll for BMC or k-induction.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum UnrollMode {
     /// Perform unrolling for a bounded model check (BMC).
@@ -116,13 +86,6 @@ pub enum UnrollMode {
     ///
     /// This is suitable for k-induction as well as for interval property checking.
     Induction,
-    /// Perform a hybrid BMC and k-induction step.
-    ///
-    /// This behaves like the induction mode, but multiplexes between the preceding step and the
-    /// initial state between every two unrolled time steps. The multiplexing between the initial
-    /// and preceding state is constrained such that once the initial state is left, it cannot be
-    /// entered again via those multiplexers.
-    Hybrid,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
@@ -155,14 +118,7 @@ pub struct Unroll {
     comb_from_seen: IdVec<TimeStep, IdVec<Id32, Option<Lit>>>,
     seq_from_comb: LitMultimap<SeqFromCombEntry>,
 
-    reset_released: IdVec<TimeStep, Lit>,
-
     mode: UnrollMode,
-
-    spec_reduce_classes: Option<HashMap<Var, Lit>>,
-    class_reprs: HashMap<(TimeStep, Var), (Lit, Lit)>,
-
-    spec_reductions: Vec<(TimeStep, [Lit; 2], [Lit; 2])>,
 
     var_stack: Vec<Var>,
 }
@@ -174,12 +130,6 @@ impl Unroll {
             comb_from_seen: Default::default(),
             seq_from_comb: Default::default(),
 
-            reset_released: Default::default(),
-
-            spec_reduce_classes: Default::default(),
-            class_reprs: Default::default(),
-            spec_reductions: Default::default(),
-
             mode,
 
             var_stack: vec![],
@@ -188,38 +138,6 @@ impl Unroll {
         new.init();
 
         new
-    }
-
-    pub fn enable_spec_reduction(&mut self, classes: HashMap<Var, Lit>) {
-        self.reset_keeping_classes(self.mode);
-
-        if let Some(&false_class) = classes.get(&Var::FALSE) {
-            self.class_reprs.insert(
-                (TimeStep::FIRST, false_class.var()),
-                (Lit::FALSE, Lit::FALSE ^ false_class.pol()),
-            );
-        }
-        self.spec_reduce_classes = Some(classes);
-    }
-
-    pub fn spec_reductions(&self) -> &[(TimeStep, [Lit; 2], [Lit; 2])] {
-        &self.spec_reductions
-    }
-
-    pub fn reset_keeping_classes(&mut self, mode: UnrollMode) {
-        self.seen_from_seq.clear();
-        self.comb_from_seen.clear();
-        self.seq_from_comb.clear();
-
-        self.reset_released.clear();
-
-        self.class_reprs.clear();
-        self.spec_reductions.clear();
-
-        self.mode = mode;
-
-        self.var_stack.clear();
-        self.init();
     }
 
     fn init(&mut self) {
@@ -231,22 +149,6 @@ impl Unroll {
                 lit: Lit::FALSE,
             },
         );
-    }
-
-    pub fn unroll_defer_spec(
-        &mut self,
-        source: &Env,
-        dest: &mut Env,
-        step: TimeStep,
-        seq_lit: Lit,
-    ) -> Lit {
-        if seq_lit.is_const() {
-            seq_lit
-        } else {
-            let seq_lit = source.var_defs().lit_repr(seq_lit);
-
-            self.unroll_repr_var_uncached_inner(source, dest, step, seq_lit.var()) ^ seq_lit.pol()
-        }
     }
 
     pub fn unroll(&mut self, source: &Env, dest: &mut Env, step: TimeStep, seq_lit: Lit) -> Lit {
@@ -269,15 +171,27 @@ impl Unroll {
         }
     }
 
-    pub fn find_seq(
+    pub fn find_seq_input(
         &mut self,
+        source: &Env,
         dest: &Env,
         unroll_lit: Lit,
-    ) -> impl Iterator<Item = (TimeStep, Lit)> + '_ {
+    ) -> Option<(TimeStep, Lit)> {
         self.seq_from_comb.merge_equivs(dest);
-        self.seq_from_comb
-            .lit_entries(unroll_lit)
-            .map(|entry| (entry.step, entry.lit))
+
+        for entry in self
+            .seq_from_comb
+            .lit_entries(dest.var_defs().lit_repr(unroll_lit))
+        {
+            let Some(node) = source.def_node(entry.lit.var()) else { continue };
+            if node.dyn_cast::<InputNode>().is_some()
+                || node.dyn_cast::<SteadyInputNode>().is_some()
+            {
+                return Some((entry.step, entry.lit));
+            }
+        }
+
+        None
     }
 
     fn find_unrolled_repr_var(&self, step: TimeStep, seq_var: Var) -> Option<Lit> {
@@ -319,7 +233,7 @@ impl Unroll {
         unrolled_lit
     }
 
-    fn unroll_repr_var_uncached_inner(
+    fn unroll_repr_var_uncached(
         &mut self,
         source: &Env,
         dest: &mut Env,
@@ -331,10 +245,7 @@ impl Unroll {
         } else {
             match (step.id_index(), self.mode) {
                 (0, _) => self.unroll_first_bmc(source, dest, seq_var),
-                (1, UnrollMode::Hybrid | UnrollMode::Induction) => {
-                    dest.term(UnknownPast { seq: seq_var })
-                }
-                (_, UnrollMode::Hybrid) => self.unroll_hybrid(source, dest, step, seq_var),
+                (1, UnrollMode::Induction) => dest.term(UnknownPast { seq: seq_var }),
                 _ => self.unroll_generic(source, dest, step, seq_var),
             }
         };
@@ -351,39 +262,6 @@ impl Unroll {
         unrolled_lit
     }
 
-    fn unroll_repr_var_uncached(
-        &mut self,
-        source: &Env,
-        dest: &mut Env,
-        step: TimeStep,
-        seq_var: Var,
-    ) -> Lit {
-        let unrolled_lit = self.unroll_repr_var_uncached_inner(source, dest, step, seq_var);
-
-        if let Some(classes) = &self.spec_reduce_classes {
-            if let Some(&class) = classes.get(&seq_var) {
-                match self.class_reprs.entry((step, class.var())) {
-                    Entry::Occupied(entry) => {
-                        let &(class_repr, class_repr_unrolled) = entry.get();
-
-                        self.spec_reductions.push((
-                            step,
-                            [seq_var ^ class.pol(), class_repr],
-                            [unrolled_lit ^ class.pol(), class_repr_unrolled],
-                        ));
-
-                        return class_repr_unrolled ^ class.pol();
-                    }
-                    Entry::Vacant(entry) => {
-                        entry.insert((seq_var ^ class.pol(), unrolled_lit ^ class.pol()));
-                    }
-                }
-            }
-        }
-
-        unrolled_lit
-    }
-
     fn unroll_first_bmc(&mut self, source: &Env, dest: &mut Env, seq_var: Var) -> Lit {
         let node = source.def_node(seq_var).unwrap();
         let output_pol = node.output_lit().unwrap().pol();
@@ -394,46 +272,6 @@ impl Unroll {
             self.unroll(source, dest, TimeStep::FIRST, init.term.input.as_lit()) ^ output_pol
         } else {
             self.unroll_generic(source, dest, TimeStep::FIRST, seq_var)
-        }
-    }
-
-    fn unroll_hybrid(&mut self, source: &Env, dest: &mut Env, step: TimeStep, seq_var: Var) -> Lit {
-        let node = source.def_node(seq_var).unwrap();
-        let output_pol = node.output_lit().unwrap().pol();
-
-        if let Some(reg) = node.dyn_cast::<RegNode>() {
-            let prev_step = step.prev().unwrap();
-
-            if self.reset_released.is_empty() {
-                let release_step = self.reset_released.next_unused_key();
-                self.reset_released
-                    .push(dest.term(ReleaseReset { step: release_step }));
-            }
-
-            while self.reset_released.get(prev_step).is_none() {
-                let release_step = self.reset_released.next_unused_key();
-                let prev_release_step = release_step.prev().unwrap();
-
-                let prev_released = self.reset_released[prev_release_step];
-                let release_now = dest.term(ReleaseReset { step: release_step });
-                let released = dest.or([prev_released, release_now]);
-
-                self.reset_released.push(released);
-            }
-
-            let released = self.reset_released[prev_step];
-
-            let init = self.unroll(source, dest, TimeStep::FIRST, reg.term.init);
-
-            let masked_init = dest.and([init, !released]);
-
-            let prev = self.unroll(source, dest, prev_step, reg.term.next.as_lit());
-
-            let masked_prev = dest.and([prev, released]);
-
-            dest.or([masked_init, masked_prev]) ^ output_pol
-        } else {
-            self.unroll_generic(source, dest, step, seq_var)
         }
     }
 

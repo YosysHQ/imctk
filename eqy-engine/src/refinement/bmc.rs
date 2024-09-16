@@ -101,7 +101,9 @@ impl BmcRefinement {
         while driver.refine(|seq_a, seq_b| {
             let seq_vars = [seq_a, seq_b];
 
-            if !ref_ctx.refine.contains(seq_a, seq_b) && !ref_ctx.refine.contains(seq_b, seq_a) {
+            if !ref_ctx.refine.is_ancestor_of(seq_a, seq_b)
+                && !ref_ctx.refine.is_ancestor_of(seq_b, seq_a)
+            {
                 // Already known inequivalent sequences from flushing or previous incremental use
                 stats_seq_already_refiend += 1;
                 return false;
@@ -116,8 +118,8 @@ impl BmcRefinement {
                 return bmc_a == bmc_b;
             }
 
-            if !self.bmc_refine.contains(bmc_a.var(), bmc_b.var())
-                && !self.bmc_refine.contains(bmc_b.var(), bmc_a.var())
+            if !self.bmc_refine.is_ancestor_of(bmc_a.var(), bmc_b.var())
+                && !self.bmc_refine.is_ancestor_of(bmc_b.var(), bmc_a.var())
             {
                 // Already known inequivalent at this time step from flushing or previous
                 // incremental use

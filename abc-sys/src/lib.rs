@@ -1,7 +1,11 @@
+#![allow(unexpected_cfgs)] // for coverage_nightly
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
+
 #[allow(non_snake_case)]
 #[allow(non_camel_case_types)]
 #[allow(non_upper_case_globals)]
 #[allow(clippy::all)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod bindings {
     use libc::FILE;
     include!("generated/bindings.rs");

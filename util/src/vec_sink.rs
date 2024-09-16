@@ -76,3 +76,48 @@ impl<'a, A> Extend<A> for VecSink<'a, A> {
         self.target.extend(iter)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn basic_usage() {
+        let mut vec = vec![0, 1, 2];
+
+        let mut other_vec = vec![5, 6, 7];
+
+        let mut sink = VecSink::new(&mut vec);
+
+        sink.push(3);
+        sink.push(4);
+
+        let slice: &[usize] = &sink;
+        assert_eq!(slice, [3, 4]);
+        sink.append(&mut other_vec);
+        let slice: &mut [usize] = &mut sink;
+        assert_eq!(slice, [3, 4, 5, 6, 7]);
+
+        slice.reverse();
+        slice.reverse();
+
+        assert_eq!(vec, Vec::from_iter(0..8));
+    }
+
+    #[test]
+    fn recursive() {
+        pub fn build(depth: usize, mut target: VecSink<usize>) {
+            assert!(target.is_empty());
+            target.extend(0..depth);
+            if depth > 0 {
+                build(depth - 1, target.borrow_sink());
+            }
+        }
+
+        let mut vec = vec![];
+
+        build(5, VecSink::new(&mut vec));
+
+        assert_eq!(vec.len(), 6 * 5 / 2);
+    }
+}

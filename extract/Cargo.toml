@@ -1,0 +1,17 @@
+[package]
+name = "imctk-extract"
+version = "0.1.0"
+edition = "2021"
+
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+imctk-derive = { version = "0.1.0", path = "../derive" }
+imctk-ids = { path = "../ids" }
+imctk-ir = { version = "0.1.0", path = "../ir" }
+imctk-transparent = { version = "0.1.0", path = "../transparent" }
+imctk-util = { version = "0.1.0", path = "../util" }
+log = "0.4.22"

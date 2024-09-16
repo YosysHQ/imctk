@@ -167,14 +167,4 @@ impl<T: Id, P: Ord + Copy, V: Ord + Hash + Copy> RefinementDriver<T, P, V> {
         self.subdivide_sorted(start, low + 1);
         self.subdivide_sorted(low + 1, end);
     }
-
-    pub fn items_with_reprs(&self) -> impl Iterator<Item = (T, T)> + '_ {
-        assert!(self.pending.is_none() && self.heap.is_empty());
-
-        self.items
-            .values()
-            .iter()
-            .copied()
-            .zip(self.repr.values().iter().map(|&repr| self.items[repr]))
-    }
 }

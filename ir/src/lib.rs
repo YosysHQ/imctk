@@ -1,3 +1,6 @@
+#![allow(unexpected_cfgs)] // for coverage_nightly
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
+
 //! Incremental Model Checking Toolkit - Internal representation
 #![deny(unsafe_op_in_unsafe_fn)]
 #![warn(clippy::undocumented_unsafe_blocks)]

@@ -1,7 +1,4 @@
 //! Incremental Model Checking Toolkit
-#![deny(unsafe_op_in_unsafe_fn)]
-#![warn(clippy::undocumented_unsafe_blocks)]
-#![warn(missing_docs)]
-
-pub mod extract;
-pub mod import;
+//!
+//! Currently IMCTK does not offer a public API. This crate is a placeholder and will be updated to
+//! contain the main entry point of IMCTK's public API.

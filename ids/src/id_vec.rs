@@ -620,3 +620,59 @@ impl<K: Id, V: fmt::Debug> Debug for IdVec<K, V> {
         Debug::fmt(self.deref(), f)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn forwarded_instances() {
+        for i in 0..16 {
+            let mut arr_i: [bool; 4] = std::array::from_fn(|b| (i >> b) & 1 != 0);
+            let id_slice_i = <IdSlice<u32, _>>::from_slice(&arr_i);
+
+            for j in 0..16 {
+                let arr_j: [bool; 4] = std::array::from_fn(|b| (j >> b) & 1 != 0);
+
+                let id_slice_j = <IdSlice<u32, _>>::from_slice(&arr_j);
+
+                assert_eq!(id_slice_i == id_slice_j, arr_i == arr_j);
+                assert_eq!(id_slice_i <= id_slice_j, arr_i <= arr_j);
+                assert_eq!(id_slice_i >= id_slice_j, arr_i >= arr_j);
+                assert_eq!(id_slice_i > id_slice_j, arr_i > arr_j);
+                assert_eq!(id_slice_i < id_slice_j, arr_i < arr_j);
+                assert_eq!(id_slice_i.cmp(id_slice_j), arr_i.cmp(&arr_j));
+                assert_eq!(
+                    id_slice_i.partial_cmp(id_slice_j),
+                    arr_i.partial_cmp(&arr_j)
+                );
+            }
+
+            for u in 0..=4 {
+                for v in u..=4 {
+                    assert_eq!(id_slice_i[IdRange::from_index_range(u..v)], arr_i[u..v]);
+                }
+            }
+
+            let before = arr_i;
+
+            for u in 0..=4 {
+                for v in u..=4 {
+                    let id_slice_i = <IdSlice<u32, _>>::from_mut_slice(&mut arr_i);
+                    id_slice_i[IdRange::from_index_range(u..v)].reverse();
+                    arr_i[u..v].reverse();
+                }
+            }
+
+            assert_eq!(arr_i, before);
+
+            for u in 0..4 {
+                for v in 0..4 {
+                    let id_slice_i = <IdSlice<u32, _>>::from_mut_slice(&mut arr_i);
+                    id_slice_i.swap(u as u32, v as u32);
+                    arr_i.swap(u, v);
+                }
+            }
+        }
+    }
+}

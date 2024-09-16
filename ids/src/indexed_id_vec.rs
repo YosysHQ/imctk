@@ -147,3 +147,59 @@ impl<K: Id, V: Hash + Eq, S: BuildHasher> IndexedIdVec<K, V, S> {
         self.items.drain_all_values()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use rand::{rngs::SmallRng, Rng, SeedableRng};
+    use zwohash::HashSet;
+
+    use super::*;
+
+    #[test]
+    fn test_vs_std() {
+        let mut set = <HashSet<usize>>::default();
+        let mut vec = vec![];
+        let mut idvec = <IndexedIdVec<u32, usize>>::default();
+
+        for _ in 0..10 {
+            let mut rng = SmallRng::seed_from_u64(0);
+
+            for _ in 0..rng.gen_range(10..100) {
+                let val = rng.gen_range(0..50);
+                let inserted = set.insert(val);
+                if inserted {
+                    vec.push(val);
+                }
+                assert_eq!(idvec.insert(val).2, inserted);
+            }
+
+            idvec.clear();
+            vec.clear();
+            set.clear();
+
+            for &value in set.iter() {
+                idvec.insert(value);
+            }
+            assert_eq!(format!("{:?}", set), format!("{:?}", idvec));
+
+            set.clear();
+            idvec.clear();
+        }
+    }
+
+    #[test]
+    fn test_replace() {
+        let mut idvec = <IndexedIdVec<u32, u32>>::default();
+
+        for v in 0..4 {
+            idvec.insert(v);
+        }
+
+        assert_eq!(idvec.replace(0, 0), Err(0));
+        assert_eq!(idvec.replace(0, 1), Err(1));
+        assert_eq!(idvec.replace(0, 4), Ok(0));
+        assert_eq!(idvec.replace(1, 0), Ok(1));
+        assert_eq!(idvec.replace(0, 1), Ok(4));
+        assert_eq!(idvec.replace(1, 0), Err(1));
+    }
+}

@@ -5,7 +5,7 @@ members = [
     "derive",
     "transparent",
     "table_seq",
-    "imctk",
+    "aiger",
     "logger",
     "util",
     "ir",
@@ -13,12 +13,24 @@ members = [
     "abc",
     "eqy-engine",
     "inc_refine",
+    "extract",
+    "imctk",
 
     # comment to force multi-line layout
 ]
+
+[workspace.lints.rust]
+unsafe_op_in_unsafe_fn = "warn"
+missing_docs = "warn"
+
+[workspace.lints.clippy]
+undocumented_unsafe_blocks = "warn"
 
 [profile.release]
 debug = true
 
 [profile.dev]
+opt-level = 1
+
+[profile.test]
 opt-level = 1

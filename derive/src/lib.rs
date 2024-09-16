@@ -1,3 +1,4 @@
+#![allow(missing_docs)] // proc macro crate, documented on re-export
 use proc_macro::TokenStream as MacroTokenStream;
 use proc_macro2::{Span, TokenStream};
 use proc_macro_crate::FoundCrate;

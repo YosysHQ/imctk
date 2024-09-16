@@ -11,22 +11,13 @@
 //!     IEEE, 2021.
 //!     (PDF)](https://people.eecs.berkeley.edu/~alanmi/publications/2022/iwls22_sweep.pdf)
 
-use std::{
-    cell::RefCell,
-    collections::VecDeque,
-    mem::{replace, take},
-    ops::Range,
-    time::Duration,
-};
+use std::{cell::RefCell, collections::VecDeque, mem::take, time::Duration};
 
 use imctk_abc::sat::glucose2::ProofTracer;
-use imctk_ids::{id_vec::IdVec, indexed_id_vec::IndexedIdVec};
+use imctk_ids::id_vec::IdVec;
 use imctk_ir::{
     env::Env,
-    node::fine::{
-        circuit::{AndNode, XorNode},
-        constraints::BinClause,
-    },
+    node::fine::circuit::{AndNode, XorNode},
     prelude::NodeBuilderDyn,
     var::{Lit, Var},
 };
@@ -45,26 +36,18 @@ pub struct CircuitSat {
     sat_from_env: IdVec<Var, Option<Lit>>,
     env_from_sat: IdVec<Var, Lit>,
     sat_gates: IdVec<Var, Option<XaigStep>>,
-    redundant_gates: IdVec<u32, CircuitCutGate>,
-
-    depth_limit: Option<usize>,
-    bfs_queue: IndexedIdVec<u32, Var>,
 
     input_model: Vec<Lit>,
     inner_model: Vec<Lit>,
     sat_cube_buf: Vec<Lit>,
-    in_cube: HashSet<Lit>,
+    in_cube: HashMap<Lit, Lit>,
 
     equiv_pos: usize,
 
     solver_query_count: usize,
     query_count: usize,
 
-    stop_on_events: bool,
     tracer: Option<Box<RefCell<Tracer>>>,
-    tracer_analysis: TracerAnalysis,
-    unsat_cut: CircuitCut,
-    sat_from_cut: IndexedIdVec<Var, Var>,
 
     failed_assumptions: HashSet<Lit>,
     pending_cubes: VecDeque<[usize; 2]>,
@@ -90,10 +73,6 @@ impl Default for CircuitSat {
             sat_from_env: IdVec::from_vec(vec![Some(Lit::FALSE)]),
             env_from_sat: IdVec::from_vec(vec![Lit::FALSE]),
             sat_gates: IdVec::from_vec(vec![None]),
-            redundant_gates: IdVec::default(),
-
-            depth_limit: None,
-            bfs_queue: Default::default(),
 
             input_model: vec![],
             inner_model: vec![],
@@ -105,11 +84,7 @@ impl Default for CircuitSat {
             solver_query_count: 0,
             query_count: 0,
 
-            stop_on_events: false,
             tracer: Some(Default::default()),
-            tracer_analysis: Default::default(),
-            unsat_cut: Default::default(),
-            sat_from_cut: Default::default(),
 
             failed_assumptions: Default::default(),
             pending_cubes: Default::default(),
@@ -166,8 +141,6 @@ impl CircuitSat {
 
                 self.sat_from_env[var] = Some(sat_lit);
 
-                // TODO make this configurable
-                self.add_redundant_overlapping_nodes_to_solver(solver, env, var);
                 return sat_lit ^ output_pol;
             } else if let Some(xor) = node.dyn_cast::<XorNode>() {
                 let inputs = xor.term.inputs;
@@ -183,8 +156,6 @@ impl CircuitSat {
 
                 self.sat_from_env[var] = Some(sat_lit);
 
-                // TODO make this configurable
-                self.add_redundant_overlapping_nodes_to_solver(solver, env, var);
                 return sat_lit ^ output_pol;
             }
         }
@@ -195,110 +166,13 @@ impl CircuitSat {
         sat_lit ^ output_pol
     }
 
-    fn add_redundant_overlapping_nodes_to_solver(
-        &mut self,
-        solver: &mut InnerSolver,
-        env: &Env,
-        var: Var,
-    ) {
-        'outer: for node_id in env
-            .defs_index()
-            .find_non_primary_defs_unordered(var)
-            .chain(env.uses_index().find_uses_unordered(var))
-        {
-            let node = env.nodes().get_dyn(node_id).unwrap();
-            if let Some(and) = node.dyn_cast::<AndNode>() {
-                let inputs = and.term.inputs.into_values();
-                if !matches!(self.sat_from_env.get(and.output.var()), Some(Some(_))) {
-                    continue 'outer;
-                }
-                for input in inputs.into_iter() {
-                    if !matches!(self.sat_from_env.get(input.var()), Some(Some(_))) {
-                        continue 'outer;
-                    }
-                }
-
-                let [a, b] = inputs.map(|input_lit| self.add_to_solver(solver, env, input_lit));
-                let y = and.output.lookup(|var| self.sat_from_env[var].unwrap());
-
-                let tag = self
-                    .redundant_gates
-                    .push(CircuitCutGate {
-                        output: y,
-                        gate: XaigStep::and([a, b].into()),
-                    })
-                    .0
-                    ^ (!0 >> 1);
-
-                assert_eq!(tag & (0b1 << 31), 0);
-
-                solver.add_tagged_clause(&[!a, !b, y], tag);
-                solver.add_tagged_clause(&[a, !y], tag);
-                solver.add_tagged_clause(&[b, !y], tag);
-            } else if let Some(xor) = node.dyn_cast::<XorNode>() {
-                let inputs = xor.term.inputs.into_values();
-                if !matches!(self.sat_from_env.get(xor.output.var()), Some(Some(_))) {
-                    continue 'outer;
-                }
-                for input in inputs.into_iter() {
-                    if !matches!(self.sat_from_env.get(input), Some(Some(_))) {
-                        continue 'outer;
-                    }
-                }
-
-                let [a, b] =
-                    inputs.map(|input_var| self.add_to_solver(solver, env, input_var.as_lit()));
-                let y = xor.output.lookup(|var| self.sat_from_env[var].unwrap());
-
-                let tag = self
-                    .redundant_gates
-                    .push(CircuitCutGate {
-                        output: y,
-                        gate: XaigStep::xor([a, b].into()),
-                    })
-                    .0
-                    ^ (!0 >> 1);
-
-                assert_eq!(tag & (0b1 << 31), 0);
-
-                solver.add_tagged_clause(&[!y, a, b], tag);
-                solver.add_tagged_clause(&[y, !a, b], tag);
-                solver.add_tagged_clause(&[y, a, !b], tag);
-                solver.add_tagged_clause(&[!y, !a, !b], tag);
-            } else if let Some(bin_clause) = node.dyn_cast::<BinClause>() {
-                let inputs = bin_clause.inputs.into_values();
-                for input in inputs.into_iter() {
-                    if !matches!(self.sat_from_env.get(input.var()), Some(Some(_))) {
-                        continue 'outer;
-                    }
-                }
-                let [a, b] = inputs.map(|input_lit| self.add_to_solver(solver, env, input_lit));
-
-                let tag = self
-                    .redundant_gates
-                    .push(CircuitCutGate {
-                        output: Lit::FALSE,
-                        gate: XaigStep::and([!a, !b].into()),
-                    })
-                    .0
-                    ^ (!0 >> 1);
-
-                assert_eq!(tag & (0b1 << 31), 0);
-
-                solver.add_tagged_clause(&[a, b], tag);
-            }
-        }
-    }
-
     pub fn reset(&mut self) {
         self.sat_from_env.clear();
         self.env_from_sat.clear();
         self.sat_gates.clear();
-        self.redundant_gates.clear();
         self.sat_from_env.push(Some(Lit::FALSE));
         self.env_from_sat.push(Lit::FALSE);
         self.sat_gates.push(None);
-        self.tracer_analysis = Default::default();
         self.solver_query_count = 0;
         self.equiv_pos = usize::MAX;
 
@@ -307,25 +181,6 @@ impl CircuitSat {
         }
 
         self.tracer.as_mut().unwrap().get_mut().reset();
-    }
-
-    pub fn set_enable_proof_recording(&mut self, enable: bool) {
-        if replace(
-            &mut self.tracer.as_mut().unwrap().get_mut().full_recording,
-            enable,
-        ) != enable
-        {
-            self.reset();
-        }
-    }
-
-    // TODO the stop on event approach has some issues, a callback API would be preferred
-    pub fn set_stop_on_event(&mut self, stop: bool) {
-        self.stop_on_events = stop;
-    }
-
-    pub fn set_depth_limit(&mut self, limit: Option<usize>) {
-        self.depth_limit = limit;
     }
 
     fn new_query(&mut self) {
@@ -386,7 +241,6 @@ impl CircuitSat {
         {
             let mut tracer = tracer.borrow_mut();
             tracer.events.clear();
-            tracer.conflict_events.clear();
         }
 
         let mut solver = take(&mut self.solver).unwrap_or_default();
@@ -396,11 +250,26 @@ impl CircuitSat {
 
         let result = self.query_inner(&mut solver, &tracer, env, cubes);
 
+        let mut new_units = false;
+        let mut event_pos = 0;
+        {
+            let tracer = tracer.borrow_mut();
+            while let Some(&event) = tracer.events.get(event_pos) {
+                event_pos += 1;
+                if let Some(unit) = event {
+                    env.equiv([unit.lookup(|var| self.env_from_sat[var]), Lit::TRUE]);
+                    new_units = true;
+                }
+            }
+        }
+
+        if new_units {
+            env.rebuild_egraph();
+        }
+
         {
             let mut tracer = tracer.borrow_mut();
-            if !tracer.full_recording {
-                tracer.events.clear();
-            }
+            tracer.events.clear();
         }
 
         self.solver = Some(solver.stop_proof_tracing());
@@ -510,66 +379,51 @@ impl CircuitSat {
                     if sat_lit == Lit::FALSE {
                         self.cube_buf.truncate(start);
                         self.sat_cube_buf.truncate(start);
+
+                        self.cube_buf.push(lit);
+                        self.sat_cube_buf.push(sat_lit);
+
+                        self.unsat_cubes.push([start, self.cube_buf.len()]);
                         continue 'cubes;
                     } else {
                         continue;
                     }
                 }
 
-                if self.in_cube.contains(&!sat_lit) {
+                if let Some(&inv_lit) = self.in_cube.get(&!sat_lit) {
                     self.cube_buf.truncate(start);
                     self.sat_cube_buf.truncate(start);
+
+                    self.cube_buf.push(inv_lit);
+                    self.cube_buf.push(lit);
+
+                    self.sat_cube_buf.push(!sat_lit);
+                    self.sat_cube_buf.push(sat_lit);
+
+                    self.unsat_cubes.push([start, self.cube_buf.len()]);
                     continue 'cubes;
                 }
 
-                if self.in_cube.insert(sat_lit) {
+                self.in_cube.entry(sat_lit).or_insert_with(|| {
                     self.cube_buf.push(repr_lit);
                     self.sat_cube_buf.push(sat_lit);
-                }
+                    lit
+                });
             }
             let end = self.cube_buf.len();
+            if start == end {
+                self.sat_cube = Some([0; 2]);
+                self.input_model.clear();
+                self.inner_model.clear();
+                return Some(true);
+            }
             self.pending_cubes.push_back([start, end]);
         }
 
         solver.new_round();
 
-        if let Some(depth_limit) = self.depth_limit {
-            self.bfs_queue.clear();
-
-            for &sat_lit in self.sat_cube_buf.iter() {
-                self.bfs_queue.insert(sat_lit.var());
-            }
-
-            let mut pos = 0;
-            let mut next_depth = self.bfs_queue.len();
-            let mut depth = 0;
-            while let Some(&var) = self.bfs_queue.get(pos as u32) {
-                if pos == next_depth {
-                    depth += 1;
-                    if depth == depth_limit {
-                        break;
-                    }
-                    next_depth = self.bfs_queue.len();
-                }
-                pos += 1;
-                if let Some(equiv) = tracer.borrow_mut().gate_elims.get(&var) {
-                    self.bfs_queue.insert(equiv.var());
-                    self.bfs_queue.insert(Var::FALSE);
-                }
-                if let Some(gate) = self.sat_gates[var] {
-                    for sat_lit in gate.inputs {
-                        self.bfs_queue.insert(sat_lit.var());
-                    }
-                }
-            }
-
-            for &sat_lit in self.bfs_queue.values() {
-                solver.mark_var(sat_lit)
-            }
-        } else {
-            for &sat_lit in self.sat_cube_buf.iter() {
-                solver.mark_cone(sat_lit.var());
-            }
+        for &sat_lit in self.sat_cube_buf.iter() {
+            solver.mark_cone(sat_lit.var());
         }
 
         if self.pending_cubes.is_empty() {
@@ -581,8 +435,6 @@ impl CircuitSat {
         let mut left_of_round = self.pending_cubes.len();
 
         solver.produce_inner_model(true);
-
-        let mut event_pos = 0;
 
         loop {
             let Some(current_cube) = self.pending_cubes.pop_front() else {
@@ -616,22 +468,6 @@ impl CircuitSat {
                 let end_conflicts = solver.conflicts();
                 *conflicts_left =
                     (*conflicts_left).saturating_sub((end_conflicts - start_conflicts) as usize);
-            }
-
-            let mut new_units = false;
-            {
-                let tracer = tracer.borrow_mut();
-                while let Some(&event) = tracer.events.get(event_pos) {
-                    event_pos += 1;
-                    if let Some(unit) = event {
-                        if self.stop_on_events {
-                            self.solver_query_count -= 1;
-                            return None;
-                        }
-                        env.equiv([unit.lookup(|var| self.env_from_sat[var]), Lit::TRUE]);
-                        new_units = true;
-                    }
-                }
             }
 
             match round_result {
@@ -672,10 +508,6 @@ impl CircuitSat {
                 }
             }
 
-            if new_units {
-                self.refresh_env(solver, tracer, env);
-            }
-
             if round_result == Some(true) {
                 return round_result;
             }
@@ -693,394 +525,154 @@ impl CircuitSat {
         &self.input_model
     }
 
-    pub fn inner_model(&self) -> &[Lit] {
-        assert!(self.sat_cube.is_some());
-        &self.inner_model
-    }
-
-    pub fn sat_cube(&self) -> &[Lit] {
-        let [cube_start, cube_end] = self.sat_cube.unwrap();
-        &self.cube_buf[cube_start..cube_end]
-    }
-
     pub fn unsat_cubes(&self) -> impl Iterator<Item = &[Lit]> {
         self.unsat_cubes
             .iter()
             .map(|&[start, end]| &self.cube_buf[start..end])
     }
-
-    pub fn next_event(&mut self, env: &mut Env) -> Option<(bool, &CircuitCut)> {
-        self.process_event(env, false)
-    }
-
-    pub fn last_event(&mut self, env: &mut Env) -> Option<(bool, &CircuitCut)> {
-        self.process_event(env, true)
-    }
-
-    fn process_event(&mut self, env: &mut Env, last: bool) -> Option<(bool, &CircuitCut)> {
-        let tracer = self.tracer.get_or_insert_with(Default::default);
-        let mut tracer = tracer.borrow_mut();
-        let tracer = &mut *tracer;
-
-        let failed_unit;
-        let conflict_reason;
-
-        let (was_query, failed_cube, reason) = match if last {
-            tracer.events.pop_back()
-        } else {
-            tracer.events.pop_front()
-        }? {
-            Some(unit) => {
-                failed_unit = !unit;
-                (
-                    false,
-                    std::slice::from_ref(&failed_unit),
-                    tracer.unit_reasons.get(&unit).unwrap(),
-                )
-            }
-            None => {
-                conflict_reason = (if last {
-                    tracer.conflict_events.pop_back()
-                } else {
-                    tracer.conflict_events.pop_front()
-                })
-                .unwrap();
-
-                (
-                    true,
-                    conflict_reason.failed_assumptions(tracer),
-                    &conflict_reason.reason,
-                )
-            }
-        };
-
-        self.tracer_analysis.analyze_conflict(tracer, reason);
-
-        self.sat_from_cut.clear();
-        self.sat_from_cut.insert(Var::FALSE);
-
-        self.unsat_cut.env_from_cut.clear();
-        self.unsat_cut.gates.clear();
-        self.unsat_cut.equivs.clear();
-        self.unsat_cut.units.clear();
-        self.unsat_cut.failed_cube.clear();
-
-        let mut var_map = |var| self.sat_from_cut.insert(var).0.as_lit();
-
-        for &gate_output in self.tracer_analysis.gates_seen.values() {
-            let mut gate = CircuitCutGate {
-                output: gate_output.as_lit(),
-                gate: self.sat_gates[gate_output].unwrap(),
-            };
-            gate.apply_var_map(&mut var_map);
-            self.unsat_cut.gates.push(gate);
-        }
-
-        assert!(self.redundant_gates.len() + tracer.tag_reasons.len() <= (1 << 31));
-        for &tag in self.tracer_analysis.unknown_tags.iter() {
-            let tag = tag ^ (!0 >> 1);
-            let mut gate = self.redundant_gates[tag];
-            gate.apply_var_map(&mut var_map);
-            self.unsat_cut.gates.push(gate);
-        }
-
-        for &equiv_var in self.tracer_analysis.equivs_seen.values() {
-            let equiv_lit = equiv_var.as_lit().lookup(&mut var_map);
-            let repr_lit = tracer
-                .gate_elims
-                .get(&equiv_var)
-                .unwrap()
-                .lookup(&mut var_map);
-
-            self.unsat_cut.equivs.push([equiv_lit, repr_lit]);
-        }
-
-        for &unit in self.tracer_analysis.units_seen.values() {
-            self.unsat_cut.units.push(unit.lookup(&mut var_map));
-        }
-
-        for &lit in failed_cube {
-            self.unsat_cut.failed_cube.push(lit.lookup(&mut var_map));
-        }
-
-        for &var in self.sat_from_cut.values() {
-            self.unsat_cut
-                .env_from_cut
-                .push(env.lit_repr(self.env_from_sat[var]));
-        }
-
-        Some((was_query, &self.unsat_cut))
-    }
-}
-
-#[derive(Clone, Debug, Default)]
-pub struct CircuitCut {
-    pub env_from_cut: IdVec<Var, Lit>,
-    pub gates: Vec<CircuitCutGate>,
-    pub equivs: Vec<[Lit; 2]>,
-    pub units: Vec<Lit>,
-    pub failed_cube: Vec<Lit>,
-}
-
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
-pub struct CircuitCutGate {
-    pub output: Lit,
-    pub gate: XaigStep,
-}
-
-impl CircuitCutGate {
-    pub fn apply_var_map(&mut self, mut var_map: impl FnMut(Var) -> Lit) {
-        self.output = self.output.lookup(&mut var_map);
-
-        let inputs = self.gate.inputs.map(|input| input.lookup(&mut var_map));
-        if self.gate.is_and() {
-            self.gate = XaigStep::and(inputs.into());
-        } else {
-            self.gate = XaigStep::xor(inputs.into());
-        }
-    }
-
-    pub fn is_constraining(&self) -> bool {
-        self.output.is_const()
-            || self.gate.inputs[0].is_const()
-            || self.gate.inputs[1].is_const()
-            || self.output.var() == self.gate.inputs[0].var()
-            || self.output.var() == self.gate.inputs[1].var()
-            || self.gate.inputs[0].var() == self.gate.inputs[1].var()
-    }
-}
-
-#[derive(Debug)]
-struct Reason {
-    tags_range: Range<usize>,
-    units_range: Range<usize>,
-}
-
-impl Reason {
-    pub fn tags<'a>(&self, tracer: &'a Tracer) -> &'a [u32] {
-        &tracer.tag_buf[self.tags_range.clone()]
-    }
-    pub fn units<'a>(&self, tracer: &'a Tracer) -> &'a [Lit] {
-        &tracer.lit_buf[self.units_range.clone()]
-    }
-}
-
-struct ConflictReason {
-    failed_cube_range: Range<usize>,
-    reason: Reason,
-}
-
-impl ConflictReason {
-    pub fn failed_assumptions<'a>(&self, tracer: &'a Tracer) -> &'a [Lit] {
-        &tracer.lit_buf[self.failed_cube_range.clone()]
-    }
 }
 
 #[derive(Default)]
 struct Tracer {
-    full_recording: bool,
-
-    tag_reasons: IdVec<u32, Reason>,
-    unit_reasons: HashMap<Lit, Reason>,
-
     events: VecDeque<Option<Lit>>,
-    conflict_events: VecDeque<ConflictReason>,
 
     gate_elims: HashMap<Var, Lit>,
-
-    tag_buf: Vec<u32>,
-    lit_buf: Vec<Lit>,
 }
 
 impl Tracer {
     pub fn reset(&mut self) {
-        self.tag_reasons.clear();
-        self.unit_reasons.clear();
         self.events.clear();
-        self.conflict_events.clear();
         self.gate_elims.clear();
-        self.tag_buf.clear();
-        self.lit_buf.clear();
-    }
-
-    pub fn store_tags(&mut self, tags: &[u32]) -> Range<usize> {
-        let start = self.tag_buf.len();
-
-        self.tag_buf.extend(tags);
-
-        for tag in self.tag_buf[start..].iter_mut() {
-            if *tag & (1 << 31) != 0 {
-                let index = *tag & !(1 << 31);
-                if self
-                    .gate_elims
-                    .contains_key(&Var::from_index(index as usize))
-                {
-                    *tag |= 1 << 30;
-                }
-            }
-        }
-        start..self.tag_buf.len()
-    }
-
-    pub fn store_lits(&mut self, units: &[Lit]) -> Range<usize> {
-        let start = self.lit_buf.len();
-        self.lit_buf.extend_from_slice(units);
-        start..self.lit_buf.len()
     }
 }
 
 impl ProofTracer for Tracer {
-    fn learnt_clause(&mut self, clause_lits: &[Lit], tags: &[u32], units: &[Lit]) -> u32 {
-        if !self.full_recording {
-            if clause_lits.len() == 1 {
-                self.events.push_back(Some(clause_lits[0]));
-            }
-            return !0;
-        }
-
-        assert!(!tags.contains(&!0), "{tags:08x?}");
-
-        let tags_range = self.store_tags(tags);
-        let units_range = self.store_lits(units);
-
-        let tag = self
-            .tag_reasons
-            .push(Reason {
-                tags_range,
-                units_range,
-            })
-            .0;
-
+    fn learnt_clause(&mut self, clause_lits: &[Lit], _tags: &[u32], _units: &[Lit]) -> u32 {
         if clause_lits.len() == 1 {
-            let tags_range = self.store_tags(&[tag]);
-            let units_range = self.store_lits(&[]);
-
             self.events.push_back(Some(clause_lits[0]));
-
-            self.unit_reasons.insert(
-                clause_lits[0],
-                Reason {
-                    tags_range,
-                    units_range,
-                },
-            );
         }
-        tag
+        !0
     }
 
-    fn learnt_unit(&mut self, unit: Lit, tag: u32, units: &[Lit]) {
+    fn learnt_unit(&mut self, unit: Lit, _tag: u32, _units: &[Lit]) {
         self.events.push_back(Some(unit));
-        if !self.full_recording {
-            return;
-        }
-        assert_ne!(tag, !0, "{tag:08x?}");
-
-        let tags_range = self.store_tags(&[tag]);
-        let units_range = self.store_lits(units);
-
-        self.unit_reasons.insert(
-            unit,
-            Reason {
-                tags_range,
-                units_range,
-            },
-        );
     }
 
-    fn conflict(&mut self, conflict_lits: &[Lit], tags: &[u32], units: &[Lit]) {
-        if !self.full_recording {
-            return;
-        }
-        assert!(!tags.contains(&!0), "{tags:08x?}");
-
-        let failed_cube_range = self.store_lits(conflict_lits);
-
-        for lit in self.lit_buf[failed_cube_range.clone()].iter_mut() {
-            *lit ^= true;
-        }
-
-        let tags_range = self.store_tags(tags);
-        let units_range = self.store_lits(units);
-
-        self.events.push_back(None);
-
-        self.conflict_events.push_back(ConflictReason {
-            failed_cube_range,
-            reason: Reason {
-                tags_range,
-                units_range,
-            },
-        })
-    }
+    fn conflict(&mut self, _conflict_lits: &[Lit], _tags: &[u32], _units: &[Lit]) {}
 }
 
-#[derive(Default)]
-struct TracerAnalysis {
-    tags_seen: IndexedIdVec<u32, u32>,
-    units_seen: IndexedIdVec<u32, Lit>,
-    gates_seen: IndexedIdVec<u32, Var>,
-    equivs_seen: IndexedIdVec<u32, Var>,
+#[cfg(test)]
+mod tests {
+    use imctk_extract::{duplicate, duplicate_partial};
+    use imctk_ids::Id;
+    use imctk_ir::{
+        node::fine::circuit::{FineCircuitNodeBuilder, Input},
+        prelude::NodeBuilder,
+    };
+    use rand::{rngs::SmallRng, seq::SliceRandom, Rng, SeedableRng};
 
-    cut_defs: IndexedIdVec<u32, Var>,
-    cut_uses: IndexedIdVec<u32, Var>,
-    cut_inputs: IndexedIdVec<u32, Var>,
+    use crate::{
+        bit_matrix::{Word, WordVec},
+        comb_sim::refine_sim::RefineSim,
+    };
 
-    cut_gates: Vec<CircuitCutGate>,
-    cut_constraints: Vec<CircuitCutGate>,
+    use super::*;
 
-    unknown_tags: Vec<u32>,
-}
+    #[test]
+    fn test_random_circuits() {
+        let mut rng = SmallRng::seed_from_u64(0);
+        for _ in 0..8 {
+            let mut env = Env::default();
 
-impl TracerAnalysis {
-    fn reset(&mut self) {
-        self.tags_seen.clear();
-        self.units_seen.clear();
-        self.gates_seen.clear();
-        self.equivs_seen.clear();
-        self.cut_inputs.clear();
-        self.cut_defs.clear();
-        self.cut_uses.clear();
-        self.cut_gates.clear();
-        self.cut_constraints.clear();
-        self.unknown_tags.clear();
-    }
+            let mut lits = vec![];
 
-    pub fn analyze_conflict(&mut self, tracer: &Tracer, reason: &Reason) {
-        self.reset();
-        self.analyze_reason(tracer, reason);
-    }
-
-    fn analyze_reason(&mut self, tracer: &Tracer, reason: &Reason) {
-        for &unit in reason.units(tracer).iter() {
-            let (_, _, inserted) = self.units_seen.insert(unit);
-            if inserted {
-                // TODO should be a setting
-                if let Some(unit_reason) = tracer.unit_reasons.get(&unit) {
-                    self.analyze_reason(tracer, unit_reason);
-                };
+            for i in 0..rng.gen_range(4..16) {
+                lits.push(env.term(Input::from_id_index(i)));
             }
-        }
-        for &tag in reason.tags(tracer).iter() {
-            if tag == !0 {
-                log::error!("tags: {:08x?}", reason.tags(tracer));
-                log::error!("units: {:?}", reason.units(tracer));
-                panic!("found untagged reason clause");
-            } else if tag & (1 << 31) == 0 {
-                let (_, _, inserted) = self.tags_seen.insert(tag);
 
-                if inserted {
-                    if let Some(reason) = tracer.tag_reasons.get(tag) {
-                        self.analyze_reason(tracer, reason);
-                    } else {
-                        self.unknown_tags.push(tag);
+            let inputs = lits.clone();
+
+            for _ in 0..rng.gen_range(4..64) {
+                let inputs: [Lit; 2] =
+                    std::array::from_fn(|_| *lits.choose(&mut rng).unwrap() ^ rng.gen::<bool>());
+
+                lits.push(if rng.gen() {
+                    env.and(inputs)
+                } else {
+                    env.xor(inputs)
+                })
+            }
+
+            let mut sim = RefineSim::default();
+            let mut sat = CircuitSat::default();
+
+            for b in 0..WordVec::BITS as usize {
+                let mut cube = vec![];
+                let (mut reduce, _env_from_reduce, reduce_from_env) = duplicate(&mut env);
+                for &lit in inputs.iter() {
+                    let values = sim.get_value(&env, lit);
+                    let bit = values.as_array_ref()[b / Word::BITS as usize]
+                        >> (b % Word::BITS as usize)
+                        & 1
+                        != 0;
+                    let input = lit ^ !bit;
+                    cube.push(input);
+                    reduce.equiv([input.lookup(|var| reduce_from_env[var].unwrap()), Lit::TRUE]);
+                }
+                reduce.rebuild_egraph();
+
+                for &lit in lits.iter() {
+                    let values = sim.get_value(&env, lit);
+
+                    let bit = values.as_array_ref()[b / Word::BITS as usize]
+                        >> (b % Word::BITS as usize)
+                        & 1
+                        != 0;
+                    let output = lit ^ !bit;
+
+                    assert!(!sat
+                        .query_cube(&mut env, cube.iter().copied().chain([!output]))
+                        .unwrap());
+                    assert!(sat
+                        .query_cube(&mut env, cube.iter().copied().chain([output]))
+                        .unwrap());
+
+                    assert_eq!(
+                        reduce.lit_repr(output.lookup(|var| reduce_from_env[var].unwrap())),
+                        Lit::TRUE
+                    );
+
+                    if b % 16 == 0 {
+                        let (mut reduce_partial, _env_from_reduce, reduce_partial_from_env) =
+                            duplicate_partial(
+                                &mut env,
+                                cube.iter().map(|&lit| lit.var()).chain([output.var()]),
+                            );
+
+                        reduce_partial.equiv([
+                            output.lookup(|var| reduce_partial_from_env[var].unwrap()),
+                            Lit::TRUE,
+                        ]);
+
+                        reduce_partial.rebuild_egraph();
+
+                        for input in cube.iter() {
+                            reduce_partial.equiv([
+                                input.lookup(|var| reduce_partial_from_env[var].unwrap()),
+                                Lit::TRUE,
+                            ]);
+                        }
+
+                        reduce_partial.rebuild_egraph();
+
+                        assert_eq!(
+                            reduce_partial.lit_repr(
+                                output.lookup(|var| reduce_partial_from_env[var].unwrap())
+                            ),
+                            Lit::TRUE
+                        );
                     }
                 }
-            } else if tag & (1 << 30) == 0 {
-                self.gates_seen
-                    .insert(Var::from_index((tag & !(1 << 31)) as usize));
-            } else {
-                self.equivs_seen
-                    .insert(Var::from_index((tag & !(0b11 << 30)) as usize));
             }
         }
     }

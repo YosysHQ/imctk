@@ -1,10 +1,3 @@
-#![warn(missing_docs)]
-#![deny(unsafe_op_in_unsafe_fn)]
-// TODO temporary while the unsafe review is in progress:
-#![deny(unused_unsafe)]
-// TODO add #![warn(clippy::undocumented_unsafe_blocks)] after reviewing and documented all unsafe
-// uses
-
 //! Memory optimized indexed sequences of hash tables.
 //!
 //! This crate provides the [`TableSeq`] type, which is a memory and runtime efficient

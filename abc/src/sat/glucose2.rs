@@ -1,20 +1,40 @@
-use std::{cell::RefCell, ffi::c_int, marker::PhantomData, mem::ManuallyDrop, os::raw::c_void};
+//! Bindings to abc's glucuse2 SAT solver
+
+use std::{
+    cell::RefCell,
+    collections::HashSet,
+    ffi::c_int,
+    marker::PhantomData,
+    mem::{take, ManuallyDrop},
+    os::raw::c_void,
+};
 
 use imctk_abc_sys as abc;
 use imctk_ir::var::{Lit, Var};
 use imctk_util::unordered_pair::UnorderedPair;
 use sealed::{CircuitMode, SolverMode};
 
+/// Wrapper for `std::slice::from_raw_parts` that allows a null pointer when the length is zero.
+///
+/// # Safety
+/// For a non-zero length the caller is responsible to uphold the safety requirements of
+/// `std::slice::from_raw_parts`
 unsafe fn from_raw_parts_nullptr<'a, T>(ptr: *const T, len: usize) -> &'a [T] {
     if len == 0 {
         &[]
     } else {
-        std::slice::from_raw_parts(ptr, len)
+        // SAFETY: we checked for a non-zero length and documented the requirements for this case
+        unsafe { std::slice::from_raw_parts(ptr, len) }
     }
 }
 
+/// CNF only propagation and no justification
 pub struct CnfOnly;
+
+/// CNF only propagation and circuit based justification
 pub struct CircuitJust;
+
+/// CNF and circuit propagation with circuit based justification
 pub struct CircuitProp;
 
 mod sealed {
@@ -50,14 +70,17 @@ enum State {
     Unknown,
 }
 
+/// An instance of abc's glucose2 SAT solver
 pub struct Solver<'a, Mode: SolverMode> {
     ptr: *mut c_void,
     state: State,
+    dupcheck: HashSet<Var>,
     _phantom: PhantomData<(Mode, &'a mut ())>,
 }
 
 impl<Mode: SolverMode> Default for Solver<'static, Mode> {
     fn default() -> Self {
+        // SAFETY: safe raw FFI calls
         unsafe {
             let ptr = abc::imctk_abc_glucose2_init();
             abc::imctk_abc_glucose2_set_incremental_mode(ptr);
@@ -67,6 +90,7 @@ impl<Mode: SolverMode> Default for Solver<'static, Mode> {
             let mut new = Self {
                 ptr,
                 state: State::Setup,
+                dupcheck: Default::default(),
                 _phantom: PhantomData,
             };
             new.add_tagged_clause(&[Lit::TRUE], 1 << 31);
@@ -77,6 +101,7 @@ impl<Mode: SolverMode> Default for Solver<'static, Mode> {
 
 impl<Mode: SolverMode> Drop for Solver<'_, Mode> {
     fn drop(&mut self) {
+        // SAFETY: all references into the solver available to safe rust code share our lifetime
         unsafe {
             abc::imctk_abc_glucose2_release(self.ptr);
         }
@@ -84,8 +109,12 @@ impl<Mode: SolverMode> Drop for Solver<'_, Mode> {
 }
 
 impl<Mode: SolverMode> Solver<'_, Mode> {
+    /// Reset the solver back to the initial state
+    ///
+    /// Equivalent to creating a new solver, but avoids newly allocating solver resources.
     pub fn reset(&mut self) {
         self.state = State::Setup;
+        // SAFETY: safe raw FFI calls
         unsafe {
             abc::imctk_abc_glucose2_reset(self.ptr);
             abc::imctk_abc_glucose2_set_incremental_mode(self.ptr);
@@ -97,26 +126,33 @@ impl<Mode: SolverMode> Solver<'_, Mode> {
     fn ensure_var(&mut self, var: Var) {
         self.state = State::Setup;
         assert!(var.index() < (c_int::MAX / 2) as usize);
+
+        // SAFETY: safe raw FFI call
         let nvars = unsafe { abc::imctk_abc_glucose2_nvars(self.ptr) } as usize;
 
         for _ in nvars..var.index() + 1 {
+            // SAFETY: safe raw FFI call
             unsafe { abc::imctk_abc_glucose2_new_var(self.ptr) };
         }
     }
-    fn valid_var(&self, var: Var) -> bool {
-        let nvars = unsafe { abc::imctk_abc_glucose2_nvars(self.ptr) } as usize;
-        var.index() < nvars
-    }
 
+    /// Adds a CNF clause to the solver.
     pub fn add_clause(&mut self, lits: &[Lit]) {
         self.state = State::Setup;
         if let Some(max_var) = lits.iter().map(|&lit| lit.var()).max() {
             self.ensure_var(max_var);
         }
+        // SAFETY: we called ensure_var to ensure all vars are in bounds
         unsafe { self.add_clause_unchecked(lits) }
     }
 
+    /// Adds a CNF clause to the solver without checking whether the variables are in bounds.
+    ///
+    /// # Safety
+    /// The caller needs to ensure that all variables are in bounds. E.g. by calling
+    /// `Self::ensure_var`.
     unsafe fn add_clause_unchecked(&mut self, lits: &[Lit]) {
+        // SAFETY: safe FFI call, if variables are in bounds, which is a documented requirement
         unsafe {
             abc::imctk_abc_glucose2_add_clause(
                 self.ptr,
@@ -126,18 +162,29 @@ impl<Mode: SolverMode> Solver<'_, Mode> {
         }
     }
 
+    /// Adds a CNF clause with a given proof tracing tag.
     pub fn add_tagged_clause(&mut self, lits: &[Lit], tag: u32) {
         self.state = State::Setup;
+        // SAFETY: safe FFI call
         let saved_tag = unsafe { abc::imctk_abc_glucose2_proof_trace_default_tag(self.ptr) };
+        // SAFETY: safe FFI call
         unsafe {
             abc::imctk_abc_glucose2_proof_trace_set_default_tag(self.ptr, tag);
         }
         self.add_clause(lits);
+        // SAFETY: safe FFI call
         unsafe {
             abc::imctk_abc_glucose2_proof_trace_set_default_tag(self.ptr, saved_tag);
         }
     }
 
+    /// When using circuit based justification, include inner circuit nodes in the produced model.
+    pub fn produce_inner_model(&mut self, produce_inner: bool) {
+        // SAFETY: safe FFI call
+        unsafe { abc::imctk_abc_glucose2_produce_inner_model(self.ptr, produce_inner as i32) };
+    }
+
+    /// Adds an AND gate to the solver.
     pub fn add_and(&mut self, output: Var, inputs: UnorderedPair<Lit>) {
         self.state = State::Setup;
         let (y, [a, b]) = (output.as_lit(), inputs.into_values());
@@ -147,22 +194,28 @@ impl<Mode: SolverMode> Solver<'_, Mode> {
             self.ensure_var(output.max(a.var().max(b.var())));
         } else {
             let gate_tag = (output.index() as u32) | (1 << 31);
+            // SAFETY: safe FFI call
             let saved_tag = unsafe { abc::imctk_abc_glucose2_proof_trace_default_tag(self.ptr) };
+            // SAFETY: safe FFI call
             unsafe {
                 abc::imctk_abc_glucose2_proof_trace_set_default_tag(self.ptr, gate_tag);
             }
 
             self.add_clause(&[y, !a, !b]);
+            // SAFETY: the above add_clause ensures all used vars are in bounds
             unsafe {
                 self.add_clause_unchecked(&[!y, a]);
                 self.add_clause_unchecked(&[!y, b]);
             }
+
+            // SAFETY: safe FFI call
             unsafe {
                 abc::imctk_abc_glucose2_proof_trace_set_default_tag(self.ptr, saved_tag);
             }
         }
 
         if Mode::JFTR != 0 {
+            // SAFETY: either ensure_var or add_clause above will ensure vars are in bounds
             unsafe {
                 abc::imctk_abc_glucose2_set_var_fanin_lit(
                     self.ptr,
@@ -174,10 +227,7 @@ impl<Mode: SolverMode> Solver<'_, Mode> {
         }
     }
 
-    pub fn produce_inner_model(&mut self, produce_inner: bool) {
-        unsafe { abc::imctk_abc_glucose2_produce_inner_model(self.ptr, produce_inner as i32) };
-    }
-
+    /// Adds a XOR gate to the solver.
     pub fn add_xor(&mut self, output: Var, inputs: UnorderedPair<Lit>) {
         self.state = State::Setup;
         let (y, [a, b]) = (output.as_lit(), inputs.into_values());
@@ -187,24 +237,29 @@ impl<Mode: SolverMode> Solver<'_, Mode> {
             self.ensure_var(output.max(a.var().max(b.var())));
         } else {
             let gate_tag = (output.index() as u32) | (1 << 31);
+            // SAFETY: safe FFI call
             let saved_tag = unsafe { abc::imctk_abc_glucose2_proof_trace_default_tag(self.ptr) };
+            // SAFETY: safe FFI call
             unsafe {
                 abc::imctk_abc_glucose2_proof_trace_set_default_tag(self.ptr, gate_tag);
             }
 
             self.add_clause(&[!y, a, b]);
+            // SAFETY: the above add_clause ensures all used vars are in bounds
             unsafe {
                 self.add_clause_unchecked(&[y, !a, b]);
                 self.add_clause_unchecked(&[y, a, !b]);
                 self.add_clause_unchecked(&[!y, !a, !b]);
             }
 
+            // SAFETY: safe FFI call
             unsafe {
                 abc::imctk_abc_glucose2_proof_trace_set_default_tag(self.ptr, saved_tag);
             }
         }
 
         if Mode::JFTR != 0 {
+            // SAFETY: either ensure_var or add_clause above will ensure vars are in bounds
             unsafe {
                 abc::imctk_abc_glucose2_set_var_fanin_lit(
                     self.ptr,
@@ -216,39 +271,64 @@ impl<Mode: SolverMode> Solver<'_, Mode> {
         }
     }
 
+    /// Reset the propagation window for circuit based justification.
     pub fn new_round(&mut self) {
         self.state = State::Setup;
         if Mode::JFTR == 0 {
             return;
         }
 
+        // SAFETY: safe FFI call
         unsafe { abc::imctk_abc_glucose2_start_new_round(self.ptr) }
     }
 
+    /// Extend the circuit based justification propagation window by the input cone of a variable.
+    ///
+    /// The inputs are only traversed up to any node that is already part of the propagation window.
+    /// Hence, when [`Self::mark_var`] was called before, this might not add the full transitive
+    /// input cone to the propagation window.
     pub fn mark_cone(&mut self, var: Var) {
         self.state = State::Setup;
-        if Mode::JFTR == 0 || !self.valid_var(var) {
+        if Mode::JFTR == 0 {
             return;
         }
 
+        self.ensure_var(var);
+
+        // SAFETY: we called ensure_var to make the var in bounds
         unsafe { abc::imctk_abc_glucose2_mark_cone(self.ptr, var.index() as c_int) }
     }
 
+    /// Extend the circuit based justification propagation window by a single variable.
     pub fn mark_var(&mut self, var: Var) {
         self.state = State::Setup;
-        if Mode::JFTR == 0 || !self.valid_var(var) {
+        if Mode::JFTR == 0 {
             return;
         }
 
+        self.ensure_var(var);
+
+        // SAFETY: we called ensure_var to make the var in bounds
         unsafe { abc::imctk_abc_glucose2_mark_var(self.ptr, var.index() as c_int) }
     }
 
+    /// Find a solution justifying the given assumptions.
+    ///
+    /// Returns `Some(true)` when a solution was fond, `Some(false)` when no solution exists and
+    /// `None` when reaching any configured limit.
     pub fn solve_assuming(&mut self, assumptions: &[Lit]) -> Option<bool> {
-        // FIXME abc's glucose2 can crash when there are duplicate vars in the assumptions, either
-        // fix that in glucose or work around it here.
+        // abc's glucose2 can crash when there are duplicate vars in the assumptions
+        self.dupcheck.clear();
+        for &lit in assumptions.iter() {
+            assert!(
+                self.dupcheck.insert(lit.var()),
+                "duplicate variable in assumptions"
+            );
+        }
         if let Some(max_var) = assumptions.iter().map(|&lit| lit.var()).max() {
             self.ensure_var(max_var);
         }
+        // SAFETY: we called ensure_var to make the used vars in bounds
         unsafe {
             match abc::imctk_abc_glucose2_solve_limited(
                 self.ptr,
@@ -273,7 +353,12 @@ impl<Mode: SolverMode> Solver<'_, Mode> {
         }
     }
 
+    /// Returns a subset of assumptions that made the last solve unsatisfiable.
+    ///
+    /// Returns an emtpy slice when the last call was not unsatisfiable.
     pub fn failed_assumptions(&mut self) -> &[Lit] {
+        // SAFETY: safe FFI calls, from_raw_parts_nullptr allows the null pointer returned when not
+        // unsat
         unsafe {
             let nlits = abc::imctk_abc_glucose2_conflict_size(self.ptr);
             let lits = abc::imctk_abc_glucose2_conflict_lits(self.ptr);
@@ -282,20 +367,35 @@ impl<Mode: SolverMode> Solver<'_, Mode> {
         }
     }
 
+    /// Sets a conflict limit for future solves.
+    ///
+    /// This limit remains in place for multiple solves, with each solve reducing the
+    /// limit by the number of conflicts that occured.
     pub fn cumulative_conflict_limit(&mut self, limit: usize) {
         self.state = State::Setup;
+        // SAFETY: safe FFI call
         unsafe { abc::imctk_abc_glucose2_set_conf_budget(self.ptr, i64::try_from(limit).unwrap()) }
     }
 
+    /// Clears all configured limits.
     pub fn clear_limits(&mut self) {
         self.state = State::Setup;
+        // SAFETY: safe FFI call
         unsafe { abc::imctk_abc_glucose2_budget_off(self.ptr) }
     }
 
+    /// Returns the input model justifying the assumptions when in circuit based justification mode.
+    ///
+    /// When the last solve wasn't satisfiable or when not in circuit based justification mode, this
+    /// will return `None`.
+    ///
+    /// When `Self::produce_inner_model` was used to request an inner model in addition to the
+    /// inputs, this will contain both the inputs and inner nodes needed to justify the assumptions.
     pub fn try_input_model(&mut self) -> Option<&[Lit]> {
         if Mode::JFTR == 0 || self.state != State::Sat {
             return None;
         }
+        // SAFETY: safe when the last solve was satisfying, which we checked above
         unsafe {
             let cex = abc::imctk_abc_glucose2_get_cex(self.ptr);
             let len = *cex as usize;
@@ -304,14 +404,22 @@ impl<Mode: SolverMode> Solver<'_, Mode> {
         }
     }
 
+    /// Returns the number of conflicts that occured in total.
     pub fn conflicts(&mut self) -> u64 {
+        // SAFETY: safe FFI call
         unsafe { abc::imctk_abc_glucose2_conflicts(self.ptr) as u64 }
     }
 }
 
+/// Trait to receive proof-tracing callbacks while solving.
 pub trait ProofTracer {
+    /// Callback invoked when learning a clause.
     fn learnt_clause(&mut self, clause_lits: &[Lit], tags: &[u32], units: &[Lit]) -> u32;
+
+    /// Callback invoked when learning a unit clause.
     fn learnt_unit(&mut self, unit: Lit, tag: u32, units: &[Lit]);
+
+    /// Callback invoked when the assumptions are detected to be in conflict.
     fn conflict(&mut self, conflict_lits: &[Lit], tags: &[u32], units: &[Lit]);
 }
 
@@ -329,19 +437,6 @@ impl<T: ProofTracer> ProofTracer for &'_ RefCell<T> {
     }
 }
 
-impl<T: ProofTracer> ProofTracer for &'_ mut T {
-    fn learnt_clause(&mut self, clause_lits: &[Lit], tags: &[u32], units: &[Lit]) -> u32 {
-        (*self).learnt_clause(clause_lits, tags, units)
-    }
-
-    fn learnt_unit(&mut self, unit: Lit, tag: u32, units: &[Lit]) {
-        (*self).learnt_unit(unit, tag, units)
-    }
-
-    fn conflict(&mut self, conflict_lits: &[Lit], tags: &[u32], units: &[Lit]) {
-        (*self).conflict(conflict_lits, tags, units)
-    }
-}
 struct AbortOnUnwind;
 
 impl Drop for AbortOnUnwind {
@@ -351,12 +446,15 @@ impl Drop for AbortOnUnwind {
 }
 
 impl<Mode: SolverMode> Solver<'_, Mode> {
-    pub fn stop_proof_tracing(self) -> Solver<'static, Mode> {
+    /// Detach any currently attached proof tracing callback.
+    pub fn stop_proof_tracing(mut self) -> Solver<'static, Mode> {
+        // SAFETY: safe FFI call
         unsafe { abc::imctk_abc_glucose2_stop_proof_trace(self.ptr) }
 
         let new = Solver {
             ptr: self.ptr,
             state: self.state,
+            dupcheck: take(&mut self.dupcheck),
             _phantom: PhantomData,
         };
 
@@ -364,7 +462,9 @@ impl<Mode: SolverMode> Solver<'_, Mode> {
 
         new
     }
-    pub fn with_proof_tracer<T: ProofTracer>(self, tracer: &mut T) -> Solver<'_, Mode> {
+
+    /// Attach a proof tracing callback.
+    pub fn with_proof_tracer<T: ProofTracer>(mut self, tracer: &mut T) -> Solver<'_, Mode> {
         unsafe extern "C" fn learnt_clause_wrapper<T: ProofTracer>(
             tracer: *mut c_void,
             lits: *const c_int,
@@ -374,6 +474,8 @@ impl<Mode: SolverMode> Solver<'_, Mode> {
             units: *const c_int,
             nunits: c_int,
         ) -> u32 {
+            // SAFETY: from_raw_parts_nullptr handles the potential null pointers for empty slices.
+            // Using AbortOnUnwind ensures no panic will cross the FFI boundary
             unsafe {
                 let abort_on_unwind = AbortOnUnwind;
                 let tracer = &mut *tracer.cast::<T>();
@@ -392,6 +494,8 @@ impl<Mode: SolverMode> Solver<'_, Mode> {
             units: *const c_int,
             nunits: c_int,
         ) {
+            // SAFETY: from_raw_parts_nullptr handles the potential null pointers for empty slices.
+            // Using AbortOnUnwind ensures no panic will cross the FFI boundary
             unsafe {
                 let abort_on_unwind = AbortOnUnwind;
                 let tracer = &mut *tracer.cast::<T>();
@@ -410,6 +514,8 @@ impl<Mode: SolverMode> Solver<'_, Mode> {
             units: *const c_int,
             nunits: c_int,
         ) {
+            // SAFETY: from_raw_parts_nullptr handles the potential null pointers for empty slices.
+            // Using AbortOnUnwind ensures no panic will cross the FFI boundary
             unsafe {
                 let abort_on_unwind = AbortOnUnwind;
                 let tracer = &mut *tracer.cast::<T>();
@@ -421,6 +527,8 @@ impl<Mode: SolverMode> Solver<'_, Mode> {
             }
         }
 
+        // SAFETY: the returned solver has the callback's lifetime, ensuring the callback can't be
+        // invoked past its own lifetime
         unsafe {
             abc::imctk_abc_glucose2_start_proof_trace(
                 self.ptr,
@@ -434,6 +542,7 @@ impl<Mode: SolverMode> Solver<'_, Mode> {
         let new = Solver {
             ptr: self.ptr,
             state: self.state,
+            dupcheck: take(&mut self.dupcheck),
             _phantom: PhantomData,
         };
 
@@ -444,6 +553,9 @@ impl<Mode: SolverMode> Solver<'_, Mode> {
 }
 
 impl<Mode: CircuitMode> Solver<'_, Mode> {
+    /// Returns the input model justifying the assumptions.
+    ///
+    /// This panics when the last solve wasn't satisfiable.
     pub fn input_model(&mut self) -> &[Lit] {
         assert_eq!(self.state, State::Sat);
 

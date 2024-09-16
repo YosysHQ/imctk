@@ -3,6 +3,11 @@ name = "imctk-inc_refine"
 version = "0.1.0"
 edition = "2021"
 
+publish = false
+
+[lints]
+workspace = true
+
 [dependencies]
 imctk-ids = { version = "0.1.0", path = "../ids" }
 imctk-util = { version = "0.1.0", path = "../util" }

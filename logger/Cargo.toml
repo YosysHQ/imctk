@@ -3,6 +3,11 @@ name = "imctk-logger"
 version = "0.1.0"
 edition = "2021"
 
+publish = false
+
+[lints]
+workspace = true
+
 [dependencies]
 anstyle = "1.0.7"
 env_logger = "0.11.3"

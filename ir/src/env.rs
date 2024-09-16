@@ -21,6 +21,11 @@ use super::{
     var::{Lit, Var},
 };
 
+mod multimap;
+mod node_builders;
+mod rebuild_egraph;
+
+pub use multimap::{LitMultimap, VarMultimap};
 pub use updates::EnvUpdates;
 
 /// Indicates whether a node is the primary definition or an equivalent definition of a variable or
@@ -293,20 +298,6 @@ impl EnvIndex {
         self.pending_nodes.push(node_id);
     }
 
-    #[allow(dead_code)] // TODO remove when this is used
-    pub fn remove_node<T: Node>(
-        &mut self,
-        nodes: &Nodes,
-        node_id: NodeId,
-        node: &T,
-        node_role: NodeRole,
-    ) {
-        self.structural_hash_index
-            .remove_node(nodes, node_id, node, node_role);
-        self.defs_index.remove_node((), node_id, node, node_role);
-        self.uses_index.remove_node((), node_id, node, node_role);
-    }
-
     pub fn remove_dyn_node(
         &mut self,
         nodes: &Nodes,
@@ -438,8 +429,6 @@ impl Env {
     }
 }
 
-mod node_builders;
-mod rebuild_egraph;
 mod updates {
     #![allow(missing_docs)] // TODO document module
     use crate::{node::NodeId, var::Var};
@@ -484,5 +473,64 @@ impl Env {
         self.index
             .structural_hash_index
             .find_term(self.nodes(), term)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use zwohash::HashMap;
+
+    use crate::node::fine::circuit::{FineCircuitNodeBuilder, Input};
+
+    use super::*;
+
+    #[test]
+    fn duplicate_with_var_map() {
+        let mut env = Env::default();
+
+        let a = env.term(Input::from_id_index(0));
+        let b = env.term(Input::from_id_index(1));
+        let c = env.term(Input::from_id_index(2));
+        let d = env.term(Input::from_id_index(3));
+
+        let y = env.and([a, b]);
+
+        let z = env.fresh_var_with_max_level_bound().as_lit();
+
+        let y_def_id = env.def_node_with_id(y.var()).unwrap().0;
+
+        let var_map =
+            HashMap::from_iter([(a, c), (b, d), (y, z)].map(|(a, b)| (a.var(), b ^ a.pol())));
+
+        env.duplicate_node_with_var_map(y_def_id, |_env, var| var_map[&var]);
+
+        assert_eq!(env.and([c, d]), z);
+
+        let y2 = env.xor([a, b]);
+
+        let z2 = env.xor([c, d]);
+
+        let y2_def_id = env.def_node_with_id(y2.var()).unwrap().0;
+
+        assert_eq!(
+            z2.var(),
+            env.duplicate_term_with_var_map(y2_def_id, |_env, var| var_map[&var])
+                .var()
+        );
+    }
+
+    #[test]
+    fn remove_nodes() {
+        let mut env = Env::default();
+
+        let a = env.term(Input::from_id_index(0));
+        let b = env.term(Input::from_id_index(1));
+        let y = env.and([a, b]);
+        let id = env.def_node_with_id(y.var()).unwrap().0;
+        env.raw_nodes().discard_node(id);
+        let y2 = env.and([a, b]);
+        assert_ne!(y, y2);
+        let y3 = env.and([a, b]);
+        assert_eq!(y2, y3);
     }
 }

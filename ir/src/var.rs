@@ -250,8 +250,6 @@ impl Lit {
         self.pol() == Pol::Neg
     }
 
-    /// FIXME description for the generic version
-    ///
     /// This is equivalent to `f(self.var()) ^ self.pol()`.
     #[inline(always)]
     pub fn lookup<T, U>(self, f: impl FnOnce(Var) -> T) -> U
@@ -591,5 +589,24 @@ impl VarOrLit for Lit {
         from_lit_pol: impl FnOnce(Pol) -> T,
     ) -> T {
         from_lit_pol(pol)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn polarities() {
+        let v = Var::from_index(1);
+
+        let l0 = v.as_lit();
+        assert!(l0.is_pos());
+        assert!(l0.as_pos().is_pos());
+        assert!(l0.as_neg().is_neg());
+        let l1 = v.as_neg_lit();
+        assert!(l1.is_neg());
+        assert!(l1.as_pos().is_pos());
+        assert!(l1.as_neg().is_neg());
     }
 }

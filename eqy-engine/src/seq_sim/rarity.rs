@@ -168,8 +168,4 @@ impl RaritySim {
             }
         );
     }
-
-    pub fn stuck_counter(&self) -> usize {
-        self.stuck_counter
-    }
 }
