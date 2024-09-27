@@ -369,7 +369,7 @@ impl<T: Id> IncrementalRefinement<T> {
         loop {
             counter -= 1;
             if counter == 0 {
-                panic!("unexpected loop in first_sibling_scan")
+                panic!("unexpected loop in first_sibling_update")
             }
             let enter = Self::enter_id(id);
             let prev_enter = if let Some(prev) = self.node[enter].prev {
@@ -413,7 +413,7 @@ impl<T: Id> IncrementalRefinement<T> {
         loop {
             counter -= 1;
             if counter == 0 {
-                panic!("unexpected loop in first_sibling_scan")
+                panic!("unexpected loop in first_in_leaf_run_scan")
             }
             if !self.is_leaf(id) {
                 return id;
@@ -453,7 +453,7 @@ impl<T: Id> IncrementalRefinement<T> {
         loop {
             counter -= 1;
             if counter == 0 {
-                panic!("unexpected loop in first_sibling_scan")
+                panic!("unexpected loop in first_in_leaf_run_update")
             }
             if !self.is_leaf(id) {
                 return;
@@ -560,11 +560,6 @@ impl<T: Id> IncrementalRefinement<T> {
     ///
     /// Panics when the given item is not currently tracked.
     pub fn is_root(&mut self, id: T) -> bool {
-        let enter = Self::enter_id(id);
-        let Some(node) = self.node.get(enter) else { panic!("item not present") };
-        if node.next.is_none() {
-            panic!("item not present");
-        }
         let first_sibling = self.first_sibling(id);
         self.node[Self::enter_id(first_sibling)].prev.is_none()
     }
@@ -636,7 +631,7 @@ impl<T: Id> IncrementalRefinement<T> {
 
     /// Make two items equivalent.
     ///
-    /// This will remove the ancestor item and insert it directly below the descendant item.
+    /// This will remove the ancestor item and insert it directly above the descendant item.
     ///
     /// Panics when either given item is not currently tracked or when neither of the given item is
     /// an ancestor of the other item.
@@ -998,6 +993,7 @@ impl<T: Id> IncrementalRefinement<T> {
         }
 
         if nodes_to_move.is_empty() {
+            self.tmp = nodes_to_move;
             return;
         }
 
