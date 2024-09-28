@@ -105,6 +105,11 @@ impl<'a, T> InvalidateChunkOnDrop<'a, T> {
 }
 
 impl<T> TableSeq<T> {
+    /// Discards all subtables with all their entries.
+    pub fn clear(&mut self) {
+        self.resize(0);
+    }
+
     /// Resizes the indexed table to a given number of subtables.
     ///
     /// When this is used to increase the number of subtables, empty subtables are appended at the
