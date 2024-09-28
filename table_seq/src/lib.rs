@@ -109,8 +109,11 @@ use hashbrown::HashTable;
 mod node_allocator;
 
 pub mod table_seq;
+pub mod set_seq;
 
 #[doc(inline)]
 pub use table_seq::TableSeq;
+#[doc(inline)]
+pub use set_seq::SetSeq;
 
-// TODO Implement at least SetSeq and MapSeq on top of TableSeq
+// TODO Implement MapSeq on top of TableSeq

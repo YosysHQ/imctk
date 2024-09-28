@@ -47,6 +47,14 @@ pub struct TableSeq<T> {
     chunks: Vec<Chunk<T>>,
 }
 
+// SAFETY: As a plain collection type, it's safe to move a TableSeq between threads whenever it's
+// safe for the contained values.
+unsafe impl<T: Send> Send for TableSeq<T> {}
+
+// SAFETY: As a plain collection type, it's safe to have concurrent read-only access to a TableSeq
+// whenever it's safe for the contained values.
+unsafe impl<T: Sync> Sync for TableSeq<T> {}
+
 impl<T: fmt::Debug> fmt::Debug for TableSeq<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         #[derive(Clone)]
