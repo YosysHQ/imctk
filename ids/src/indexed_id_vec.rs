@@ -123,7 +123,7 @@ impl<K: Id, V: Hash + Eq, S: BuildHasher> IndexedIdVec<K, V, S> {
     /// Retrieves the key for a value in the set.
     ///
     /// Returns `None` if the set doesn't contain the given value.
-    pub fn get_id<Q>(&self, value: &Q) -> Option<K>
+    pub fn get_key<Q>(&self, value: &Q) -> Option<K>
     where
         V: Borrow<Q>,
         Q: Hash + Eq + ?Sized,

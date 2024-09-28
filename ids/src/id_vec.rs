@@ -522,7 +522,7 @@ impl<K: Id, V> IdVec<K, V> {
 
     /// Inserts values from an iterator using the smallset available ids as keys.
     #[inline]
-    pub fn extend(&mut self, iter: impl IntoIterator<Item = V>) {
+    pub fn extend_values(&mut self, iter: impl IntoIterator<Item = V>) {
         // TODO document why we're not implementing the Extend trait
         self.modify_values(|values| values.extend(iter))
     }

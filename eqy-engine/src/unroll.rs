@@ -195,7 +195,7 @@ impl Unroll {
     }
 
     fn find_unrolled_repr_var(&self, step: TimeStep, seq_var: Var) -> Option<Lit> {
-        let seen = self.seen_from_seq.get_id(&seq_var)?;
+        let seen = self.seen_from_seq.get_key(&seq_var)?;
         let comb_from_seen = self.comb_from_seen.get(step)?;
         let slot = comb_from_seen.get(seen)?;
         *slot
