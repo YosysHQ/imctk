@@ -37,7 +37,6 @@ pub use owned::OwnedSubtable;
 /// `HashTable`-level methods that operate on an individual subtable instead of the collection of
 /// all subtables. For methods that operate on all entries of all subtables we include `flat` suffix
 /// or prefix.
-
 pub struct TableSeq<T> {
     _phantom: PhantomData<T>,
     allocators: Vec<NodeAllocator<T>>,

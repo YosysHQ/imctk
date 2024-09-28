@@ -27,7 +27,6 @@ pub type AigerLit = Lit;
 /// numbering.
 ///
 /// Note that this is a type alias and thus does not provide any type checking.
-
 pub type AigerVar = Var;
 
 /// Partial mapping of AIGER variables to existing literals.
