@@ -14,6 +14,6 @@ pub fn hash_value<T: std::hash::Hash>(value: T) -> u64 {
 /// This forwards to [`hash_value`]. Restricting the argument to be a reference is occasionally
 /// useful for type inference or for avoiding warnings.
 #[inline]
-pub fn hash_ref<T: std::hash::Hash>(value: &T) -> u64 {
+pub fn hash_ref<T: std::hash::Hash + ?Sized>(value: &T) -> u64 {
     hash_value(value)
 }
