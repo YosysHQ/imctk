@@ -17,6 +17,8 @@ mod id_range;
 pub mod id_vec;
 pub mod indexed_id_vec;
 
+pub mod id_set_seq;
+
 /// Derives an [`Id`] instance for a newtype wrapper around an existing [`Id`] type.
 ///
 /// Deriving an [`Id`] instance requires the `#[repr(transparent)]` attribute on the target struct.

@@ -12,6 +12,7 @@ workspace = true
 hashbrown = { version = "0.14.5", default-features = false, features = ["inline-more"] }
 imctk-derive = { path = "../derive" }
 imctk-transparent = { path = "../transparent" }
+table_seq = { path = "../table_seq" }
 zwohash = "0.1.2"
 
 [dev-dependencies]
