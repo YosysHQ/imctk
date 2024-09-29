@@ -40,6 +40,33 @@ impl<'a, T> VecSink<'a, T> {
         self.target.append(values)
     }
 
+    /// Implements [`Vec::truncate`] limited to the newly added elements.
+    ///
+    /// The given length referes to the number of newly added elements to keep, not to the number of
+    /// elements in the underlying `Vec`.
+    pub fn truncate(&mut self, len: usize) {
+        self.target.truncate(self.fixed.saturating_add(len));
+    }
+
+    /// Implements [`Vec::dedup`] limited to the newly added elements.
+    ///
+    /// Note that this does not compare the first newly added element with its predecessor in the
+    /// underlying `Vec`.
+    pub fn dedup(&mut self)
+    where
+        T: Eq,
+    {
+        let mut write = 1;
+        for read in 1..self.len() {
+            if self[write - 1] == self[read] {
+                continue;
+            }
+            self.swap(write, read);
+            write += 1;
+        }
+        self.truncate(write);
+    }
+
     /// Re-borrows the existing [`VecSink`].
     pub fn borrow_mut(&mut self) -> VecSink<'_, T> {
         VecSink {
