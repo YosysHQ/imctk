@@ -110,6 +110,7 @@ mod node_allocator;
 
 pub mod set_seq;
 pub mod table_seq;
+pub mod map_seq;
 
 #[doc(inline)]
 pub use set_seq::SetSeq;
