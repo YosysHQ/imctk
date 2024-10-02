@@ -2,6 +2,8 @@ use imctk_derive::{NewtypeCast, SubtypeCast};
 use imctk_ids::{Id, Id32};
 use std::ops;
 
+use crate::pol::{Negate, NegateInPlace};
+
 use super::{pol::Pol, var::Var};
 
 /// Numeric identifier for a Boolean-like literal.
@@ -60,6 +62,28 @@ impl Default for Lit {
     #[inline(always)]
     fn default() -> Self {
         Self::MIN_ID
+    }
+}
+
+impl From<Var> for Lit {
+    #[inline(always)]
+    fn from(var: Var) -> Self {
+        var.as_lit()
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct NegativePolarityError(pub Var);
+
+impl TryFrom<Lit> for Var {
+    type Error = NegativePolarityError;
+
+    fn try_from(lit: Lit) -> Result<Self, Self::Error> {
+        if lit.is_pos() {
+            Ok(lit.var())
+        } else {
+            Err(NegativePolarityError(lit.var()))
+        }
     }
 }
 
@@ -130,10 +154,7 @@ impl Lit {
 
     /// This is equivalent to `f(self.var()) ^ self.pol()`.
     #[inline(always)]
-    pub fn lookup<T, U>(self, f: impl FnOnce(Var) -> T) -> U
-    where
-        T: ops::BitXor<Pol, Output = U>,
-    {
+    pub fn lookup<T: Negate>(self, f: impl FnOnce(Var) -> T) -> T::Negated {
         f(self.var()) ^ self.pol()
     }
 
@@ -159,6 +180,7 @@ impl Lit {
 impl ops::BitXor<Pol> for Lit {
     type Output = Self;
 
+    #[inline(always)]
     fn bitxor(self, rhs: Pol) -> Self::Output {
         // SAFETY: Changing the LSB of the code makes it stay in bounds
         unsafe { Lit::from_code_unchecked(self.code() ^ (rhs as usize)) }
@@ -166,6 +188,7 @@ impl ops::BitXor<Pol> for Lit {
 }
 
 impl ops::BitXorAssign<Pol> for Lit {
+    #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Pol) {
         *self = *self ^ rhs;
     }
@@ -174,6 +197,7 @@ impl ops::BitXorAssign<Pol> for Lit {
 impl ops::BitXor<bool> for Lit {
     type Output = Self;
 
+    #[inline(always)]
     fn bitxor(self, rhs: bool) -> Self::Output {
         // SAFETY: Changing the LSB of the code makes it stay in bounds
         unsafe { Lit::from_code_unchecked(self.code() ^ (rhs as usize)) }
@@ -183,12 +207,14 @@ impl ops::BitXor<bool> for Lit {
 impl ops::BitXor<Pol> for &'_ Lit {
     type Output = Lit;
 
+    #[inline(always)]
     fn bitxor(self, rhs: Pol) -> Self::Output {
         *self ^ rhs
     }
 }
 
 impl ops::BitXorAssign<bool> for Lit {
+    #[inline(always)]
     fn bitxor_assign(&mut self, rhs: bool) {
         *self = *self ^ rhs;
     }
@@ -197,10 +223,35 @@ impl ops::BitXorAssign<bool> for Lit {
 impl ops::Not for Lit {
     type Output = Self;
 
+    #[inline(always)]
     fn not(self) -> Self::Output {
         // SAFETY: Changing the LSB of the code makes it stay in bounds
         unsafe { Lit::from_code_unchecked(self.code() ^ 1) }
     }
+}
+
+impl ops::Not for &'_ Lit {
+    type Output = Lit;
+
+    #[inline(always)]
+    fn not(self) -> Self::Output {
+        !*self
+    }
+}
+
+impl Negate for Lit {
+    type Negated = Lit;
+}
+
+impl NegateInPlace for Lit {
+    #[inline(always)]
+    fn negate_in_place(&mut self) {
+        *self = !*self
+    }
+}
+
+impl Negate for &'_ Lit {
+    type Negated = Lit;
 }
 
 // FIXME optional dependency

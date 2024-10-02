@@ -76,6 +76,15 @@ impl ops::BitXor for Pol {
     }
 }
 
+impl ops::BitXor<Pol> for &'_ Pol {
+    type Output = Pol;
+
+    #[inline(always)]
+    fn bitxor(self, rhs: Pol) -> Self::Output {
+        *self ^ rhs
+    }
+}
+
 impl ops::BitXorAssign for Pol {
     #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
@@ -86,6 +95,7 @@ impl ops::BitXorAssign for Pol {
 impl ops::BitXor<Pol> for bool {
     type Output = bool;
 
+    #[inline(always)]
     fn bitxor(self, rhs: Pol) -> Self::Output {
         self ^ (rhs == Pol::Neg)
     }
@@ -94,12 +104,14 @@ impl ops::BitXor<Pol> for bool {
 impl ops::BitXor<Pol> for &'_ bool {
     type Output = bool;
 
+    #[inline(always)]
     fn bitxor(self, rhs: Pol) -> Self::Output {
         *self ^ rhs
     }
 }
 
 impl ops::BitXorAssign<Pol> for bool {
+    #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Pol) {
         *self ^= rhs == Pol::Neg
     }
@@ -108,6 +120,7 @@ impl ops::BitXorAssign<Pol> for bool {
 impl ops::BitXor<Pol> for u64 {
     type Output = u64;
 
+    #[inline(always)]
     fn bitxor(self, rhs: Pol) -> Self::Output {
         self ^ match rhs {
             Pol::Pos => 0,
@@ -116,10 +129,114 @@ impl ops::BitXor<Pol> for u64 {
     }
 }
 
+impl ops::BitXor<Pol> for &'_ u64 {
+    type Output = u64;
+
+    #[inline(always)]
+    fn bitxor(self, rhs: Pol) -> Self::Output {
+        *self ^ rhs
+    }
+}
+
 impl ops::Not for Pol {
     type Output = Self;
 
+    #[inline(always)]
     fn not(self) -> Self::Output {
         self ^ Pol::Neg
     }
+}
+
+impl ops::Not for &'_ Pol {
+    type Output = Pol;
+
+    #[inline(always)]
+    fn not(self) -> Self::Output {
+        !*self
+    }
+}
+
+pub trait Negate:
+    Sized
+    + ops::Not<Output = <Self as Negate>::Negated>
+    + ops::BitXor<Pol, Output = <Self as Negate>::Negated>
+{
+    // Not called Output as that's ambiguous with the supertrait's Output
+    type Negated;
+
+    #[inline(always)]
+    fn negate(self) -> <Self as Negate>::Negated
+    where
+        Self: Sized,
+    {
+        !self
+    }
+
+    #[inline(always)]
+    fn apply_pol(self, pol: Pol) -> <Self as Negate>::Negated {
+        self ^ pol
+    }
+}
+
+pub trait NegateInPlace: Negate<Negated = Self> + ops::BitXorAssign<Pol> {
+    fn negate_in_place(&mut self);
+    fn apply_pol_in_place(&mut self, pol: Pol) {
+        *self ^= pol;
+    }
+}
+
+impl ops::BitXorAssign<Pol> for u64 {
+    fn bitxor_assign(&mut self, rhs: Pol) {
+        *self = *self ^ rhs
+    }
+}
+
+impl Negate for u64 {
+    type Negated = u64;
+}
+
+impl NegateInPlace for u64 {
+    #[inline(always)]
+    fn negate_in_place(&mut self) {
+        *self = !*self;
+    }
+
+    #[inline(always)]
+    fn apply_pol_in_place(&mut self, pol: Pol) {
+        *self ^= 0 ^ pol;
+    }
+}
+
+impl Negate for &u64 {
+    type Negated = u64;
+}
+
+impl Negate for bool {
+    type Negated = bool;
+}
+
+impl NegateInPlace for bool {
+    #[inline(always)]
+    fn negate_in_place(&mut self) {
+        *self = !*self;
+    }
+}
+
+impl Negate for &bool {
+    type Negated = bool;
+}
+
+impl Negate for Pol {
+    type Negated = Pol;
+}
+
+impl NegateInPlace for Pol {
+    #[inline(always)]
+    fn negate_in_place(&mut self) {
+        *self = !*self;
+    }
+}
+
+impl Negate for &Pol {
+    type Negated = Pol;
 }
