@@ -1,21 +1,19 @@
 [package]
-name = "imctk-ir"
+name = "imctk-lit"
 version = "0.1.0"
 edition = "2021"
 
-publish = false
 
 [lints]
 workspace = true
 
 [dependencies]
-flussab-aiger = "0.1.0"
+flussab-aiger = "0.1.0" # TODO optional dependency
 hashbrown = { version = "0.14.5", default-features = false, features = [
     "inline-more",
 ] }
 imctk-derive = { version = "0.1.0", path = "../derive" }
 imctk-ids = { path = "../ids" }
-imctk-lit = { version = "0.1.0", path = "../lit" }
 imctk-transparent = { version = "0.1.0", path = "../transparent" }
 imctk-util = { version = "0.1.0", path = "../util" }
 log = "0.4.21"
