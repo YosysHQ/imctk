@@ -1,3 +1,4 @@
+#![allow(missing_docs)] // test only
 use imctk_ids::*;
 
 use std::{hash::BuildHasher, marker::PhantomData};

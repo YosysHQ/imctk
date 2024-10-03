@@ -40,7 +40,17 @@ impl<K: Id, V, S> Deref for IndexedIdVec<K, V, S> {
     }
 }
 
-impl<K: std::fmt::Debug + Id, V: std::fmt::Debug> std::fmt::Debug for IndexedIdVec<K, V> {
+impl<K: Id, V: Clone, S: Clone> Clone for IndexedIdVec<K, V, S> {
+    fn clone(&self) -> Self {
+        Self {
+            items: self.items.clone(),
+            table: self.table.clone(),
+            build_hasher: self.build_hasher.clone(),
+        }
+    }
+}
+
+impl<K: Id, V: std::fmt::Debug, S> std::fmt::Debug for IndexedIdVec<K, V, S> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Debug::fmt(&self.items, f)
     }
@@ -53,6 +63,12 @@ impl<K: Id, V, S: Default> Default for IndexedIdVec<K, V, S> {
             table: Default::default(),
             build_hasher: Default::default(),
         }
+    }
+}
+
+impl<K: Id, V: Hash + Eq, S> From<IndexedIdVec<K, V, S>> for IdVec<K, V> {
+    fn from(value: IndexedIdVec<K, V, S>) -> Self {
+        value.items
     }
 }
 
@@ -123,7 +139,7 @@ impl<K: Id, V: Hash + Eq, S: BuildHasher> IndexedIdVec<K, V, S> {
     /// Retrieves the key for a value in the set.
     ///
     /// Returns `None` if the set doesn't contain the given value.
-    pub fn get_id<Q>(&self, value: &Q) -> Option<K>
+    pub fn get_key<Q>(&self, value: &Q) -> Option<K>
     where
         V: Borrow<Q>,
         Q: Hash + Eq + ?Sized,
@@ -133,6 +149,47 @@ impl<K: Id, V: Hash + Eq, S: BuildHasher> IndexedIdVec<K, V, S> {
             .table
             .find(hash, |&key| *self.items[key].borrow() == *value)?;
         Some(id)
+    }
+
+    /// Returns whether there already is an entry for the given value.
+    pub fn contains_value<Q>(&self, value: &Q) -> bool
+    where
+        V: Borrow<Q>,
+        Q: Hash + Eq + ?Sized,
+    {
+        self.get_key(value).is_some()
+    }
+
+    /// Removes a value and closes any resulting gap among the keys by changing the key of the last
+    /// entry to be the newly unused key.
+    pub fn swap_remove_value<Q>(&mut self, value: &Q) -> Option<(K, V)>
+    where
+        V: Borrow<Q>,
+        Q: Hash + Eq + ?Sized,
+    {
+        let key = self.get_key(value)?;
+
+        let (last_key, last_value) = self.pop().unwrap();
+
+        let removed_value = if key != last_key {
+            self.replace(key, last_value).unwrap()
+        } else {
+            last_value
+        };
+
+        Some((key, removed_value))
+    }
+
+    /// Removes and returns the last entry.
+    ///
+    /// Returns `None` if the collection is empty.
+    pub fn pop(&mut self) -> Option<(K, V)> {
+        let (key, value) = self.items.pop()?;
+        self.table
+            .find_entry(self.build_hasher.hash_one(&value), |&found| found == key)
+            .unwrap()
+            .remove();
+        Some((key, value))
     }
 
     /// Removes all entries from the collection.
@@ -145,6 +202,14 @@ impl<K: Id, V: Hash + Eq, S: BuildHasher> IndexedIdVec<K, V, S> {
     pub fn drain(&mut self) -> std::vec::Drain<'_, V> {
         self.table.clear();
         self.items.drain_all_values()
+    }
+
+    /// Inserts values from an iterator using the smallset available ids as keys.
+    #[inline]
+    pub fn extend_values(&mut self, iter: impl IntoIterator<Item = V>) {
+        for value in iter {
+            self.insert(value);
+        }
     }
 }
 

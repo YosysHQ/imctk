@@ -520,9 +520,9 @@ impl<K: Id, V> IdVec<K, V> {
         *self = Self::from_vec(taken)
     }
 
-    /// Inserts values from an iterator using the smallset available ids as keys.
+    /// Inserts values from an iterator using the smallest available ids as keys.
     #[inline]
-    pub fn extend(&mut self, iter: impl IntoIterator<Item = V>) {
+    pub fn extend_values(&mut self, iter: impl IntoIterator<Item = V>) {
         // TODO document why we're not implementing the Extend trait
         self.modify_values(|values| values.extend(iter))
     }
@@ -550,6 +550,13 @@ impl<K: Id, V> IdVec<K, V> {
     /// Removes all entries, returning an iterator yielding the removed entries in order.
     pub fn drain_all_values(&mut self) -> std::vec::Drain<'_, V> {
         self.values.drain(..)
+    }
+
+    /// Retains only those entries where the given predicate holds for the value. Keys following the
+    /// first removed entry are changed such that entry position and key id index remain the same
+    /// for all entries.
+    pub fn retain_values(&mut self, f: impl FnMut(&V) -> bool) {
+        self.values.retain(f)
     }
 }
 

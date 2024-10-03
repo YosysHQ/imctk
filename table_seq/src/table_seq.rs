@@ -37,7 +37,6 @@ pub use owned::OwnedSubtable;
 /// `HashTable`-level methods that operate on an individual subtable instead of the collection of
 /// all subtables. For methods that operate on all entries of all subtables we include `flat` suffix
 /// or prefix.
-
 pub struct TableSeq<T> {
     _phantom: PhantomData<T>,
     allocators: Vec<NodeAllocator<T>>,
@@ -47,6 +46,14 @@ pub struct TableSeq<T> {
     allocator_sweep: usize,
     chunks: Vec<Chunk<T>>,
 }
+
+// SAFETY: As a plain collection type, it's safe to move a TableSeq between threads whenever it's
+// safe for the contained values.
+unsafe impl<T: Send> Send for TableSeq<T> {}
+
+// SAFETY: As a plain collection type, it's safe to have concurrent read-only access to a TableSeq
+// whenever it's safe for the contained values.
+unsafe impl<T: Sync> Sync for TableSeq<T> {}
 
 impl<T: fmt::Debug> fmt::Debug for TableSeq<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -106,6 +113,11 @@ impl<'a, T> InvalidateChunkOnDrop<'a, T> {
 }
 
 impl<T> TableSeq<T> {
+    /// Discards all subtables with all their entries.
+    pub fn clear(&mut self) {
+        self.resize(0);
+    }
+
     /// Resizes the indexed table to a given number of subtables.
     ///
     /// When this is used to increase the number of subtables, empty subtables are appended at the

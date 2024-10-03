@@ -5,7 +5,6 @@ mod primitive_impls;
 mod u8_range_types;
 
 #[allow(unused_imports)] // docs
-
 /// Used to construct constant values from an index.
 ///
 /// Together with [`Id::FromConstIdIndex`], this works around the lack of support for `const fn` in

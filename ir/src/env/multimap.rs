@@ -115,7 +115,7 @@ impl<T> LitMultimap<T> {
     pub fn lit_entries<'a>(
         &'a self,
         lit: Lit,
-    ) -> impl Iterator<Item = <&'a T as BitXor<Pol>>::Output> + '_
+    ) -> impl Iterator<Item = <&'a T as BitXor<Pol>>::Output> + 'a
     where
         &'a T: BitXor<Pol>,
     {

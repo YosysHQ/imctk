@@ -6,7 +6,6 @@ impl Env {
     /// Note that using [`Env::raw_nodes`] it may be possible to violate the egraph invariants in
     /// ways that this method cannot repair. This does not happen when using the envrionment's
     /// [`NodeBuilder`] methods.
-
     pub fn rebuild_egraph(&mut self) {
         let mut node_ids = vec![];
 

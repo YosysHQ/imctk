@@ -1,3 +1,4 @@
+#![allow(missing_docs)] // test only
 use std::{
     fmt::Debug,
     hash::{BuildHasher, BuildHasherDefault, Hash},
