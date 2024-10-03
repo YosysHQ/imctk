@@ -15,7 +15,7 @@ enum VacantEntryKind<'a, T> {
 /// It is part of the [`Entry`] enum.
 // SAFETY: The kind accurately describes the state of the subtable.
 pub struct VacantEntry<'a, T> {
-    tables: &'a mut TableSeq<T>,
+    tables: *mut TableSeq<T>,
     subtable: usize,
     kind: VacantEntryKind<'a, T>,
 }
@@ -26,14 +26,15 @@ enum OccupiedEntryKind<'a, T> {
     PairTable(usize),
     // On both SmallTable and LargeTable the `bool` is true iff the OccupiedEntry is the only entry in the table.
     SmallTable(SmallSubtableOccupiedEntry<'a, T>, bool),
-    LargeTable(hashbrown::hash_table::OccupiedEntry<'a, T>, bool),
+    // We need MaybeUninit here because we may deallocate the HashTable, at which point the OccupiedEntry becomes invalid.
+    LargeTable(MaybeUninit<hashbrown::hash_table::OccupiedEntry<'a, T>>, bool),
 }
 
 /// A view into an occupied entry in a [`TableSeq`]'s subtable.
 /// It is part of the [`Entry`] enum.
 // SAFETY: The kind accurately describes the state of the subtable.
 pub struct OccupiedEntry<'a, T> {
-    tables: &'a mut TableSeq<T>,
+    tables: *mut TableSeq<T>,
     subtable: usize,
     entry_ptr: *mut T,
     kind: OccupiedEntryKind<'a, T>,
@@ -154,7 +155,7 @@ impl<T> TableSeq<T> {
                                         tables: self,
                                         subtable,
                                         entry_ptr: &mut *entry.get_mut(),
-                                        kind: OccupiedEntryKind::LargeTable(entry, is_single)
+                                        kind: OccupiedEntryKind::LargeTable(MaybeUninit::new(entry), is_single)
                                     }),
                                 hashbrown::hash_table::Entry::Vacant(entry) =>
                                     Entry::Vacant(VacantEntry {
@@ -228,11 +229,11 @@ impl<'a, T> VacantEntry<'a, T> {
         let chunk_index = self.subtable >> CHUNK_SHIFT;
         let allocator_index = self.subtable >> ALLOCATOR_SHIFT;
 
-        let chunk_alloc = unsafe { tables.allocators.get_unchecked_mut(allocator_index) };
-        let chunk = unsafe { tables.chunks.get_unchecked_mut(chunk_index) };
+        let chunk_alloc = unsafe { (*tables).allocators.get_unchecked_mut(allocator_index) };
+        let chunk = unsafe { (*tables).chunks.get_unchecked_mut(chunk_index) };
         match kind {
             VacantEntryKind::EmptyChunk => unsafe {
-                tables.entries += 1;
+                (*tables).entries += 1;
                 let size_class = SizeClass::class_for_index(0);
 
                 chunk.node = chunk_alloc.alloc(size_class);
@@ -247,7 +248,7 @@ impl<'a, T> VacantEntry<'a, T> {
                 }
             },
             VacantEntryKind::EmptyTable => unsafe {
-                tables.entries += 1;
+                (*tables).entries += 1;
                 let mut node = chunk.node(chunk_alloc);
 
                 let entry_offset = chunk.meta.entry_offset(chunk_slot);
@@ -267,7 +268,7 @@ impl<'a, T> VacantEntry<'a, T> {
             VacantEntryKind::SingletonTable => unsafe {
                 let mut node = chunk.node(chunk_alloc);
                 let entry_offset = chunk.meta.entry_offset(chunk_slot);
-                tables.entries += 1;
+                (*tables).entries += 1;
 
                 node.make_entry_gap_resize(entry_offset, chunk, chunk_alloc);
 
@@ -285,7 +286,7 @@ impl<'a, T> VacantEntry<'a, T> {
             VacantEntryKind::PairTable(hash, pair_hashes) => unsafe {
                 let mut node = chunk.node(chunk_alloc);
                 let entry_offset = chunk.meta.entry_offset(chunk_slot);
-                tables.entries += 1;
+                (*tables).entries += 1;
 
                 let found_pair = node.entry_ptr(entry_offset).cast::<[T; 2]>().read();
                 let table_offset = chunk.meta.table_offset(chunk_slot);
@@ -299,7 +300,7 @@ impl<'a, T> VacantEntry<'a, T> {
 
                 let table_ptr = node.table_ptr(table_offset);
 
-                let table_alloc = &mut tables.allocators[allocator_index ^ 1];
+                let table_alloc = &mut (*tables).allocators[allocator_index ^ 1];
                 let (entry_ptr, table) =
                     SmallSubtable::new(found_pair, pair_hashes, value, hash, table_alloc);
 
@@ -317,9 +318,9 @@ impl<'a, T> VacantEntry<'a, T> {
                 }
             },
             VacantEntryKind::SmallTable(vacant_entry) => {
-                let table_alloc = &mut tables.allocators[allocator_index ^ 1];
+                let table_alloc = unsafe { &mut (*tables).allocators[allocator_index ^ 1] };
                 let mut new_entry = unsafe { vacant_entry.insert(value, table_alloc) };
-                tables.entries += 1;
+                unsafe { (*tables).entries += 1 };
                 OccupiedEntry {
                     tables,
                     subtable,
@@ -329,12 +330,12 @@ impl<'a, T> VacantEntry<'a, T> {
             },
             VacantEntryKind::LargeTable(vacant_entry) => {
                 let mut new_entry = vacant_entry.insert(value);
-                tables.entries += 1;
+                unsafe { (*tables).entries += 1 };
                 OccupiedEntry {
                     tables,
                     subtable,
                     entry_ptr: &mut *new_entry.get_mut(),
-                    kind: OccupiedEntryKind::LargeTable(new_entry, false)
+                    kind: OccupiedEntryKind::LargeTable(MaybeUninit::new(new_entry), false)
                 }
             },
         }
@@ -342,7 +343,7 @@ impl<'a, T> VacantEntry<'a, T> {
 
     /// Converts the `VacantEntry` into a mutable reference to the underlying `TableSeq`.
     pub fn into_tables(self) -> &'a mut TableSeq<T> {
-        self.tables
+        unsafe { &mut *self.tables }
     }
     /// Returns the subtable index of the `VacantEntry`.
     pub fn subtable(&self) -> usize {
@@ -365,7 +366,7 @@ impl<'a, T> OccupiedEntry<'a, T> {
     }
     /// Converts the `OccupiedEntry` into a mutable reference to the underlying `TableSeq`.
     pub fn into_tables(self) -> &'a mut TableSeq<T> {
-        self.tables
+        unsafe { &mut *self.tables }
     }
     /// Returns the subtable index of the `OccupiedEntry`.
     pub fn subtable(&self) -> usize {
@@ -378,15 +379,15 @@ impl<'a, T> OccupiedEntry<'a, T> {
         let chunk_index = subtable >> CHUNK_SHIFT;
         let allocator_index = subtable >> ALLOCATOR_SHIFT;
 
-        let chunk = unsafe { tables.chunks.get_unchecked_mut(chunk_index) };
-        let chunk_alloc = unsafe { tables.allocators.get_unchecked_mut(allocator_index) };
+        let chunk = unsafe { (*tables).chunks.get_unchecked_mut(chunk_index) };
+        let chunk_alloc = unsafe { (*tables).allocators.get_unchecked_mut(allocator_index) };
 
         match kind {
             OccupiedEntryKind::SingletonTable => unsafe {
                 let mut node = chunk.node(chunk_alloc);
                 let entry_offset = chunk.meta.entry_offset(chunk_slot);
 
-                tables.entries -= 1;
+                (*tables).entries -= 1;
                 let value = entry_ptr.read();
 
                 node.close_entry_gap_resize(entry_offset, chunk, chunk_alloc);
@@ -404,7 +405,7 @@ impl<'a, T> OccupiedEntry<'a, T> {
                 let mut node = chunk.node(chunk_alloc);
                 let entry_offset = chunk.meta.entry_offset(chunk_slot) + index;
 
-                tables.entries -= 1;
+                (*tables).entries -= 1;
                 let value = entry_ptr.read();
 
                 node.close_entry_gap_resize(entry_offset, chunk, chunk_alloc);
@@ -414,8 +415,8 @@ impl<'a, T> OccupiedEntry<'a, T> {
             },
             OccupiedEntryKind::SmallTable(entry, will_delete) => unsafe {
                 let mut node = chunk.node(chunk_alloc);
-                let table_alloc = &mut tables.allocators[allocator_index ^ 1];
-                tables.entries -= 1;
+                let table_alloc = &mut (*tables).allocators[allocator_index ^ 1];
+                (*tables).entries -= 1;
                 let (removed, entry) = entry.remove(table_alloc);
 
                 // TODO earlier shrinking
@@ -424,7 +425,7 @@ impl<'a, T> OccupiedEntry<'a, T> {
                     let table_offset = chunk.meta.table_offset(chunk_slot);
                     table.drop_and_dealloc(table_alloc);
                     let chunk_alloc =
-                        tables.allocators.get_unchecked_mut(allocator_index);
+                        (*tables).allocators.get_unchecked_mut(allocator_index);
                     node.close_table_gap_resize(table_offset, chunk, chunk_alloc);
                     chunk.meta.make_empty(chunk_slot);
                     if chunk.meta.is_empty() {
@@ -439,8 +440,8 @@ impl<'a, T> OccupiedEntry<'a, T> {
                 (removed, VacantEntry { tables, subtable, kind })
             },
             OccupiedEntryKind::LargeTable(entry, will_delete) => unsafe {
-                tables.entries -= 1;
-                let (removed, entry) = entry.remove();
+                (*tables).entries -= 1;
+                let (removed, entry) = entry.assume_init().remove();
 
                 // TODO external -> internal shrinking
                 let kind = if will_delete {
