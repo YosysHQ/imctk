@@ -224,13 +224,11 @@ impl<T> TestTableSeq<T> {
     where
         T: Hash + Eq + Debug,
     {
-        let removed;
-        match self.under_test.entry(subtable, hash_ref(item), |found| found == item, hash_ref) {
-            table_seq::table_seq::Entry::Occupied(entry) => {
-                removed = Some(entry.remove().0);
-            }
-            table_seq::table_seq::Entry::Vacant(_) => removed = None,
-        }
+        let removed = 
+            match self.under_test.entry(subtable, hash_ref(item), |found| found == item, hash_ref) {
+                table_seq::table_seq::Entry::Occupied(entry) => Some(entry.remove().0),
+                table_seq::table_seq::Entry::Vacant(_) => None,
+            };
         match self.spec[subtable].entry(hash_ref(item), |found| found == item, hash_ref) {
             hashbrown::hash_table::Entry::Occupied(found) => {
                 assert_eq!(Some(found.remove().0), removed);

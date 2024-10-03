@@ -581,6 +581,7 @@ impl<'a, T> SmallSubtableVacantEntry<'a, T> {
 
 impl<'a, T> SmallSubtableOccupiedEntry<'a, T> {
     pub fn get_mut(&mut self) -> &mut T {
+        // SAFETY: entry_ptr is valid by construction
         unsafe { &mut *self.entry_ptr }
     }
     // SAFETY: entry_ptr has to be a valid pointer in the table
@@ -594,7 +595,9 @@ impl<'a, T> SmallSubtableOccupiedEntry<'a, T> {
     // The referenced subtable must be alive in this allocator, i.e. allocated but not yet deallocated
     pub unsafe fn remove(self, allocator: &mut NodeAllocator<T>) -> (T, SmallSubtableVacantEntry<'a, T>) {
         let SmallSubtableOccupiedEntry { table, entry_ptr } = self;
+        // SAFETY: guaranteed by caller
         let node_ptr = unsafe { allocator.ptr(table.node) };
+        // SAFETY: entry_ptr is known to point to a valid entry and we're about to shrink the table, preventing future use.
         let value = unsafe { entry_ptr.read() };
         // SAFETY: since we know we're non-empty this will be in bounds
         let last_ptr = unsafe { node_ptr.add(table.len as usize - 1) };
@@ -606,6 +609,7 @@ impl<'a, T> SmallSubtableOccupiedEntry<'a, T> {
                 .cast::<MaybeUninit<T>>()
                 .copy_to(entry_ptr.cast::<MaybeUninit<T>>(), 1)
         };
+        // SAFETY: entry_ptr pointed at a valid entry, thus we know it must be in bounds of the allocation
         let match_index = unsafe { entry_ptr.offset_from(node_ptr) as usize };
         let byte_hash = table.hashes[match_index];
         table.hashes[match_index] = table.hashes[table.len as usize - 1];
