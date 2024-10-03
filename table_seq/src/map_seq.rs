@@ -1,12 +1,19 @@
+//! Indexed sequence of hash maps and associated helper types.
 use core::fmt;
-use std::{borrow::Borrow, hash::{BuildHasher, BuildHasherDefault, Hash}};
-use crate::table_seq::{TableSeq, SubtableIter, SubtableIterMut};
+use std::{borrow::Borrow, hash::{BuildHasher, Hash}, mem};
+use crate::table_seq::{self, SubtableIter, SubtableIterMut, TableSeq};
 
 struct MapEntry<K, V> {
     key: K,
     value: V,
 }
 
+/// Indexed sequence of hash maps.
+///
+/// This type serves as a memory and runtime efficient replacement for `Vec<HashMap<K, V>>`. In
+/// particular, it is optimized for the use-case where the vast majority of contained maps are tiny,
+/// each having 16 or fewer entries, while still allowing for a small but significant fraction of
+/// maps to be large.
 pub struct MapSeq<K, V, S> {
     tables: TableSeq<MapEntry<K, V>>,
     build_hasher: S,
@@ -162,16 +169,15 @@ impl<K: Eq + Hash, V, S: BuildHasher> MapSeq<K, V, S> {
 
     fn map_insert(&mut self, map: usize, key: K, value: V) -> Option<V> {
         let hash = self.build_hasher.hash_one(&key);
-        self.tables
+        let (entry, returned_value) = self.tables
             .insert(
                 map,
                 hash,
                 MapEntry { key, value },
                 |found, inserting| found.key == inserting.key,
                 |found| self.build_hasher.hash_one(&found.key),
-            )
-            .1
-            .map(|entry| entry.value)
+            );
+        returned_value.map(|MapEntry { value, .. }| mem::replace(&mut entry.value, value))
     }
 
     fn map_remove_entry<Q>(&mut self, map: usize, key: &Q) -> Option<(K, V)>
@@ -190,8 +196,20 @@ impl<K: Eq + Hash, V, S: BuildHasher> MapSeq<K, V, S> {
             )
             .map(|entry| (entry.key, entry.value))
     }
-}
 
+    fn map_entry(&mut self, map: usize, key: K) -> Entry<'_, K, V> {
+        let hash = self.build_hasher.hash_one(&key);
+        match self.tables
+            .entry(
+                    map,
+                    hash, 
+                    |found| found.key == key,
+                    |found| self.build_hasher.hash_one(&found.key)) {
+            table_seq::Entry::Occupied(entry) => Entry::Occupied(OccupiedEntry(entry)),
+            table_seq::Entry::Vacant(entry) => Entry::Vacant(VacantEntry(entry, key)),
+        }
+    }
+}
 
 /// Exclusive mutable access to a map of a [`MapSeq`].
 #[repr(C)] // SAFETY: layout must be compatible with MapSeqMap
@@ -201,12 +219,19 @@ pub struct MapSeqMapMut<'a, K, V, S> {
 }
 
 /// Shared read-only access to a map of a [`MapSeq`].
-#[derive(Clone, Copy)]
 #[repr(C)] // SAFETY: layout must be compatible with MapSeqMapMut
 pub struct MapSeqMap<'a, K, V, S> {
     seq: &'a MapSeq<K, V, S>,
     map: usize,
 }
+
+impl<'a, K, V, S> Clone for MapSeqMap<'a, K, V, S> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<'a, K, V, S> Copy for MapSeqMap<'a, K, V, S> { }
 
 impl<'a, K, V, S> std::ops::Deref for MapSeqMapMut<'a, K, V, S> {
     type Target = MapSeqMap<'a, K, V, S>;
@@ -274,6 +299,21 @@ impl<'a, K, V, S> MapSeqMapMut<'a, K, V, S> {
     pub fn clear(&mut self) {
         self.seq.clear_map(self.map)
     }
+
+    /// Returns an iterator over the elements of the map, with mutable references to values.
+    #[inline(always)]
+    pub fn iter_mut(&mut self) -> MapIterMut<K, V> {
+        self.reborrow().into_iter()
+    }
+
+    /// Reborrow the mutable reference to the map, creating a new mutable reference with a potentially shorter lifetime.
+    #[inline(always)]
+    pub fn reborrow(&mut self) -> MapSeqMapMut<'_, K, V, S> {
+        MapSeqMapMut {
+            seq: self.seq,
+            map: self.map
+        }
+    }
 }
 
 impl<'a, K: Eq + Hash, V, S: BuildHasher> MapSeqMap<'a, K, V, S> {
@@ -319,14 +359,6 @@ impl<'a, K: Eq + Hash, V, S: BuildHasher> MapSeqMapMut<'a, K, V, S> {
         self.seq.map_get_mut(self.map, key)
     }
 
-    /// Returns an iterator over the elements of the map, with mutable references to values.
-    #[inline(always)]
-    pub fn iter_mut(&'a mut self) -> MapIterMut<'a, K, V> {
-        MapIterMut {
-            inner: self.seq.tables.subtable_iter_mut(self.map)
-        }
-    }
-
     /// Inserts a key-value pair into the map.
     ///
     /// If the map did not have this key present, [`None`] is returned.
@@ -354,6 +386,150 @@ impl<'a, K: Eq + Hash, V, S: BuildHasher> MapSeqMapMut<'a, K, V, S> {
         Q: Hash + Eq + ?Sized,
     {
         self.seq.map_remove_entry(self.map, key)
+    }
+
+    /// Gets the given key's corresponding entry in the map for in-place manipulation.
+    pub fn entry(&mut self, key: K) -> Entry<'_, K, V> {
+        self.seq.map_entry(self.map, key)
+    }
+}
+
+/// A view into a vacant entry in a [`MapSeq`].
+/// It is part of the [`Entry`] enum.
+pub struct VacantEntry<'a, K, V>(table_seq::VacantEntry<'a, MapEntry<K, V>>, K);
+
+/// A view into an occupied entry in a [`MapSeq`].
+/// It is part of the [`Entry`] enum.
+pub struct OccupiedEntry<'a, K, V>(table_seq::OccupiedEntry<'a, MapEntry<K, V>>);
+
+/// A view into a single entry in a map, which may either be vacant or occupied.
+///
+/// This `enum` is constructed from the [`entry`] method on [`MapSeqMapMut`].
+pub enum Entry<'a, K, V> {
+    /// A vacant entry.
+    Vacant(VacantEntry<'a, K, V>),
+    /// An occupied entry.
+    Occupied(OccupiedEntry<'a, K, V>),
+}
+
+impl<'a, K, V> VacantEntry<'a, K, V> {
+    /// Gets a reference to the key that would be used when inserting a value
+    /// through the `VacantEntry`.
+    pub fn key(&self) -> &K {
+        &self.1
+    }
+    /// Take ownership of the key.
+    pub fn into_key(self) -> K {
+        self.1
+    }
+    /// Sets the value of the entry with the `VacantEntry`'s key,
+    /// and returns an `OccupiedEntry`.
+    pub fn insert_entry(self, value: V) -> OccupiedEntry<'a, K, V> {
+        let VacantEntry(entry, key) = self;
+        let new_entry = entry.insert(MapEntry { key, value });
+        OccupiedEntry(new_entry)
+    }
+    /// Sets the value of the entry with the `VacantEntry`'s key,
+    /// and returns a mutable reference to it.
+    pub fn insert(self, value: V) -> &'a mut V {
+        self.insert_entry(value).into_mut()
+    }
+}
+
+impl<'a, K, V> OccupiedEntry<'a, K, V> {
+    /// Gets a reference to the value in the entry.
+    pub fn get(&self) -> &V {
+        &self.0.get().value
+    }
+    /// Gets a mutable reference to the value in the entry.
+    pub fn get_mut(&mut self) -> &mut V {
+        &mut self.0.get_mut().value
+    }
+    /// Sets the value of the entry, and returns the entry’s old value.
+    pub fn insert(&mut self, value: V) -> V {
+        mem::replace(self.get_mut(), value)
+    }
+    /// Converts the `OccupiedEntry` into a mutable reference to the value in the entry
+    /// with a lifetime bound to the map itself.
+    pub fn into_mut(self) -> &'a mut V {
+        &mut self.0.into_mut().value
+    }
+    /// Gets a reference to the key in the entry.
+    pub fn key(&self) -> &K {
+        &self.0.get().key
+    }
+    /// Take the ownership of the key and value from the map.
+    pub fn remove_entry(self) -> (K, V) {
+        let (MapEntry {key, value}, _) = self.0.remove();
+        (key, value)
+    }
+    /// Takes the value out of the entry, and returns it.
+    pub fn remove(self) -> V {
+        self.remove_entry().1
+    }
+}
+
+impl<'a, K, V> Entry<'a, K, V> {
+    /// Provides in-place mutable access to an occupied entry before any potential inserts into the map.
+    pub fn and_modify(self, f: impl FnOnce(&mut V)) -> Self {
+        match self {
+            Entry::Vacant(entry) => Entry::Vacant(entry),
+            Entry::Occupied(mut entry) => {
+                f(entry.get_mut());
+                Entry::Occupied(entry)
+            }
+        }
+    }
+    /// Ensures a value is in the entry by inserting the default if empty, and returns a mutable reference to the value in the entry.
+    pub fn or_insert(self, default: V) -> &'a mut V {
+        match self {
+            Entry::Vacant(entry) => entry.insert(default),
+            Entry::Occupied(entry) => entry.into_mut(),
+        }
+    }
+    /// Sets the value of the entry, and returns an `OccupiedEntry`.
+    pub fn insert_entry(self, value: V) -> OccupiedEntry<'a, K, V> {
+        match self {
+            Entry::Vacant(entry) => entry.insert_entry(value),
+            Entry::Occupied(mut entry) => {
+                entry.insert(value);
+                entry
+            }
+        }
+    }
+    /// Ensures a value is in the entry by inserting the result of the default function if empty,
+    /// and returns a mutable reference to the value in the entry.
+    pub fn or_insert_with(self, default: impl FnOnce() -> V) -> &'a mut V {
+        match self {
+            Entry::Vacant(entry) => entry.insert(default()),
+            Entry::Occupied(entry) => entry.into_mut(),
+        }
+    }
+    /// Ensures a value is in the entry by inserting, if empty, the result of the default function.
+    /// This method allows for generating key-derived values for insertion by providing the default
+    /// function a reference to the key that was moved during the `.entry(key)` method call.
+    ///
+    /// The reference to the moved key is provided so that cloning or copying the key is
+    /// unnecessary, unlike with `.or_insert_with(|| ... )`.
+    pub fn or_insert_with_key(self, f: impl FnOnce(&K) -> V) -> &'a mut V {
+        match self {
+            Entry::Vacant(entry) => {
+                let value = f(entry.key());
+                entry.insert(value)
+            }
+            Entry::Occupied(entry) => entry.into_mut(),
+        }
+    }
+}
+
+impl<'a, K, V: Default> Entry<'a, K, V> {
+    /// Ensures a value is in the entry by inserting the default value if empty,
+    /// and returns a mutable reference to the value in the entry.
+    pub fn or_default(self) -> &'a mut V {
+        match self {
+            Entry::Vacant(entry) => entry.insert(Default::default()),
+            Entry::Occupied(entry) => entry.into_mut(),
+        }
     }
 }
 
@@ -498,15 +674,68 @@ impl<'a, K, V> ExactSizeIterator for MapIterMut<'a, K, V> {
     }
 }
 
-#[test]
-fn test_foo() {
-    use zwohash::ZwoHasher;
-    let mut foo: MapSeq<String, u32, BuildHasherDefault<ZwoHasher>> = Default::default();
-    let mut bar = foo.grow_for(3);
-    bar.insert("foo".to_string(), 100);
-    for (_, value) in bar.iter_mut() {
-        *value *= 2;
+impl<'a, K, V, S> IntoIterator for MapSeqMap<'a, K, V, S> {
+    type Item = (&'a K, &'a V);
+    type IntoIter = MapIter<'a, K, V>;
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
     }
-    bar.insert("bar".to_string(), 42);
-    println!("{:?}", foo);
+}
+
+impl<'a, K, V, S> IntoIterator for MapSeqMapMut<'a, K, V, S> {
+    type Item = (&'a K, &'a mut V);
+    type IntoIter = MapIterMut<'a, K, V>;
+    fn into_iter(self) -> Self::IntoIter {
+        MapIterMut {
+            inner: self.seq.tables.subtable_iter_mut(self.map)
+        }
+    }
+}
+
+impl<'a, K, V, S> Extend<(K, V)> for MapSeqMapMut<'a, K, V, S>
+where
+    K: Eq + Hash,
+    S: BuildHasher
+{
+    fn extend<T: IntoIterator<Item = (K, V)>>(&mut self, iter: T) {
+        for (k, v) in iter {
+            self.insert(k, v);
+        }
+    }
+}
+
+impl<'a, 'b, K, V, S> Extend<(&'b K, &'b V)> for MapSeqMapMut<'a, K, V, S>
+where
+    K: Eq + Hash + Copy,
+    V: Copy,
+    S: BuildHasher
+{
+    fn extend<T: IntoIterator<Item = (&'b K, &'b V)>>(&mut self, iter: T) {
+        for (k, v) in iter {
+            self.insert(*k, *v);
+        }
+    }
+}
+
+impl<'a, K, Q, V, S> std::ops::Index<&Q> for MapSeqMap<'a, K, V, S>
+where
+    K: Eq + Hash + Borrow<Q>,
+    S: BuildHasher,
+    Q: Eq + Hash
+{
+    type Output = V;
+
+    fn index(&self, index: &Q) -> &Self::Output {
+        self.get(index).expect("no entry found for key")
+    }
+}
+
+impl<'a, K, Q, V, S> std::ops::Index<&Q> for MapSeqMapMut<'a, K, V, S>
+    where K: Eq + Hash + Borrow<Q>, S: BuildHasher, Q: Eq + Hash
+{
+    type Output = V;
+
+    fn index(&self, index: &Q) -> &Self::Output {
+        self.get(index).expect("no entry found for key")
+    }
 }

@@ -14,14 +14,16 @@ mod iter;
 mod node;
 mod owned;
 mod table;
+mod entry;
 
 use chunk::{Chunk, EntryType, CHUNK_MASK, CHUNK_SHIFT, CHUNK_SIZE};
 use node::{NodeAllocator, NodeRef, SizeClass};
 use owned::OwnedSubtableSmall;
-use table::{SmallSubtable, Subtable};
+use table::{SmallSubtable, Subtable, SmallSubtableEntry, SmallSubtableOccupiedEntry, SmallSubtableVacantEntry};
 
 pub use iter::{SubtableIter, SubtableIterMut};
 pub use owned::OwnedSubtable;
+pub use entry::{Entry, VacantEntry, OccupiedEntry};
 
 /// Indexed sequence of low-level hash tables with explicit hashing.
 ///
@@ -88,7 +90,7 @@ impl<T> Default for TableSeq<T> {
 
 const ALLOCATOR_SHIFT: u32 = 20;
 
-/// Drop guard to preven exposing invalid entries on panics.
+/// Drop guard to prevent exposing invalid entries on panics.
 struct InvalidateChunkOnDrop<'a, T>(&'a mut Chunk<T>);
 
 impl<'a, T> Drop for InvalidateChunkOnDrop<'a, T> {
@@ -401,6 +403,7 @@ impl<T> TableSeq<T> {
                     self.entries += 1;
 
                     let found_pair = node.entry_ptr(entry_offset).cast::<[T; 2]>().read();
+                    let pair_hashes = [hasher(&found_pair[0]), hasher(&found_pair[1])];
                     let table_offset = chunk.meta.table_offset(chunk_slot);
 
                     node.close_entry_pair_gap_and_make_table_gap_resize(
@@ -414,7 +417,7 @@ impl<T> TableSeq<T> {
 
                     let table_alloc = &mut self.allocators[allocator_index ^ 1];
                     let (entry_ptr, table) =
-                        SmallSubtable::new(found_pair, value, hash, hasher, table_alloc);
+                        SmallSubtable::new(found_pair, pair_hashes, value, hash, table_alloc);
 
                     table_ptr.write(Subtable::Small(table));
                     chunk.meta.make_table(chunk_slot);
@@ -552,6 +555,7 @@ impl<T> TableSeq<T> {
                     let entry_offset = chunk.meta.entry_offset(chunk_slot);
 
                     let found_pair = node.entry_ptr(entry_offset).cast::<[T; 2]>().read();
+                    let pair_hashes = [hasher(&found_pair[0]), hasher(&found_pair[1])];
                     let table_offset = chunk.meta.table_offset(chunk_slot);
 
                     node.close_entry_pair_gap_and_make_table_gap_resize(
@@ -565,7 +569,7 @@ impl<T> TableSeq<T> {
 
                     let table_alloc = &mut self.allocators[allocator_index ^ 1];
                     let (entry_ptr, table) =
-                        SmallSubtable::new(found_pair, value, hash, hasher, table_alloc);
+                        SmallSubtable::new(found_pair, pair_hashes, value, hash, table_alloc);
 
                     table_ptr.write(Subtable::Small(table));
                     chunk.meta.make_table(chunk_slot);
@@ -852,9 +856,6 @@ impl<T> TableSeq<T> {
                     node.close_entry_gap_resize(entry_offset, chunk, chunk_alloc);
 
                     chunk.meta.make_single(chunk_slot);
-                    if chunk.meta.is_empty() {
-                        chunk_alloc.dealloc(chunk.node)
-                    }
                     Some(value)
                 }
                 EntryType::Table => {

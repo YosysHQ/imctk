@@ -116,5 +116,5 @@ pub mod map_seq;
 pub use set_seq::SetSeq;
 #[doc(inline)]
 pub use table_seq::TableSeq;
-
-// TODO Implement MapSeq on top of TableSeq
+#[doc(inline)]
+pub use map_seq::MapSeq;
