@@ -156,33 +156,23 @@ impl ops::Not for &'_ Pol {
     }
 }
 
+/// Subtrait of `ops::Not` and `ops::BitXor<Pol>` for types that support Boolean negation.
+///
+/// Types that implement `Negate` and `Clone` should also implement `Negate` for references.
 pub trait Negate:
     Sized
     + ops::Not<Output = <Self as Negate>::Negated>
     + ops::BitXor<Pol, Output = <Self as Negate>::Negated>
 {
     // Not called Output as that's ambiguous with the supertrait's Output
+    /// The common output type when invoking the `!` or `^` operator.
     type Negated;
-
-    #[inline(always)]
-    fn negate(self) -> <Self as Negate>::Negated
-    where
-        Self: Sized,
-    {
-        !self
-    }
-
-    #[inline(always)]
-    fn apply_pol(self, pol: Pol) -> <Self as Negate>::Negated {
-        self ^ pol
-    }
 }
 
+/// Subtrait of `Negate` and `ops::BitXorAssign<Pol>` for types that support in-place Boolean negation.
 pub trait NegateInPlace: Negate<Negated = Self> + ops::BitXorAssign<Pol> {
+    /// Performs `ops::Not::not` in-place.
     fn negate_in_place(&mut self);
-    fn apply_pol_in_place(&mut self, pol: Pol) {
-        *self ^= pol;
-    }
 }
 
 impl ops::BitXorAssign<Pol> for u64 {
@@ -196,14 +186,8 @@ impl Negate for u64 {
 }
 
 impl NegateInPlace for u64 {
-    #[inline(always)]
     fn negate_in_place(&mut self) {
         *self = !*self;
-    }
-
-    #[inline(always)]
-    fn apply_pol_in_place(&mut self, pol: Pol) {
-        *self ^= 0 ^ pol;
     }
 }
 

@@ -1,6 +1,8 @@
 //! Numeric identifiers for variables and Boolean literals
-#![allow(missing_docs, dead_code)] // FIXME prototyping
+mod lit;
+mod pol;
+mod var;
 
-pub mod lit;
-pub mod pol;
-pub mod var;
+pub use lit::Lit;
+pub use pol::{Negate, NegateInPlace, Pol};
+pub use var::Var;
