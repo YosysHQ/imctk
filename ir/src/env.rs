@@ -5,10 +5,7 @@ use imctk_ids::{id_vec::IdVec, Id, Id32};
 use imctk_transparent::{NewtypeCast, SubtypeCast};
 use imctk_util::give_take::Take;
 
-use crate::{
-    index::{DefsIndex, UsesIndex},
-    var::VarOrLit,
-};
+use crate::index::{DefsIndex, UsesIndex};
 
 use super::{
     index::{DynamicIndex, StructuralHashIndex},

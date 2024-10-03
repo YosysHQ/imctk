@@ -1,6 +1,6 @@
 //! Generic interface for adding equivalences, nodes and terms.
 
-use crate::var::{Lit, VarOrLit};
+use crate::var::Lit;
 use imctk_util::give_take::{give, Take};
 
 use super::generic::{DynNode, DynTerm, Node, Term};
@@ -14,7 +14,7 @@ pub trait NodeBuilder: NodeBuilderDyn {
     /// variable or literal.
     fn term<T: Term>(&mut self, term: T) -> T::Output {
         give!(term: DynTerm = term);
-        <T::Output as VarOrLit>::build_var_or_lit(self.dyn_term(term), |lit| lit.var(), |lit| lit)
+        self.dyn_term(term).try_into().unwrap()
     }
     /// Ensure the presence of the given node.
     fn node<T: Node>(&mut self, node: T) {
@@ -62,7 +62,7 @@ impl NodeBuilder for DynNodeBuilder {
 
         let lit = self.dyn_term(term);
 
-        <T::Output as VarOrLit>::build_var_or_lit(lit, |lit| lit.var(), |lit| lit)
+        T::Output::try_from(lit).unwrap()
     }
 
     fn node<T: Node>(&mut self, node: T) {

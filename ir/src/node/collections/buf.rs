@@ -14,7 +14,7 @@ use crate::{
         vtables::{DynNodeType, DynTermType, GenericNodeType, GenericTermType},
         NodeId,
     },
-    var::{Lit, Var, VarOrLit},
+    var::{Lit, Var},
 };
 
 #[derive(Clone, Copy, Debug)]
@@ -120,7 +120,7 @@ impl NodeBuilder for NodeBuf {
             self.nodes.insert(TermWrapper { term }).0,
         ));
 
-        <T::Output as VarOrLit>::build_var_or_lit(lit, |lit| lit.var(), |lit| lit)
+        T::Output::try_from(lit).unwrap()
     }
 
     fn node<T: Node>(&mut self, node: T) {

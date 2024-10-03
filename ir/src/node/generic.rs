@@ -10,7 +10,7 @@ use zwohash::ZwoHasher;
 
 use crate::{
     env::Env,
-    var::{Lit, Pol, Var, VarOrLit},
+    var::{Lit, Pol, Var},
 };
 
 use super::{
@@ -298,7 +298,15 @@ impl DynNode {
 /// Everything that is object-safe is part of the [`TermDyn`] supertrait.
 pub trait Term: Debug + Clone + Eq + Hash + TermDyn + 'static {
     /// Whether the output can be represented as a variable or can require a literal.
-    type Output: VarOrLit + 'static;
+    type Output: Into<Lit>
+        + From<Var>
+        + TryFrom<Lit, Error: Debug>
+        + Copy
+        + Ord
+        + Hash
+        + Debug
+        + Default
+        + 'static;
 
     /// A short name identifying the operation.
     const NAME: &'static str;
@@ -319,8 +327,7 @@ pub trait Term: Debug + Clone + Eq + Hash + TermDyn + 'static {
 
     /// Rewrites all variables in the term using a given mapping.
     #[must_use]
-    fn apply_var_map(&mut self, var_map: impl FnMut(Var) -> Lit)
-        -> <Self::Output as VarOrLit>::Pol;
+    fn apply_var_map(&mut self, var_map: impl FnMut(Var) -> Lit) -> Pol;
 
     /// Returns whether two [`Term`]s define the same value.
     ///
@@ -383,9 +390,7 @@ pub fn default_reduce_node<T: Term>(
     };
 
     if new_output != output {
-        builder.equiv(
-            [output, new_output].map(|x| x.process_var_or_lit(|var| var.as_lit(), |lit| lit)),
-        );
+        builder.equiv([output, new_output].map(|x| x.into()));
     }
 
     true
@@ -545,13 +550,11 @@ impl<T: Term> TermDynAuto for T {
 
     #[must_use]
     fn dyn_apply_var_map(&mut self, var_repr: &mut dyn FnMut(Var) -> Lit) -> Pol {
-        <T::Output as VarOrLit>::process_pol(self.apply_var_map(var_repr), || Pol::Pos, |pol| pol)
+        self.apply_var_map(var_repr)
     }
 
     fn dyn_reduce_into_buf(&mut self, buf: &mut NodeBuf) -> Option<Lit> {
-        self.reduce(buf).map(|output| {
-            <T::Output as VarOrLit>::process_var_or_lit(output, |var| var.as_lit(), |lit| lit)
-        })
+        self.reduce(buf).map(|output| output.into())
     }
 
     fn dyn_add_to_buf_with_var_map(
@@ -560,14 +563,8 @@ impl<T: Term> TermDynAuto for T {
         var_map: &mut dyn FnMut(Var) -> Lit,
     ) -> Lit {
         let mut clone = self.clone();
-        let pol = <<Self as Term>::Output>::process_pol(
-            clone.apply_var_map(var_map),
-            || Pol::Pos,
-            |pol| pol,
-        );
-        buf.term(clone)
-            .process_var_or_lit(|var| var.as_lit(), |lit| lit)
-            ^ pol
+        let pol = clone.apply_var_map(var_map);
+        buf.term(clone).into() ^ pol
     }
 
     fn dyn_add_to_env_with_var_map(
@@ -576,15 +573,9 @@ impl<T: Term> TermDynAuto for T {
         var_map: &mut dyn FnMut(Var) -> Lit,
     ) -> Lit {
         let mut clone = self.clone();
-        let pol = <<Self as Term>::Output>::process_pol(
-            clone.apply_var_map(var_map),
-            || Pol::Pos,
-            |pol| pol,
-        );
+        let pol = clone.apply_var_map(var_map);
 
-        env.term(clone)
-            .process_var_or_lit(|var| var.as_lit(), |lit| lit)
-            ^ pol
+        env.term(clone).into() ^ pol
     }
 }
 
@@ -733,26 +724,14 @@ impl<T: Term> Node for TermNode<T> {
     }
 
     fn apply_var_map(&mut self, mut var_map: impl FnMut(Var) -> Lit) {
-        let mut new_output_lit = self
-            .output
-            .process_var_or_lit(|var| var.as_lit(), |lit| lit)
-            .lookup(&mut var_map);
+        let mut new_output_lit = self.output.into().lookup(&mut var_map);
 
         let term_pol = self.term.apply_var_map(var_map);
 
-        new_output_lit ^= term_pol.into();
+        new_output_lit ^= term_pol;
 
-        let new_output = <T::Output>::build_var_or_lit(
-            new_output_lit,
-            |lit| {
-                assert!(
-                    lit.is_pos(),
-                    "Term output of non-Boolean type mapped to negative literal"
-                );
-                lit.var()
-            },
-            |lit| lit,
-        );
+        let new_output = T::Output::try_from(new_output_lit)
+            .expect("Term output of non-Boolean type mapped to negative literal");
 
         self.output = new_output
     }
@@ -772,20 +751,15 @@ impl<T: Term> NodeDyn for TermNode<T> {
     }
 
     fn output_var(&self) -> Option<Var> {
-        Some(self.output.process_var_or_lit(|var| var, |lit| lit.var()))
+        Some(self.output.into().var())
     }
 
     fn output_lit(&self) -> Option<Lit> {
-        Some(
-            self.output
-                .process_var_or_lit(|var| var.as_lit(), |lit| lit),
-        )
+        Some(self.output.into())
     }
 
     fn max_var(&self) -> Var {
-        self.output
-            .process_var_or_lit(|var| var, |lit| lit.var())
-            .max(self.term.max_var())
+        self.output.into().var().max(self.term.max_var())
     }
 
     fn dyn_term(&self) -> Option<&DynTerm> {
@@ -811,10 +785,8 @@ mod tests {
             [].into_iter()
         }
 
-        fn apply_var_map(
-            &mut self,
-            _var_map: impl FnMut(Var) -> Lit,
-        ) -> <Self::Output as VarOrLit>::Pol {
+        fn apply_var_map(&mut self, _var_map: impl FnMut(Var) -> Lit) -> Pol {
+            Pol::Pos
         }
     }
 
@@ -832,13 +804,11 @@ mod tests {
             [self.0].into_iter()
         }
 
-        fn apply_var_map(
-            &mut self,
-            mut var_map: impl FnMut(Var) -> Lit,
-        ) -> <Self::Output as VarOrLit>::Pol {
+        fn apply_var_map(&mut self, mut var_map: impl FnMut(Var) -> Lit) -> Pol {
             let var = var_map(self.0);
             assert!(var.is_pos());
             self.0 = var.var();
+            Pol::Pos
         }
     }
 
