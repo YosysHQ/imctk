@@ -208,15 +208,12 @@ impl<T> TestTableSeq<T> {
                 inserted_spec = true;
                 item.clone()
             });
-        self.under_test.entry(
-            subtable,
-            hash_ref(&item), 
-            |found| found == &item,
-            hash_ref
-        ).or_insert_with(|| {
-            inserted_dut = true;
-            item
-        });
+        self.under_test
+            .entry(subtable, hash_ref(&item), |found| found == &item, hash_ref)
+            .or_insert_with(|| {
+                inserted_dut = true;
+                item
+            });
         assert_eq!(inserted_spec, inserted_dut);
     }
 
@@ -224,8 +221,11 @@ impl<T> TestTableSeq<T> {
     where
         T: Hash + Eq + Debug,
     {
-        let removed = 
-            match self.under_test.entry(subtable, hash_ref(item), |found| found == item, hash_ref) {
+        let removed =
+            match self
+                .under_test
+                .entry(subtable, hash_ref(item), |found| found == item, hash_ref)
+            {
                 table_seq::table_seq::Entry::Occupied(entry) => Some(entry.remove().0),
                 table_seq::table_seq::Entry::Vacant(_) => None,
             };
@@ -238,7 +238,6 @@ impl<T> TestTableSeq<T> {
             }
         }
     }
-
 }
 
 #[derive(Clone, Copy, Debug)]

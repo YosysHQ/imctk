@@ -28,7 +28,10 @@ enum OccupiedEntryKind<'a, T> {
     // On both SmallTable and LargeTable the `bool` is true iff the OccupiedEntry is the only entry in the table.
     SmallTable(SmallSubtableOccupiedEntry<'a, T>, bool),
     // We need MaybeUninit here because we may deallocate the HashTable, at which point the OccupiedEntry becomes invalid.
-    LargeTable(MaybeUninit<hashbrown::hash_table::OccupiedEntry<'a, T>>, bool),
+    LargeTable(
+        MaybeUninit<hashbrown::hash_table::OccupiedEntry<'a, T>>,
+        bool,
+    ),
 }
 
 /// A view into an occupied entry in a [`TableSeq`]'s subtable.
@@ -56,9 +59,9 @@ impl<T> TableSeq<T> {
     ///
     /// If there are existing entries with the hash value and `eq` returns true for one of them, an OccupiedEntry referring to that entry is returned.
     /// Otherwise, a VacantEntry is returned.
-    /// 
+    ///
     /// `eq` may be called on any entries in the given subtable, but is never called on entries from other subtables.
-    /// 
+    ///
     /// If VacantEntry is returned, `entry` may resize the subtable to prepare for insertion.
     /// In that case, `hasher` is called on all entries in the subtable to recompute their hash values.
     /// It will never be called on entries from another subtable.
@@ -87,7 +90,7 @@ impl<T> TableSeq<T> {
                 return Entry::Vacant(VacantEntry {
                     tables: self,
                     subtable,
-                    kind: VacantEntryKind::EmptyChunk
+                    kind: VacantEntryKind::EmptyChunk,
                 });
             }
 
@@ -96,7 +99,7 @@ impl<T> TableSeq<T> {
                     return Entry::Vacant(VacantEntry {
                         tables: self,
                         subtable,
-                        kind: VacantEntryKind::EmptyTable
+                        kind: VacantEntryKind::EmptyTable,
                     });
                 }
                 EntryType::Single => {
@@ -109,13 +112,13 @@ impl<T> TableSeq<T> {
                             tables: self,
                             subtable,
                             entry_ptr: found_entry_ptr,
-                            kind: OccupiedEntryKind::SingletonTable
+                            kind: OccupiedEntryKind::SingletonTable,
                         })
                     } else {
                         Entry::Vacant(VacantEntry {
                             tables: self,
                             subtable,
-                            kind: VacantEntryKind::SingletonTable
+                            kind: VacantEntryKind::SingletonTable,
                         })
                     }
                 }
@@ -130,7 +133,7 @@ impl<T> TableSeq<T> {
                                 tables: self,
                                 subtable,
                                 entry_ptr: found_entry_ptr,
-                                kind: OccupiedEntryKind::PairTable(i)
+                                kind: OccupiedEntryKind::PairTable(i),
                             });
                         }
                     }
@@ -139,7 +142,7 @@ impl<T> TableSeq<T> {
                     Entry::Vacant(VacantEntry {
                         tables: self,
                         subtable,
-                        kind: VacantEntryKind::PairTable(hash, [hash0, hash1])
+                        kind: VacantEntryKind::PairTable(hash, [hash0, hash1]),
                     })
                 }
                 EntryType::Table => {
@@ -151,19 +154,24 @@ impl<T> TableSeq<T> {
                         Subtable::Large(table) => {
                             let is_single = table.len() == 1;
                             match table.entry(hash, eq, hasher) {
-                                hashbrown::hash_table::Entry::Occupied(mut entry) =>
+                                hashbrown::hash_table::Entry::Occupied(mut entry) => {
                                     Entry::Occupied(OccupiedEntry {
                                         tables: self,
                                         subtable,
                                         entry_ptr: &mut *entry.get_mut(),
-                                        kind: OccupiedEntryKind::LargeTable(MaybeUninit::new(entry), is_single)
-                                    }),
-                                hashbrown::hash_table::Entry::Vacant(entry) =>
+                                        kind: OccupiedEntryKind::LargeTable(
+                                            MaybeUninit::new(entry),
+                                            is_single,
+                                        ),
+                                    })
+                                }
+                                hashbrown::hash_table::Entry::Vacant(entry) => {
                                     Entry::Vacant(VacantEntry {
                                         tables: self,
                                         subtable,
-                                        kind: VacantEntryKind::LargeTable(entry)
-                                    }),
+                                        kind: VacantEntryKind::LargeTable(entry),
+                                    })
+                                }
                             }
                         }
                         Subtable::Small(int_table) => {
@@ -171,19 +179,19 @@ impl<T> TableSeq<T> {
                             let is_single = int_table.len() == 1;
 
                             match int_table.entry(hash, eq, table_alloc) {
-                                SmallSubtableEntry::Occupied(mut entry) => 
+                                SmallSubtableEntry::Occupied(mut entry) => {
                                     Entry::Occupied(OccupiedEntry {
                                         tables: self,
                                         subtable,
                                         entry_ptr: &mut *entry.get_mut(),
-                                        kind: OccupiedEntryKind::SmallTable(entry, is_single)
-                                    }),
-                                SmallSubtableEntry::Vacant(entry) =>
-                                    Entry::Vacant(VacantEntry {
-                                        tables: self,
-                                        subtable,
-                                        kind: VacantEntryKind::SmallTable(entry)
-                                    }),
+                                        kind: OccupiedEntryKind::SmallTable(entry, is_single),
+                                    })
+                                }
+                                SmallSubtableEntry::Vacant(entry) => Entry::Vacant(VacantEntry {
+                                    tables: self,
+                                    subtable,
+                                    kind: VacantEntryKind::SmallTable(entry),
+                                }),
                                 SmallSubtableEntry::FullTable(int_table) => {
                                     let mut hash_table = HashTable::with_capacity(CHUNK_SIZE * 2);
                                     int_table.drain_and_dealloc_with(
@@ -200,16 +208,20 @@ impl<T> TableSeq<T> {
 
                                     // SAFETY: int_table has been drained and invalidated, we can just overwrite it
                                     table_ptr.write(Subtable::Large(hash_table));
-                                    let Some(Subtable::Large(hash_table)) = table_ptr.as_mut() else {
+                                    let Some(Subtable::Large(hash_table)) = table_ptr.as_mut()
+                                    else {
                                         unreachable!();
                                     };
 
-                                    let hashbrown::hash_table::Entry::Vacant(new_entry) = hash_table.entry(hash, |_| false, &hasher)
-                                        else { unreachable!() };
+                                    let hashbrown::hash_table::Entry::Vacant(new_entry) =
+                                        hash_table.entry(hash, |_| false, &hasher)
+                                    else {
+                                        unreachable!()
+                                    };
                                     Entry::Vacant(VacantEntry {
                                         tables: self,
                                         subtable,
-                                        kind: VacantEntryKind::LargeTable(new_entry)
+                                        kind: VacantEntryKind::LargeTable(new_entry),
                                     })
                                 }
                             }
@@ -223,13 +235,17 @@ impl<T> TableSeq<T> {
 
 impl<'a, T> VacantEntry<'a, T> {
     /// Inserts an entry into the subtable at the hash value corresponding to the `VacantEntry`.
-    /// 
+    ///
     /// If `value` does not hash to that hash value, the table is left in an indeterminate, but memory-safe state.
     pub fn insert(self, value: T) -> OccupiedEntry<'a, T> {
         // SAFETY: all relevant preconditions hold by construction
         // TODO reduce unsafe scope and go into more detail
         unsafe {
-            let VacantEntry { tables, subtable, kind } = self;
+            let VacantEntry {
+                tables,
+                subtable,
+                kind,
+            } = self;
             let chunk_slot = (self.subtable & CHUNK_MASK) as u32;
             let chunk_index = self.subtable >> CHUNK_SHIFT;
             let allocator_index = self.subtable >> ALLOCATOR_SHIFT;
@@ -251,7 +267,7 @@ impl<'a, T> VacantEntry<'a, T> {
                         entry_ptr,
                         kind: OccupiedEntryKind::SingletonTable,
                     }
-                },
+                }
                 VacantEntryKind::EmptyTable => {
                     (*tables).entries += 1;
                     let mut node = chunk.node(chunk_alloc);
@@ -269,7 +285,7 @@ impl<'a, T> VacantEntry<'a, T> {
                         entry_ptr,
                         kind: OccupiedEntryKind::SingletonTable,
                     }
-                },
+                }
                 VacantEntryKind::SingletonTable => {
                     let mut node = chunk.node(chunk_alloc);
                     let entry_offset = chunk.meta.entry_offset(chunk_slot);
@@ -287,7 +303,7 @@ impl<'a, T> VacantEntry<'a, T> {
                         entry_ptr,
                         kind: OccupiedEntryKind::PairTable(0),
                     }
-                },
+                }
                 VacantEntryKind::PairTable(hash, pair_hashes) => {
                     let mut node = chunk.node(chunk_alloc);
                     let entry_offset = chunk.meta.entry_offset(chunk_slot);
@@ -312,16 +328,20 @@ impl<'a, T> VacantEntry<'a, T> {
                     table_ptr.write(Subtable::Small(table));
                     chunk.meta.make_table(chunk_slot);
 
-                    let Subtable::Small(table) = table_ptr.as_mut().unwrap()
-                        else { unreachable!() };
+                    let Subtable::Small(table) = table_ptr.as_mut().unwrap() else {
+                        unreachable!()
+                    };
 
                     OccupiedEntry {
                         tables,
                         subtable,
                         entry_ptr,
-                        kind: OccupiedEntryKind::SmallTable(SmallSubtableOccupiedEntry::from_entry_ptr(table, entry_ptr), false)
+                        kind: OccupiedEntryKind::SmallTable(
+                            SmallSubtableOccupiedEntry::from_entry_ptr(table, entry_ptr),
+                            false,
+                        ),
                     }
-                },
+                }
                 VacantEntryKind::SmallTable(vacant_entry) => {
                     let table_alloc = &mut (*tables).allocators[allocator_index ^ 1];
                     let mut new_entry = vacant_entry.insert(value, table_alloc);
@@ -330,9 +350,9 @@ impl<'a, T> VacantEntry<'a, T> {
                         tables,
                         subtable,
                         entry_ptr: &mut *new_entry.get_mut(),
-                        kind: OccupiedEntryKind::SmallTable(new_entry, false)
+                        kind: OccupiedEntryKind::SmallTable(new_entry, false),
                     }
-                },
+                }
                 VacantEntryKind::LargeTable(vacant_entry) => {
                     let mut new_entry = vacant_entry.insert(value);
                     (*tables).entries += 1;
@@ -340,9 +360,9 @@ impl<'a, T> VacantEntry<'a, T> {
                         tables,
                         subtable,
                         entry_ptr: &mut *new_entry.get_mut(),
-                        kind: OccupiedEntryKind::LargeTable(MaybeUninit::new(new_entry), false)
+                        kind: OccupiedEntryKind::LargeTable(MaybeUninit::new(new_entry), false),
                     }
-                },
+                }
             }
         }
     }
@@ -388,7 +408,12 @@ impl<'a, T> OccupiedEntry<'a, T> {
         // SAFETY: all relevant preconditions hold by construction
         // TODO reduce unsafe scope and go into more detail
         unsafe {
-            let OccupiedEntry { tables, subtable, entry_ptr, kind } = self;
+            let OccupiedEntry {
+                tables,
+                subtable,
+                entry_ptr,
+                kind,
+            } = self;
             let chunk_slot = (subtable & CHUNK_MASK) as u32;
             let chunk_index = subtable >> CHUNK_SHIFT;
             let allocator_index = subtable >> ALLOCATOR_SHIFT;
@@ -413,8 +438,15 @@ impl<'a, T> OccupiedEntry<'a, T> {
                     } else {
                         VacantEntryKind::EmptyTable
                     };
-                    (value, VacantEntry { tables, subtable, kind })
-                },
+                    (
+                        value,
+                        VacantEntry {
+                            tables,
+                            subtable,
+                            kind,
+                        },
+                    )
+                }
                 OccupiedEntryKind::PairTable(index) => {
                     let mut node = chunk.node(chunk_alloc);
                     let entry_offset = chunk.meta.entry_offset(chunk_slot) + index;
@@ -425,8 +457,15 @@ impl<'a, T> OccupiedEntry<'a, T> {
                     node.close_entry_gap_resize(entry_offset, chunk, chunk_alloc);
 
                     chunk.meta.make_single(chunk_slot);
-                    (value, VacantEntry { tables, subtable, kind: VacantEntryKind::SingletonTable })
-                },
+                    (
+                        value,
+                        VacantEntry {
+                            tables,
+                            subtable,
+                            kind: VacantEntryKind::SingletonTable,
+                        },
+                    )
+                }
                 OccupiedEntryKind::SmallTable(entry, will_delete) => {
                     let mut node = chunk.node(chunk_alloc);
                     let table_alloc = &mut (*tables).allocators[allocator_index ^ 1];
@@ -438,8 +477,7 @@ impl<'a, T> OccupiedEntry<'a, T> {
                         let table = entry.into_table();
                         let table_offset = chunk.meta.table_offset(chunk_slot);
                         table.drop_and_dealloc(table_alloc);
-                        let chunk_alloc =
-                            (*tables).allocators.get_unchecked_mut(allocator_index);
+                        let chunk_alloc = (*tables).allocators.get_unchecked_mut(allocator_index);
                         node.close_table_gap_resize(table_offset, chunk, chunk_alloc);
                         chunk.meta.make_empty(chunk_slot);
                         if chunk.meta.is_empty() {
@@ -451,8 +489,15 @@ impl<'a, T> OccupiedEntry<'a, T> {
                     } else {
                         VacantEntryKind::SmallTable(entry)
                     };
-                    (removed, VacantEntry { tables, subtable, kind })
-                },
+                    (
+                        removed,
+                        VacantEntry {
+                            tables,
+                            subtable,
+                            kind,
+                        },
+                    )
+                }
                 OccupiedEntryKind::LargeTable(entry, will_delete) => {
                     (*tables).entries -= 1;
                     let (removed, entry) = entry.assume_init().remove();
@@ -464,11 +509,7 @@ impl<'a, T> OccupiedEntry<'a, T> {
                         let table_offset = chunk.meta.table_offset(chunk_slot);
                         let table_ptr = node.table_ptr(table_offset);
                         table_ptr.drop_in_place();
-                        node.close_table_gap_resize(
-                            table_offset,
-                            chunk,
-                            chunk_alloc,
-                        );
+                        node.close_table_gap_resize(table_offset, chunk, chunk_alloc);
                         chunk.meta.make_empty(chunk_slot);
                         if chunk.meta.is_empty() {
                             chunk_alloc.dealloc(chunk.node);
@@ -479,8 +520,15 @@ impl<'a, T> OccupiedEntry<'a, T> {
                     } else {
                         VacantEntryKind::LargeTable(entry)
                     };
-                    (removed, VacantEntry { tables, subtable, kind })
-                },
+                    (
+                        removed,
+                        VacantEntry {
+                            tables,
+                            subtable,
+                            kind,
+                        },
+                    )
+                }
             }
         }
     }
@@ -502,7 +550,7 @@ impl<'a, T> Entry<'a, T> {
         }
     }
     /// Inserts an entry into the subtable at the hash value corresponding to the `Entry`, overwriting any existing value.
-    /// 
+    ///
     /// If `value` does not hash to that hash value, the table is left in an indeterminate, but memory-safe state.
     pub fn insert(self, value: T) -> OccupiedEntry<'a, T> {
         match self {
@@ -510,7 +558,7 @@ impl<'a, T> Entry<'a, T> {
             Entry::Occupied(mut entry) => {
                 *entry.get_mut() = value;
                 entry
-            },
+            }
         }
     }
     /// Ensures a value is in the entry by inserting the default if empty, and returns an `OccupiedEntry`.

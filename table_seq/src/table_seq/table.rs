@@ -257,18 +257,18 @@ impl<T> SmallSubtable<T> {
             if eq(unsafe { &*entry_ptr }) {
                 return SmallSubtableEntry::Occupied(SmallSubtableOccupiedEntry {
                     table: self,
-                    entry_ptr
-                })
+                    entry_ptr,
+                });
             }
         }
 
         if self.len() == SMALL_SUBTABLE_CAPACITY {
-            return SmallSubtableEntry::FullTable(self)
+            return SmallSubtableEntry::FullTable(self);
         } else {
             return SmallSubtableEntry::Vacant(SmallSubtableVacantEntry {
                 table: self,
-                byte_hash
-            })
+                byte_hash,
+            });
         }
     }
 
@@ -509,12 +509,12 @@ impl<T> SmallSubtable<T> {
 
 pub struct SmallSubtableOccupiedEntry<'a, T> {
     table: &'a mut SmallSubtable<T>,
-    entry_ptr: *mut T
+    entry_ptr: *mut T,
 }
 
 pub struct SmallSubtableVacantEntry<'a, T> {
     table: &'a mut SmallSubtable<T>,
-    byte_hash: u8
+    byte_hash: u8,
 }
 
 pub enum SmallSubtableEntry<'a, T> {
@@ -529,7 +529,11 @@ impl<'a, T> SmallSubtableVacantEntry<'a, T> {
     }
     // # Safety
     // The referenced subtable must be alive in this allocator, i.e. allocated but not yet deallocated
-    pub unsafe fn insert(self, value: T, allocator: &mut NodeAllocator<T>) -> SmallSubtableOccupiedEntry<'a, T> {
+    pub unsafe fn insert(
+        self,
+        value: T,
+        allocator: &mut NodeAllocator<T>,
+    ) -> SmallSubtableOccupiedEntry<'a, T> {
         let SmallSubtableVacantEntry { table, byte_hash } = self;
 
         // SAFETY: we require our node to be alive in the given allocator
@@ -586,14 +590,14 @@ impl<'a, T> SmallSubtableOccupiedEntry<'a, T> {
     }
     // SAFETY: entry_ptr has to be a valid pointer in the table
     pub unsafe fn from_entry_ptr(table: &'a mut SmallSubtable<T>, entry_ptr: *mut T) -> Self {
-        SmallSubtableOccupiedEntry {
-            table,
-            entry_ptr
-        }
+        SmallSubtableOccupiedEntry { table, entry_ptr }
     }
     // # Safety
     // The referenced subtable must be alive in this allocator, i.e. allocated but not yet deallocated
-    pub unsafe fn remove(self, allocator: &mut NodeAllocator<T>) -> (T, SmallSubtableVacantEntry<'a, T>) {
+    pub unsafe fn remove(
+        self,
+        allocator: &mut NodeAllocator<T>,
+    ) -> (T, SmallSubtableVacantEntry<'a, T>) {
         let SmallSubtableOccupiedEntry { table, entry_ptr } = self;
         // SAFETY: guaranteed by caller
         let node_ptr = unsafe { allocator.ptr(table.node) };

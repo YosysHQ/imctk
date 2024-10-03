@@ -10,20 +10,23 @@ use hashbrown::HashTable;
 use crate::node_allocator::AllocatorClass;
 
 mod chunk;
+mod entry;
 mod iter;
 mod node;
 mod owned;
 mod table;
-mod entry;
 
 use chunk::{Chunk, EntryType, CHUNK_MASK, CHUNK_SHIFT, CHUNK_SIZE};
 use node::{NodeAllocator, NodeRef, SizeClass};
 use owned::OwnedSubtableSmall;
-use table::{SmallSubtable, Subtable, SmallSubtableEntry, SmallSubtableOccupiedEntry, SmallSubtableVacantEntry};
+use table::{
+    SmallSubtable, SmallSubtableEntry, SmallSubtableOccupiedEntry, SmallSubtableVacantEntry,
+    Subtable,
+};
 
+pub use entry::{Entry, OccupiedEntry, VacantEntry};
 pub use iter::{SubtableIter, SubtableIterMut};
 pub use owned::OwnedSubtable;
-pub use entry::{Entry, VacantEntry, OccupiedEntry};
 
 /// Indexed sequence of low-level hash tables with explicit hashing.
 ///

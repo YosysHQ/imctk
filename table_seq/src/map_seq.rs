@@ -1,7 +1,11 @@
 //! Indexed sequence of hash maps and associated helper types.
-use core::fmt;
-use std::{borrow::Borrow, hash::{BuildHasher, Hash}, mem};
 use crate::table_seq::{self, SubtableIter, SubtableIterMut, TableSeq};
+use core::fmt;
+use std::{
+    borrow::Borrow,
+    hash::{BuildHasher, Hash},
+    mem,
+};
 
 struct MapEntry<K, V> {
     key: K,
@@ -169,14 +173,13 @@ impl<K: Eq + Hash, V, S: BuildHasher> MapSeq<K, V, S> {
 
     fn map_insert(&mut self, map: usize, key: K, value: V) -> Option<V> {
         let hash = self.build_hasher.hash_one(&key);
-        let (entry, returned_value) = self.tables
-            .insert(
-                map,
-                hash,
-                MapEntry { key, value },
-                |found, inserting| found.key == inserting.key,
-                |found| self.build_hasher.hash_one(&found.key),
-            );
+        let (entry, returned_value) = self.tables.insert(
+            map,
+            hash,
+            MapEntry { key, value },
+            |found, inserting| found.key == inserting.key,
+            |found| self.build_hasher.hash_one(&found.key),
+        );
         returned_value.map(|MapEntry { value, .. }| mem::replace(&mut entry.value, value))
     }
 
@@ -199,12 +202,12 @@ impl<K: Eq + Hash, V, S: BuildHasher> MapSeq<K, V, S> {
 
     fn map_entry(&mut self, map: usize, key: K) -> Entry<'_, K, V> {
         let hash = self.build_hasher.hash_one(&key);
-        match self.tables
-            .entry(
-                    map,
-                    hash, 
-                    |found| found.key == key,
-                    |found| self.build_hasher.hash_one(&found.key)) {
+        match self.tables.entry(
+            map,
+            hash,
+            |found| found.key == key,
+            |found| self.build_hasher.hash_one(&found.key),
+        ) {
             table_seq::Entry::Occupied(entry) => Entry::Occupied(OccupiedEntry(entry)),
             table_seq::Entry::Vacant(entry) => Entry::Vacant(VacantEntry(entry, key)),
         }
@@ -231,7 +234,7 @@ impl<'a, K, V, S> Clone for MapSeqMap<'a, K, V, S> {
     }
 }
 
-impl<'a, K, V, S> Copy for MapSeqMap<'a, K, V, S> { }
+impl<'a, K, V, S> Copy for MapSeqMap<'a, K, V, S> {}
 
 impl<'a, K, V, S> std::ops::Deref for MapSeqMapMut<'a, K, V, S> {
     type Target = MapSeqMap<'a, K, V, S>;
@@ -311,7 +314,7 @@ impl<'a, K, V, S> MapSeqMapMut<'a, K, V, S> {
     pub fn reborrow(&mut self) -> MapSeqMapMut<'_, K, V, S> {
         MapSeqMapMut {
             seq: self.seq,
-            map: self.map
+            map: self.map,
         }
     }
 }
@@ -334,7 +337,9 @@ impl<'a, K: Eq + Hash, V, S: BuildHasher> MapSeqMap<'a, K, V, S> {
         K: Borrow<Q>,
         Q: Hash + Eq + ?Sized,
     {
-        self.seq.map_get_key_value(self.map, key).map(|(_, value)| value)
+        self.seq
+            .map_get_key_value(self.map, key)
+            .map(|(_, value)| value)
     }
 
     /// Returns a reference to the key-value pair corresponding to the given key.
@@ -376,7 +381,9 @@ impl<'a, K: Eq + Hash, V, S: BuildHasher> MapSeqMapMut<'a, K, V, S> {
         K: Borrow<Q>,
         Q: Hash + Eq + ?Sized,
     {
-        self.seq.map_remove_entry(self.map, key).map(|(_, value)| value)
+        self.seq
+            .map_remove_entry(self.map, key)
+            .map(|(_, value)| value)
     }
 
     /// Removes a key from the map, returning the stored key and value if the key was previously in the map.
@@ -460,7 +467,7 @@ impl<'a, K, V> OccupiedEntry<'a, K, V> {
     }
     /// Take the ownership of the key and value from the map.
     pub fn remove_entry(self) -> (K, V) {
-        let (MapEntry {key, value}, _) = self.0.remove();
+        let (MapEntry { key, value }, _) = self.0.remove();
         (key, value)
     }
     /// Takes the value out of the entry, and returns it.
@@ -568,7 +575,6 @@ impl<'a, K, V> ExactSizeIterator for MapIter<'a, K, V> {
     }
 }
 
-
 /// Iterator yielding references to a map's keys.
 pub struct MapKeys<'a, K, V> {
     inner: SubtableIter<'a, MapEntry<K, V>>,
@@ -658,7 +664,9 @@ impl<'a, K, V> Iterator for MapIterMut<'a, K, V> {
 
     #[inline(always)]
     fn next(&mut self) -> Option<Self::Item> {
-        self.inner.next().map(|entry| (&entry.key, &mut entry.value))
+        self.inner
+            .next()
+            .map(|entry| (&entry.key, &mut entry.value))
     }
 
     #[inline(always)]
@@ -687,7 +695,7 @@ impl<'a, K, V, S> IntoIterator for MapSeqMapMut<'a, K, V, S> {
     type IntoIter = MapIterMut<'a, K, V>;
     fn into_iter(self) -> Self::IntoIter {
         MapIterMut {
-            inner: self.seq.tables.subtable_iter_mut(self.map)
+            inner: self.seq.tables.subtable_iter_mut(self.map),
         }
     }
 }
@@ -695,7 +703,7 @@ impl<'a, K, V, S> IntoIterator for MapSeqMapMut<'a, K, V, S> {
 impl<'a, K, V, S> Extend<(K, V)> for MapSeqMapMut<'a, K, V, S>
 where
     K: Eq + Hash,
-    S: BuildHasher
+    S: BuildHasher,
 {
     fn extend<T: IntoIterator<Item = (K, V)>>(&mut self, iter: T) {
         for (k, v) in iter {
@@ -708,7 +716,7 @@ impl<'a, 'b, K, V, S> Extend<(&'b K, &'b V)> for MapSeqMapMut<'a, K, V, S>
 where
     K: Eq + Hash + Copy,
     V: Copy,
-    S: BuildHasher
+    S: BuildHasher,
 {
     fn extend<T: IntoIterator<Item = (&'b K, &'b V)>>(&mut self, iter: T) {
         for (k, v) in iter {
@@ -721,7 +729,7 @@ impl<'a, K, Q, V, S> std::ops::Index<&Q> for MapSeqMap<'a, K, V, S>
 where
     K: Eq + Hash + Borrow<Q>,
     S: BuildHasher,
-    Q: Eq + Hash
+    Q: Eq + Hash,
 {
     type Output = V;
 
@@ -731,7 +739,10 @@ where
 }
 
 impl<'a, K, Q, V, S> std::ops::Index<&Q> for MapSeqMapMut<'a, K, V, S>
-    where K: Eq + Hash + Borrow<Q>, S: BuildHasher, Q: Eq + Hash
+where
+    K: Eq + Hash + Borrow<Q>,
+    S: BuildHasher,
+    Q: Eq + Hash,
 {
     type Output = V;
 
