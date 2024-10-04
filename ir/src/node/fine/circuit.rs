@@ -129,10 +129,7 @@ impl Term for Xor {
         self.inputs.into_iter()
     }
 
-    fn apply_var_map(
-        &mut self,
-        mut var_map: impl FnMut(Var) -> Lit,
-    ) -> <Self::Output as crate::var::VarOrLit>::Pol {
+    fn apply_var_map(&mut self, mut var_map: impl FnMut(Var) -> Lit) -> Pol {
         let mut composed_pol = Pol::Pos;
         self.inputs = self.inputs.map(|var| {
             let mapped = var_map(var);

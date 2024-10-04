@@ -15,6 +15,7 @@ members = [
     "inc_refine",
     "extract",
     "imctk",
+    "lit",
 
     # comment to force multi-line layout
 ]

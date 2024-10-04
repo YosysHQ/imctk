@@ -236,8 +236,8 @@ impl RawEnvNodes {
             .find_term(&self.0.nodes, &term)
         {
             if def_mode.is_when_acyclic() {
-                let output_var =
-                    <T::Output>::process_var_or_lit(output, |var| var, |lit| lit.var());
+                let output_var = output.into().var();
+
                 let encoded_var_repr = &self.0.var_defs.var_defs[output_var];
 
                 let old_level_bound = encoded_var_repr.level_bound();
@@ -257,7 +257,7 @@ impl RawEnvNodes {
         }
 
         let (new_var, _) = self.0.var_defs.var_defs.push(EncodedVarDef::default());
-        let output = <T::Output>::build_var_or_lit(new_var, |var| var, |var| var.as_lit());
+        let output = T::Output::from(new_var);
 
         let (node_id, _) = self.insert_unique_irreducible_node(def_mode, TermNode { output, term });
 
@@ -483,12 +483,16 @@ impl NodeBuilder for Env {
         let pol = term.apply_var_map(|var| self.var_defs.update_lit_repr(var.as_lit()));
 
         if let Some(output) = term.reduce(self) {
-            return output ^ pol;
+            return T::Output::try_from(output.into() ^ pol).unwrap();
         }
 
-        self.raw_nodes()
-            .insert_irreducible_term(DefMode::WhenMissing, term)
-            ^ pol
+        T::Output::try_from(
+            self.raw_nodes()
+                .insert_irreducible_term(DefMode::WhenMissing, term)
+                .into()
+                ^ pol,
+        )
+        .unwrap()
     }
 
     fn node<T: Node>(&mut self, mut node: T) {
@@ -571,13 +575,17 @@ impl NodeBuilder for DefBuilder {
         let pol = term.apply_var_map(|var| self.0.var_defs.update_lit_repr(var.as_lit()));
 
         if let Some(output) = term.reduce(self) {
-            return output ^ pol;
+            return T::Output::try_from(output.into() ^ pol).unwrap();
         }
 
-        self.0
-            .raw_nodes()
-            .insert_irreducible_term(DefMode::WhenAcyclic, term)
-            ^ pol
+        T::Output::try_from(
+            self.0
+                .raw_nodes()
+                .insert_irreducible_term(DefMode::WhenAcyclic, term)
+                .into()
+                ^ pol,
+        )
+        .unwrap()
     }
 
     fn node<T: Node>(&mut self, mut node: T) {

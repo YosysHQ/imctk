@@ -6,10 +6,7 @@ use std::{
     ops::Deref,
 };
 
-use crate::{
-    var::{Lit, VarOrLit},
-    wide_ptr::WidePtr,
-};
+use crate::{var::Lit, wide_ptr::WidePtr};
 
 use super::{
     collections::nodes::Nodes,
@@ -177,7 +174,7 @@ impl TermTypeVTable {
                 |output: Lit, term_ptr: *mut u8, callback: &mut dyn FnMut(*mut u8)| {
                     let term_ptr = term_ptr as *mut T;
                     let mut term_node = ManuallyDrop::new(TermNode {
-                        output: VarOrLit::build_var_or_lit(output, |lit| lit.var(), |lit| lit),
+                        output: output.try_into().unwrap(),
                         term: term_ptr.read(),
                     });
                     callback(&mut term_node as *mut ManuallyDrop<TermNode<T>> as *mut u8);
