@@ -228,13 +228,13 @@ pub struct MapSeqMap<'a, K, V, S> {
     map: usize,
 }
 
-impl<'a, K, V, S> Clone for MapSeqMap<'a, K, V, S> {
+impl<K, V, S> Clone for MapSeqMap<'_, K, V, S> {
     fn clone(&self) -> Self {
         *self
     }
 }
 
-impl<'a, K, V, S> Copy for MapSeqMap<'a, K, V, S> {}
+impl<K, V, S> Copy for MapSeqMap<'_, K, V, S> {}
 
 impl<'a, K, V, S> std::ops::Deref for MapSeqMapMut<'a, K, V, S> {
     type Target = MapSeqMap<'a, K, V, S>;
@@ -246,13 +246,13 @@ impl<'a, K, V, S> std::ops::Deref for MapSeqMapMut<'a, K, V, S> {
     }
 }
 
-impl<'a, K: fmt::Debug, V: fmt::Debug, S> fmt::Debug for MapSeqMap<'a, K, V, S> {
+impl<K: fmt::Debug, V: fmt::Debug, S> fmt::Debug for MapSeqMap<'_, K, V, S> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_set().entries(self.iter()).finish()
     }
 }
 
-impl<'a, K: fmt::Debug, V: fmt::Debug, S> fmt::Debug for MapSeqMapMut<'a, K, V, S> {
+impl<K: fmt::Debug, V: fmt::Debug, S> fmt::Debug for MapSeqMapMut<'_, K, V, S> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_set().entries(self.iter()).finish()
     }
@@ -296,7 +296,7 @@ impl<'a, K, V, S> MapSeqMap<'a, K, V, S> {
     }
 }
 
-impl<'a, K, V, S> MapSeqMapMut<'a, K, V, S> {
+impl<K, V, S> MapSeqMapMut<'_, K, V, S> {
     /// Discards all elements of the map.
     #[inline(always)]
     pub fn clear(&mut self) {
@@ -319,7 +319,7 @@ impl<'a, K, V, S> MapSeqMapMut<'a, K, V, S> {
     }
 }
 
-impl<'a, K: Eq + Hash, V, S: BuildHasher> MapSeqMap<'a, K, V, S> {
+impl<K: Eq + Hash, V, S: BuildHasher> MapSeqMap<'_, K, V, S> {
     /// Returns `true` if the map contains an element for the given key.
     #[inline(always)]
     pub fn contains_key<Q>(&self, key: &Q) -> bool
@@ -353,7 +353,7 @@ impl<'a, K: Eq + Hash, V, S: BuildHasher> MapSeqMap<'a, K, V, S> {
     }
 }
 
-impl<'a, K: Eq + Hash, V, S: BuildHasher> MapSeqMapMut<'a, K, V, S> {
+impl<K: Eq + Hash, V, S: BuildHasher> MapSeqMapMut<'_, K, V, S> {
     /// Returns a mutable reference to the value corresponding to the given key.
     #[inline(always)]
     pub fn get_mut<Q>(&mut self, key: &Q) -> Option<&mut V>
@@ -545,7 +545,7 @@ pub struct MapIter<'a, K, V> {
     inner: SubtableIter<'a, MapEntry<K, V>>,
 }
 
-impl<'a, K, V> Default for MapIter<'a, K, V> {
+impl<K, V> Default for MapIter<'_, K, V> {
     #[inline(always)]
     fn default() -> Self {
         Self {
@@ -568,7 +568,7 @@ impl<'a, K, V> Iterator for MapIter<'a, K, V> {
     }
 }
 
-impl<'a, K, V> ExactSizeIterator for MapIter<'a, K, V> {
+impl<K, V> ExactSizeIterator for MapIter<'_, K, V> {
     #[inline(always)]
     fn len(&self) -> usize {
         self.inner.len()
@@ -580,7 +580,7 @@ pub struct MapKeys<'a, K, V> {
     inner: SubtableIter<'a, MapEntry<K, V>>,
 }
 
-impl<'a, K, V> Default for MapKeys<'a, K, V> {
+impl<K, V> Default for MapKeys<'_, K, V> {
     #[inline(always)]
     fn default() -> Self {
         Self {
@@ -603,7 +603,7 @@ impl<'a, K, V> Iterator for MapKeys<'a, K, V> {
     }
 }
 
-impl<'a, K, V> ExactSizeIterator for MapKeys<'a, K, V> {
+impl<K, V> ExactSizeIterator for MapKeys<'_, K, V> {
     #[inline(always)]
     fn len(&self) -> usize {
         self.inner.len()
@@ -615,7 +615,7 @@ pub struct MapValues<'a, K, V> {
     inner: SubtableIter<'a, MapEntry<K, V>>,
 }
 
-impl<'a, K, V> Default for MapValues<'a, K, V> {
+impl<K, V> Default for MapValues<'_, K, V> {
     #[inline(always)]
     fn default() -> Self {
         Self {
@@ -638,7 +638,7 @@ impl<'a, K, V> Iterator for MapValues<'a, K, V> {
     }
 }
 
-impl<'a, K, V> ExactSizeIterator for MapValues<'a, K, V> {
+impl<K, V> ExactSizeIterator for MapValues<'_, K, V> {
     #[inline(always)]
     fn len(&self) -> usize {
         self.inner.len()
@@ -650,7 +650,7 @@ pub struct MapIterMut<'a, K, V> {
     inner: SubtableIterMut<'a, MapEntry<K, V>>,
 }
 
-impl<'a, K, V> Default for MapIterMut<'a, K, V> {
+impl<K, V> Default for MapIterMut<'_, K, V> {
     #[inline(always)]
     fn default() -> Self {
         Self {
@@ -675,7 +675,7 @@ impl<'a, K, V> Iterator for MapIterMut<'a, K, V> {
     }
 }
 
-impl<'a, K, V> ExactSizeIterator for MapIterMut<'a, K, V> {
+impl<K, V> ExactSizeIterator for MapIterMut<'_, K, V> {
     #[inline(always)]
     fn len(&self) -> usize {
         self.inner.len()
@@ -700,7 +700,7 @@ impl<'a, K, V, S> IntoIterator for MapSeqMapMut<'a, K, V, S> {
     }
 }
 
-impl<'a, K, V, S> Extend<(K, V)> for MapSeqMapMut<'a, K, V, S>
+impl<K, V, S> Extend<(K, V)> for MapSeqMapMut<'_, K, V, S>
 where
     K: Eq + Hash,
     S: BuildHasher,
@@ -712,7 +712,7 @@ where
     }
 }
 
-impl<'a, 'b, K, V, S> Extend<(&'b K, &'b V)> for MapSeqMapMut<'a, K, V, S>
+impl<'b, K, V, S> Extend<(&'b K, &'b V)> for MapSeqMapMut<'_, K, V, S>
 where
     K: Eq + Hash + Copy,
     V: Copy,
@@ -725,7 +725,7 @@ where
     }
 }
 
-impl<'a, K, Q, V, S> std::ops::Index<&Q> for MapSeqMap<'a, K, V, S>
+impl<K, Q, V, S> std::ops::Index<&Q> for MapSeqMap<'_, K, V, S>
 where
     K: Eq + Hash + Borrow<Q>,
     S: BuildHasher,
@@ -738,7 +738,7 @@ where
     }
 }
 
-impl<'a, K, Q, V, S> std::ops::Index<&Q> for MapSeqMapMut<'a, K, V, S>
+impl<K, Q, V, S> std::ops::Index<&Q> for MapSeqMapMut<'_, K, V, S>
 where
     K: Eq + Hash + Borrow<Q>,
     S: BuildHasher,

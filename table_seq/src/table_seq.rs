@@ -65,7 +65,7 @@ impl<T: fmt::Debug> fmt::Debug for TableSeq<T> {
         #[derive(Clone)]
         struct SubtableFmt<'a, T>(&'a TableSeq<T>, usize);
 
-        impl<'a, T: fmt::Debug> fmt::Debug for SubtableFmt<'a, T> {
+        impl<T: fmt::Debug> fmt::Debug for SubtableFmt<'_, T> {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 f.debug_set().entries(self.0.subtable_iter(self.1)).finish()
             }
@@ -96,7 +96,7 @@ const ALLOCATOR_SHIFT: u32 = 20;
 /// Drop guard to prevent exposing invalid entries on panics.
 struct InvalidateChunkOnDrop<'a, T>(&'a mut Chunk<T>);
 
-impl<'a, T> Drop for InvalidateChunkOnDrop<'a, T> {
+impl<T> Drop for InvalidateChunkOnDrop<'_, T> {
     fn drop(&mut self) {
         // This is only called when the drop implementation of an entry panics. In that situation,
         // we do the minimum necessary to remain memory safe but spend no effort cleaning up. Since
@@ -111,7 +111,7 @@ impl<'a, T> Drop for InvalidateChunkOnDrop<'a, T> {
     }
 }
 
-impl<'a, T> InvalidateChunkOnDrop<'a, T> {
+impl<T> InvalidateChunkOnDrop<'_, T> {
     fn defuse(self) {
         let _ = ManuallyDrop::new(self);
     }

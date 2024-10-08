@@ -263,12 +263,12 @@ impl<T> SmallSubtable<T> {
         }
 
         if self.len() == SMALL_SUBTABLE_CAPACITY {
-            return SmallSubtableEntry::FullTable(self);
+            SmallSubtableEntry::FullTable(self)
         } else {
-            return SmallSubtableEntry::Vacant(SmallSubtableVacantEntry {
+            SmallSubtableEntry::Vacant(SmallSubtableVacantEntry {
                 table: self,
                 byte_hash,
-            });
+            })
         }
     }
 

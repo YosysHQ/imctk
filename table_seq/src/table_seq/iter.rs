@@ -5,7 +5,7 @@ pub struct SubtableIter<'a, T> {
     inner: SubtableIterInner<'a, T>,
 }
 
-impl<'a, T> Default for SubtableIter<'a, T> {
+impl<T> Default for SubtableIter<'_, T> {
     fn default() -> Self {
         Self {
             inner: SubtableIterInner::Small([].as_slice().iter()),
@@ -62,7 +62,7 @@ impl<'a, T> Iterator for SubtableIter<'a, T> {
     }
 }
 
-impl<'a, T> ExactSizeIterator for SubtableIter<'a, T> {
+impl<T> ExactSizeIterator for SubtableIter<'_, T> {
     fn len(&self) -> usize {
         match &self.inner {
             SubtableIterInner::Small(iter) => iter.len(),
@@ -76,7 +76,7 @@ pub struct SubtableIterMut<'a, T> {
     inner: SubtableIterMutInner<'a, T>,
 }
 
-impl<'a, T> Default for SubtableIterMut<'a, T> {
+impl<T> Default for SubtableIterMut<'_, T> {
     fn default() -> Self {
         Self {
             inner: SubtableIterMutInner::Small(Default::default()),
@@ -133,7 +133,7 @@ impl<'a, T> Iterator for SubtableIterMut<'a, T> {
     }
 }
 
-impl<'a, T> ExactSizeIterator for SubtableIterMut<'a, T> {
+impl<T> ExactSizeIterator for SubtableIterMut<'_, T> {
     fn len(&self) -> usize {
         match &self.inner {
             SubtableIterMutInner::Small(iter) => iter.len(),
