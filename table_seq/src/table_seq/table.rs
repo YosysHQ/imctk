@@ -56,9 +56,9 @@ fn find_byte_among_16(needle: u8, haystack: &[u8; 16]) -> u16 {
 impl<T> SmallSubtable<T> {
     pub fn new(
         pair: [T; 2],
+        pair_hashes: [u64; 2],
         third: T,
         third_hash: u64,
-        hasher: impl Fn(&T) -> u64,
         allocator: &mut NodeAllocator<T>,
     ) -> (*mut T, Self) {
         let node = allocator.alloc(SizeClass::at_least_3());
@@ -68,7 +68,7 @@ impl<T> SmallSubtable<T> {
 
         let mut hashes = [0; SMALL_SUBTABLE_CAPACITY];
         for i in 0..2 {
-            hashes[i] = byte_hash_from_hash(hasher(&pair[i]));
+            hashes[i] = byte_hash_from_hash(pair_hashes[i]);
         }
         hashes[2] = byte_hash_from_hash(third_hash);
 
@@ -225,6 +225,50 @@ impl<T> SmallSubtable<T> {
             // SAFETY: so we can also safely write to it
             unsafe { entry_ptr.write(value) };
             Ok(entry_ptr)
+        }
+    }
+
+    /// # Safety
+    /// Callers need to ensure that the `SmallSubtable` is valid, that the correct allocator is
+    /// passed and that the nodes owned by this subtable are not modified except by calling
+    /// `SmallSubtable` methods.
+    pub unsafe fn entry(
+        &mut self,
+        hash: u64,
+        mut eq: impl FnMut(&T) -> bool,
+        allocator: &mut NodeAllocator<T>,
+    ) -> SmallSubtableEntry<'_, T> {
+        let byte_hash = byte_hash_from_hash(hash);
+        let mut matches = find_byte_among_16(byte_hash, &self.hashes);
+
+        // SAFETY: we require our node to be alive in the given allocator
+        let node_ptr = unsafe { allocator.ptr(self.node) };
+
+        while let Some(found_match) = NonZeroU16::new(matches) {
+            matches &= matches - 1;
+            let match_index = found_match.trailing_zeros() as usize;
+            if match_index >= self.len as usize {
+                break;
+            }
+
+            // SAFETY: we just checked that the match_index is still in bounds
+            let entry_ptr = unsafe { node_ptr.add(match_index) };
+            // SAFETY: so we can also safely dereference it
+            if eq(unsafe { &*entry_ptr }) {
+                return SmallSubtableEntry::Occupied(SmallSubtableOccupiedEntry {
+                    table: self,
+                    entry_ptr,
+                });
+            }
+        }
+
+        if self.len() == SMALL_SUBTABLE_CAPACITY {
+            SmallSubtableEntry::FullTable(self)
+        } else {
+            SmallSubtableEntry::Vacant(SmallSubtableVacantEntry {
+                table: self,
+                byte_hash,
+            })
         }
     }
 
@@ -460,5 +504,120 @@ impl<T> SmallSubtable<T> {
         };
 
         self.node = new_node_ref;
+    }
+}
+
+pub struct SmallSubtableOccupiedEntry<'a, T> {
+    table: &'a mut SmallSubtable<T>,
+    entry_ptr: *mut T,
+}
+
+pub struct SmallSubtableVacantEntry<'a, T> {
+    table: &'a mut SmallSubtable<T>,
+    byte_hash: u8,
+}
+
+pub enum SmallSubtableEntry<'a, T> {
+    Occupied(SmallSubtableOccupiedEntry<'a, T>),
+    Vacant(SmallSubtableVacantEntry<'a, T>),
+    FullTable(&'a mut SmallSubtable<T>),
+}
+
+impl<'a, T> SmallSubtableVacantEntry<'a, T> {
+    pub fn into_table(self) -> &'a mut SmallSubtable<T> {
+        self.table
+    }
+    // # Safety
+    // The referenced subtable must be alive in this allocator, i.e. allocated but not yet deallocated
+    pub unsafe fn insert(
+        self,
+        value: T,
+        allocator: &mut NodeAllocator<T>,
+    ) -> SmallSubtableOccupiedEntry<'a, T> {
+        let SmallSubtableVacantEntry { table, byte_hash } = self;
+
+        // SAFETY: we require our node to be alive in the given allocator
+        let node_ptr = unsafe { allocator.ptr(table.node) };
+
+        let target_offset = table.len as usize;
+        debug_assert!(target_offset < SMALL_SUBTABLE_CAPACITY);
+
+        table.len += 1;
+
+        table.hashes[target_offset] = byte_hash;
+
+        let size_class = table.node.size_class();
+
+        if target_offset < size_class.len() {
+            // SAFETY: we have still capacity left for an additional slot at target_offset
+            let entry_ptr = unsafe { node_ptr.add(target_offset) };
+            // SAFETY: and can thus safely write to it
+            unsafe { entry_ptr.write(value) };
+            SmallSubtableOccupiedEntry { table, entry_ptr }
+        } else {
+            // we only grow by one at a time so no need to loop
+            let required_size_class = size_class.next();
+
+            let new_node = allocator.alloc(required_size_class);
+
+            // SAFETY: just allocated above, so valid
+            let new_node_ptr = unsafe { allocator.ptr(new_node) };
+            // SAFETY: valid by our own requirements
+            let node_ptr = unsafe { allocator.ptr(table.node) };
+
+            // SAFETY: the new node has a larger size class and is a new allocation so it's valid
+            // target and the copy is in bounds
+            unsafe { new_node_ptr.copy_from_nonoverlapping(node_ptr, target_offset) };
+
+            // SAFETY: valid up to this point by our own requirements
+            unsafe { allocator.dealloc(table.node) };
+            table.node = new_node;
+
+            // SAFETY: in bounds since this was one past the end for the previous node and the new
+            // node is of a larger size class.
+            let entry_ptr = unsafe { new_node_ptr.add(target_offset) };
+            // SAFETY: so we can also safely write to it
+            unsafe { entry_ptr.write(value) };
+            SmallSubtableOccupiedEntry { table, entry_ptr }
+        }
+    }
+}
+
+impl<'a, T> SmallSubtableOccupiedEntry<'a, T> {
+    pub fn get_mut(&mut self) -> &mut T {
+        // SAFETY: entry_ptr is valid by construction
+        unsafe { &mut *self.entry_ptr }
+    }
+    // SAFETY: entry_ptr has to be a valid pointer in the table
+    pub unsafe fn from_entry_ptr(table: &'a mut SmallSubtable<T>, entry_ptr: *mut T) -> Self {
+        SmallSubtableOccupiedEntry { table, entry_ptr }
+    }
+    // # Safety
+    // The referenced subtable must be alive in this allocator, i.e. allocated but not yet deallocated
+    pub unsafe fn remove(
+        self,
+        allocator: &mut NodeAllocator<T>,
+    ) -> (T, SmallSubtableVacantEntry<'a, T>) {
+        let SmallSubtableOccupiedEntry { table, entry_ptr } = self;
+        // SAFETY: guaranteed by caller
+        let node_ptr = unsafe { allocator.ptr(table.node) };
+        // SAFETY: entry_ptr is known to point to a valid entry and we're about to shrink the table, preventing future use.
+        let value = unsafe { entry_ptr.read() };
+        // SAFETY: since we know we're non-empty this will be in bounds
+        let last_ptr = unsafe { node_ptr.add(table.len as usize - 1) };
+        // SAFETY: if the item we just read taking ownership from was the last item, we're
+        // moving the now uninitialized item in place, otherwise the source is initialized
+        // and the target is uninitialized, with both being in bounds
+        unsafe {
+            last_ptr
+                .cast::<MaybeUninit<T>>()
+                .copy_to(entry_ptr.cast::<MaybeUninit<T>>(), 1)
+        };
+        // SAFETY: entry_ptr pointed at a valid entry, thus we know it must be in bounds of the allocation
+        let match_index = unsafe { entry_ptr.offset_from(node_ptr) as usize };
+        let byte_hash = table.hashes[match_index];
+        table.hashes[match_index] = table.hashes[table.len as usize - 1];
+        table.len -= 1;
+        (value, SmallSubtableVacantEntry { table, byte_hash })
     }
 }

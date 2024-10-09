@@ -13,7 +13,7 @@ pub struct SetIter<'a, T> {
     inner: SubtableIter<'a, T>,
 }
 
-impl<'a, T> Default for SetIter<'a, T> {
+impl<T> Default for SetIter<'_, T> {
     #[inline(always)]
     fn default() -> Self {
         Self {
@@ -36,7 +36,7 @@ impl<'a, T> Iterator for SetIter<'a, T> {
     }
 }
 
-impl<'a, T> ExactSizeIterator for SetIter<'a, T> {
+impl<T> ExactSizeIterator for SetIter<'_, T> {
     #[inline(always)]
     fn len(&self) -> usize {
         self.inner.len()
@@ -273,13 +273,13 @@ impl<'a, T, S> std::ops::Deref for SetSeqSetMut<'a, T, S> {
     }
 }
 
-impl<'a, T: fmt::Debug, S> fmt::Debug for SetSeqSet<'a, T, S> {
+impl<T: fmt::Debug, S> fmt::Debug for SetSeqSet<'_, T, S> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_set().entries(self.iter()).finish()
     }
 }
 
-impl<'a, T: fmt::Debug, S> fmt::Debug for SetSeqSetMut<'a, T, S> {
+impl<T: fmt::Debug, S> fmt::Debug for SetSeqSetMut<'_, T, S> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_set().entries(self.iter()).finish()
     }
@@ -307,7 +307,7 @@ impl<'a, T, S> SetSeqSet<'a, T, S> {
     }
 }
 
-impl<'a, T, S> SetSeqSetMut<'a, T, S> {
+impl<T, S> SetSeqSetMut<'_, T, S> {
     /// Discards all elements of the set.
     #[inline(always)]
     pub fn clear(&mut self) {
@@ -315,7 +315,7 @@ impl<'a, T, S> SetSeqSetMut<'a, T, S> {
     }
 }
 
-impl<'a, T: Eq + Hash, S: BuildHasher> SetSeqSet<'a, T, S> {
+impl<T: Eq + Hash, S: BuildHasher> SetSeqSet<'_, T, S> {
     /// Checks whether a given value is an element of the set.
     #[inline(always)]
     pub fn contains<Q>(&self, value: &Q) -> bool
@@ -337,7 +337,7 @@ impl<'a, T: Eq + Hash, S: BuildHasher> SetSeqSet<'a, T, S> {
     }
 }
 
-impl<'a, T: Eq + Hash, S: BuildHasher> SetSeqSetMut<'a, T, S> {
+impl<T: Eq + Hash, S: BuildHasher> SetSeqSetMut<'_, T, S> {
     /// Inserts a value into the set.
     ///
     /// If the value is already present, the given value is discarded and the set is not modified.
