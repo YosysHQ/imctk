@@ -7,6 +7,9 @@ use core::hash::Hash;
 use index_table::IndexTable;
 use std::{borrow::Borrow, hash::BuildHasher, ops::RangeBounds};
 
+#[path = "test_set.rs"]
+mod test_set;
+
 /// A hash set that maintains the order of its elements.
 #[derive(Clone)]
 pub struct StableSet<T, S> {
@@ -401,19 +404,4 @@ impl<T, S> StableSet<T, S> {
             inner: self.items.drain(range),
         }
     }
-}
-
-#[test]
-fn test_foo() {
-    use std::hash::BuildHasherDefault;
-    use zwohash::ZwoHasher;
-    let mut set: StableSet<usize, BuildHasherDefault<ZwoHasher>> = (2..100).collect();
-    let mut index = 0;
-    while let Some(&k) = set.get_index(index) {
-        set.retain(|&n| n % k != 0 || n == k);
-        index += 1;
-    }
-    dbg!(set.drain(5..9).collect::<Vec<_>>());
-    dbg!(&set);
-    set.check();
 }
