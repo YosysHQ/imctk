@@ -7,6 +7,9 @@ use core::hash::Hash;
 use index_table::IndexTable;
 use std::{borrow::Borrow, hash::BuildHasher, ops::RangeBounds};
 
+#[path = "test_map.rs"]
+mod test_map;
+
 /// A hash map that maintains the order of its elements.
 #[derive(Clone)]
 pub struct StableMap<K, V, S> {
@@ -126,6 +129,9 @@ impl<K: Hash + Eq, V, S: BuildHasher> StableMap<K, V, S> {
     ///
     /// If there was no previous value, the key-value pair is inserted at the end.
     pub fn insert_full(&mut self, key: K, value: V) -> (usize, Option<V>) {
+        self.index_table.grow_for(self.items.len(), |index| {
+            self.build_hasher.hash_one(&self.items[index].0)
+        });
         let hash = self.build_hasher.hash_one(&key);
         match self.index_table.entry(
             hash,
@@ -413,6 +419,18 @@ impl<'a, K, V, S> IntoIterator for &'a mut StableMap<K, V, S> {
     }
 }
 
+impl<K: Hash + Eq, V, S: BuildHasher + Default> FromIterator<(K, V)> for StableMap<K, V, S> {
+    fn from_iter<Iter: IntoIterator<Item = (K, V)>>(iter: Iter) -> Self {
+        let iter = iter.into_iter();
+        let (lower_bound, _) = iter.size_hint();
+        let mut map = StableMap::with_capacity(lower_bound);
+        for (k, v) in iter {
+            map.insert(k, v);
+        }
+        map
+    }
+}
+
 /// A vacant entry in a [`StableMap`].
 pub struct VacantEntry<'a, K, V, S> {
     entry: index_table::VacantEntry<'a>,
@@ -440,6 +458,10 @@ pub enum Entry<'a, K, V, S> {
 impl<K: Hash + Eq, V, S: BuildHasher> StableMap<K, V, S> {
     /// Returns the entry corresponding to the given key, allowing for insertion and/or in-place mutation.
     pub fn entry(&mut self, key: K) -> Entry<'_, K, V, S> {
+        // make sure we can insert an entry. do this now because we don't have access to index_table later.
+        self.index_table.grow_for(self.items.len(), |index| {
+            self.build_hasher.hash_one(&self.items[index].0)
+        });
         let hash = self.build_hasher.hash_one(&key);
         match self.index_table.entry(
             hash,
@@ -598,21 +620,4 @@ impl<K: Hash, V, S: BuildHasher> StableMap<K, V, S> {
             assert_eq!(self.index_table.find(hash, |idx| idx == index), Some(index));
         }
     }
-}
-
-#[test]
-fn test() {
-    use std::hash::BuildHasherDefault;
-    use zwohash::ZwoHasher;
-    let mut map: StableMap<String, usize, BuildHasherDefault<ZwoHasher>> = StableMap::default();
-    map.insert("adam".into(), 10);
-    map.insert("eve".into(), 25);
-    map.insert("mallory".into(), 8);
-    map.insert("jim".into(), 14);
-    match map.entry("eve".to_string()) {
-        Entry::Vacant(_) => unreachable!(),
-        Entry::Occupied(entry) => entry.swap_remove(),
-    };
-    dbg!(&map);
-    map.check();
 }
