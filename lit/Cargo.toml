@@ -19,3 +19,4 @@ imctk-util = { version = "0.1.0", path = "../util" }
 log = "0.4.21"
 table_seq = { version = "0.1.0", path = "../table_seq" }
 zwohash = "0.1.2"
+bytemuck = "*"
