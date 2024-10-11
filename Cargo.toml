@@ -16,6 +16,7 @@ members = [
     "extract",
     "imctk",
     "lit",
+    "dsf",
 
     # comment to force multi-line layout
 ]
