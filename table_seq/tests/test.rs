@@ -195,6 +195,49 @@ impl<T> TestTableSeq<T> {
             _ => panic!(),
         }
     }
+
+    pub fn insert_with_entry(&mut self, subtable: usize, item: T)
+    where
+        T: Hash + Eq + Debug + Clone,
+    {
+        let mut inserted_spec = false;
+        let mut inserted_dut = false;
+        self.spec[subtable]
+            .entry(hash_ref(&item), |found| *found == item, hash_ref)
+            .or_insert_with(|| {
+                inserted_spec = true;
+                item.clone()
+            });
+        self.under_test
+            .entry(subtable, hash_ref(&item), |found| found == &item, hash_ref)
+            .or_insert_with(|| {
+                inserted_dut = true;
+                item
+            });
+        assert_eq!(inserted_spec, inserted_dut);
+    }
+
+    pub fn remove_with_entry(&mut self, subtable: usize, item: &T)
+    where
+        T: Hash + Eq + Debug,
+    {
+        let removed =
+            match self
+                .under_test
+                .entry(subtable, hash_ref(item), |found| found == item, hash_ref)
+            {
+                table_seq::table_seq::Entry::Occupied(entry) => Some(entry.remove().0),
+                table_seq::table_seq::Entry::Vacant(_) => None,
+            };
+        match self.spec[subtable].entry(hash_ref(item), |found| found == item, hash_ref) {
+            hashbrown::hash_table::Entry::Occupied(found) => {
+                assert_eq!(Some(found.remove().0), removed);
+            }
+            hashbrown::hash_table::Entry::Vacant(_) => {
+                assert!(removed.is_none());
+            }
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -265,6 +308,74 @@ fn test_removal() {
                 for j in 1..size {
                     if (i ^ j) % p == 0 {
                         table.remove(i, &j);
+                    }
+                    if (i ^ !j) % p == 0 && table.spec[i].len() <= p {
+                        flip_flop = !flip_flop;
+                        if flip_flop {
+                            table.clear_subtable(i);
+                        } else {
+                            table.test_drain(i);
+                        }
+                        continue;
+                    }
+                }
+            }
+            table.test_iter_all();
+        }
+        assert_eq!(table.under_test.flat_len(), 0);
+    }
+}
+
+#[test]
+fn test_insertion_with_entry() {
+    let mut table = <TestTableSeq<usize>>::default();
+    let size = 10000;
+    table.resize(size / 2);
+    for i in 1..size {
+        for j in 1..size {
+            if i % j == 0 {
+                table.grow_for_subtable(j);
+                table.insert_with_entry(j, i);
+            }
+        }
+    }
+    table.test_iter_all();
+
+    let size = 1000;
+
+    for i in 1..size {
+        for j in 1..size {
+            if (i ^ j) % 7 == 0 {
+                table.grow_for_subtable(i);
+                table.insert_with_entry(i, j);
+            }
+        }
+    }
+
+    table.test_iter_all();
+}
+
+#[test]
+fn test_removal_with_entry() {
+    let mut flip_flop = false;
+    for size in [2, 3, 4, 5, 10, 100, 1000, 10000] {
+        let mut table = <TestTableSeq<usize>>::default();
+
+        for i in 1..size.min(1000000 / size) {
+            for j in 1..size {
+                if (i ^ j) % 7 == 0 {
+                    table.grow_for_subtable(i);
+                    table.insert(i, j);
+                }
+            }
+        }
+        table.resize(table.spec.len() - table.spec.len() / 10);
+        for p in [11, 5, 3, 2, 7] {
+            for i in 1..size.min(1000000 / size) {
+                table.grow_for_subtable(i);
+                for j in 1..size {
+                    if (i ^ j) % p == 0 {
+                        table.remove_with_entry(i, &j);
                     }
                     if (i ^ !j) % p == 0 && table.spec[i].len() <= p {
                         flip_flop = !flip_flop;

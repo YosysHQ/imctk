@@ -108,12 +108,13 @@ use hashbrown::HashTable;
 
 mod node_allocator;
 
+pub mod map_seq;
 pub mod set_seq;
 pub mod table_seq;
 
 #[doc(inline)]
+pub use map_seq::MapSeq;
+#[doc(inline)]
 pub use set_seq::SetSeq;
 #[doc(inline)]
 pub use table_seq::TableSeq;
-
-// TODO Implement MapSeq on top of TableSeq
