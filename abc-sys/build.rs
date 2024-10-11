@@ -1069,6 +1069,10 @@ fn main() {
         .flag_if_supported("-Wno-sign-compare")
         .flag_if_supported("-Wno-alloc-size-larger-than")
         .flag_if_supported("-Wno-stringop-overflow")
+        .flag_if_supported("-Wno-deprecated-declarations")
+        .flag_if_supported("-Wno-format")
+        .flag_if_supported("-Wno-parentheses-equality")
+        .flag_if_supported("-Wno-string-plus-char")
         .include("abc/src")
         .include(".");
 
