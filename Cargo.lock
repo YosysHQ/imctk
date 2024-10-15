@@ -119,9 +119,23 @@ checksum = "79296716171880943b8470b5f8d03aa55eb2e645a4874bdbb28adb49162e012c"
 
 [[package]]
 name = "bytemuck"
-version = "1.18.0"
+version = "1.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "94bbb0ad554ad961ddc5da507a12a29b14e4ae5bda06b19f575a3e6079d2e2ae"
+checksum = "8334215b81e418a0a7bdb8ef0849474f40bb10c8b71f1c4ed315cff49f32494d"
+dependencies = [
+ "bytemuck_derive",
+]
+
+[[package]]
+name = "bytemuck_derive"
+version = "1.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bcfcc3cd946cb52f0bbfdbbcfa2f4e24f75ebb6c0e1002f7c25904fada18b9ec"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
 
 [[package]]
 name = "byteorder"
@@ -455,7 +469,8 @@ dependencies = [
 name = "imctk-ids"
 version = "0.1.0"
 dependencies = [
- "hashbrown 0.14.5",
+ "bytemuck",
+ "hashbrown",
  "imctk-derive",
  "imctk-transparent",
  "rand",
@@ -492,7 +507,6 @@ dependencies = [
 name = "imctk-lit"
 version = "0.1.0"
 dependencies = [
- "bytemuck",
  "flussab-aiger",
  "hashbrown 0.14.5",
  "imctk-derive",

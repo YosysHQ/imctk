@@ -9,8 +9,6 @@ use super::{lit::Lit, pol::Pol};
 #[derive(Id, SubtypeCast, NewtypeCast)]
 pub struct Var(GenericId<{ Lit::MAX_ID_INDEX / 2 }, <Lit as Id>::BaseId>);
 
-unsafe impl bytemuck::NoUninit for Var {}
-
 impl std::fmt::Debug for Var {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self, f)

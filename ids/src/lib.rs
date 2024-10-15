@@ -31,3 +31,7 @@ pub use imctk_derive::Id;
 pub use id::{ConstIdFromIdIndex, GenericId, Id, Id16, Id32, Id64, Id8, IdSize};
 
 pub use id_range::IdRange;
+
+// re-export this so that others can use it without depending on bytemuck explicitly
+// in particular needed for #[derive(Id)]
+pub use bytemuck::NoUninit;
