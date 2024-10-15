@@ -1,12 +1,12 @@
 mod id8 {
     use imctk_transparent::SubtypeCast;
 
-    use crate::id::{u8_range_types::NonMaxHighNibbleU8, ConstIdFromIdIndex, GenericId, Id};
+    use crate::id::{u8_range_types::NonMaxHighNibbleU8, ConstIdFromIdIndex, GenericId, Id, NoUninit};
     use core::{fmt, fmt::Debug, hash::Hash};
 
     /// [`Id`] type representing indices in the range `0..0xf0`.
     #[allow(dead_code)] // Only constructed via transmutation and/or pointer casts
-    #[derive(Clone, Copy)]
+    #[derive(Clone, Copy, NoUninit)]
     #[repr(transparent)]
     pub struct Id8(NonMaxHighNibbleU8);
 
@@ -177,13 +177,13 @@ mod id8 {
 mod id16 {
     use imctk_transparent::SubtypeCast;
 
-    use crate::id::{u8_range_types::NonMaxU8, ConstIdFromIdIndex, GenericId, Id};
+    use crate::id::{u8_range_types::NonMaxU8, ConstIdFromIdIndex, GenericId, Id, NoUninit};
     use core::{fmt, fmt::Debug, hash::Hash};
 
     /// [`Id`] type representing indices in the range `0..0xff00`.
     #[cfg(target_endian = "little")]
     #[allow(dead_code)] // Only constructed via transmutation and/or pointer casts
-    #[derive(Clone, Copy)]
+    #[derive(Clone, Copy, NoUninit)]
     #[repr(C, align(2))]
     pub struct Id16 {
         lsb: u8,
@@ -192,7 +192,7 @@ mod id16 {
 
     #[cfg(target_endian = "big")]
     #[allow(dead_code)] // Only constructed via transmutation and/or pointer casts
-    #[derive(Clone, Copy)]
+    #[derive(Clone, Copy, NoUninit)]
     #[repr(C, align(2))]
     pub struct Id16 {
         msb: NonMaxU8,
@@ -366,13 +366,13 @@ mod id16 {
 mod id32 {
     use imctk_transparent::SubtypeCast;
 
-    use crate::id::{u8_range_types::NonMaxU8, ConstIdFromIdIndex, GenericId, Id};
+    use crate::id::{u8_range_types::NonMaxU8, ConstIdFromIdIndex, GenericId, Id, NoUninit};
     use core::{fmt, fmt::Debug, hash::Hash};
 
     /// [`Id`] type representing indices in the range `0..0xff00_0000`.
     #[cfg(target_endian = "little")]
     #[allow(dead_code)] // Only constructed via transmutation and/or pointer casts
-    #[derive(Clone, Copy)]
+    #[derive(Clone, Copy, NoUninit)]
     #[repr(C, align(4))]
     pub struct Id32 {
         lsbs: [u8; 3],
@@ -381,7 +381,7 @@ mod id32 {
 
     #[cfg(target_endian = "big")]
     #[allow(dead_code)] // Only constructed via transmutation and/or pointer casts
-    #[derive(Clone, Copy)]
+    #[derive(Clone, Copy, NoUninit)]
     #[repr(C, align(4))]
     pub struct Id32 {
         msb: NonMaxU8,
@@ -562,13 +562,13 @@ mod id32 {
 mod id64 {
     use imctk_transparent::SubtypeCast;
 
-    use crate::id::{u8_range_types::NonMaxU8, ConstIdFromIdIndex, GenericId, Id};
+    use crate::id::{u8_range_types::NonMaxU8, ConstIdFromIdIndex, GenericId, Id, NoUninit};
     use core::{fmt, fmt::Debug, hash::Hash};
 
     /// [`Id`] type representing indices in the range `0..0xff00_0000_0000_0000`.
     #[cfg(target_endian = "little")]
     #[allow(dead_code)] // Only constructed via transmutation and/or pointer casts
-    #[derive(Clone, Copy)]
+    #[derive(Clone, Copy, NoUninit)]
     #[repr(C, align(8))]
     pub struct Id64 {
         lsbs: [u8; 7],
@@ -577,7 +577,7 @@ mod id64 {
 
     #[cfg(target_endian = "big")]
     #[allow(dead_code)] // Only constructed via transmutation and/or pointer casts
-    #[derive(Clone, Copy)]
+    #[derive(Clone, Copy, NoUninit)]
     #[repr(C, align(8))]
     pub struct Id64 {
         msb: NonMaxU8,
@@ -758,7 +758,7 @@ mod id64 {
 mod id_size {
     use imctk_transparent::SubtypeCast;
 
-    use crate::id::{u8_range_types::NonMaxMsbU8, ConstIdFromIdIndex, GenericId, Id};
+    use crate::id::{u8_range_types::NonMaxMsbU8, ConstIdFromIdIndex, GenericId, Id, NoUninit};
     use core::{fmt, fmt::Debug, hash::Hash};
 
     const LSBS: usize = (usize::BITS as usize / 8) - 1;
@@ -766,7 +766,7 @@ mod id_size {
     /// [`Id`] type representing indices in the range `0..=isize::MAX as usize`.
     #[cfg(target_endian = "little")]
     #[allow(dead_code)] // Only constructed via transmutation and/or pointer casts
-    #[derive(Clone, Copy)]
+    #[derive(Clone, Copy, NoUninit)]
     #[cfg_attr(target_pointer_width = "16", repr(C, align(2)))]
     #[cfg_attr(target_pointer_width = "32", repr(C, align(4)))]
     #[cfg_attr(target_pointer_width = "64", repr(C, align(8)))]
@@ -777,7 +777,7 @@ mod id_size {
 
     #[cfg(target_endian = "big")]
     #[allow(dead_code)] // Only constructed via transmutation and/or pointer casts
-    #[derive(Clone, Copy)]
+    #[derive(Clone, Copy, NoUninit)]
     #[cfg_attr(target_pointer_width = "16", repr(C, align(2)))]
     #[cfg_attr(target_pointer_width = "32", repr(C, align(4)))]
     #[cfg_attr(target_pointer_width = "64", repr(C, align(8)))]

@@ -24,8 +24,6 @@ use super::{pol::Pol, var::Var};
 #[derive(Id, SubtypeCast, NewtypeCast)]
 pub struct Lit(Id32);
 
-unsafe impl bytemuck::NoUninit for Lit {}
-
 /// Ensure that there is an even number of literals
 #[allow(clippy::assertions_on_constants)]
 const _: () = {
