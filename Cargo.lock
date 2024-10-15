@@ -257,7 +257,6 @@ name = "dsf"
 version = "0.1.0"
 dependencies = [
  "atomic",
- "bytemuck",
  "imctk-ids",
  "imctk-lit",
  "priority-queue",

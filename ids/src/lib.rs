@@ -16,6 +16,7 @@ mod id;
 mod id_range;
 pub mod id_vec;
 pub mod indexed_id_vec;
+pub mod id_alloc;
 
 pub mod id_set_seq;
 
@@ -31,6 +32,8 @@ pub use imctk_derive::Id;
 pub use id::{ConstIdFromIdIndex, GenericId, Id, Id16, Id32, Id64, Id8, IdSize};
 
 pub use id_range::IdRange;
+
+pub use id_alloc::IdAlloc;
 
 // re-export this so that others can use it without depending on bytemuck explicitly
 // in particular needed for #[derive(Id)]

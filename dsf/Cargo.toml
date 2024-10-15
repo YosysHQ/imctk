@@ -8,7 +8,6 @@ publish = false
 [dependencies]
 imctk-ids = { version = "0.1.0", path = "../ids" }
 imctk-lit = { version = "0.1.0", path = "../lit" }
-bytemuck = "*"
 atomic = "0.6"
 priority-queue = "*"
 
