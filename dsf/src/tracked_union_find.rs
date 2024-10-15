@@ -169,21 +169,14 @@ impl<T: Id + NoUninit> IdAlloc<T> {
     pub fn alloc_block(&self, n: usize) -> T {
         use atomic::Ordering::Relaxed;
         debug_assert!(n > 0);
-        let mut current_id = self.counter.load(Relaxed);
-        loop {
-            let new_id = current_id
-                .id_index()
-                .checked_add(n)
-                .and_then(T::try_from_id_index)
-                .expect("not enough IDs remaining");
-            match self
-                .counter
-                .compare_exchange_weak(current_id, new_id, Relaxed, Relaxed)
-            {
-                Ok(_) => return current_id,
-                Err(id) => current_id = id,
-            }
-        }
+        self.counter
+            .fetch_update(Relaxed, Relaxed, |current_id| {
+                current_id
+                    .id_index()
+                    .checked_add(n)
+                    .and_then(T::try_from_id_index)
+            })
+            .expect("not enough IDs remaining")
     }
     pub fn alloc(&self) -> T {
         self.alloc_block(1)
