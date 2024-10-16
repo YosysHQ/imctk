@@ -4,7 +4,7 @@ use crate::{
     util::{impl_iterator, simplify_range},
 };
 use core::hash::Hash;
-use index_table::IndexTable;
+use index_table::{IndexTable, SmallIndex};
 use std::{borrow::Borrow, hash::BuildHasher, ops::RangeBounds};
 
 #[path = "test_map.rs"]
@@ -12,13 +12,13 @@ mod test_map;
 
 /// A hash map that maintains the order of its elements.
 #[derive(Clone)]
-pub struct StableMap<K, V, S> {
-    index_table: IndexTable,
+pub struct StableMap<K, V, S, W=u32> {
+    index_table: IndexTable<W>,
     items: Vec<(K, V)>,
     build_hasher: S,
 }
 
-impl<K, V, S: Default> Default for StableMap<K, V, S> {
+impl<K, V, S: Default, W> Default for StableMap<K, V, S, W> {
     fn default() -> Self {
         StableMap {
             index_table: IndexTable::default(),
@@ -27,7 +27,7 @@ impl<K, V, S: Default> Default for StableMap<K, V, S> {
         }
     }
 }
-impl<K, V, S: Default> StableMap<K, V, S> {
+impl<K, V, S: Default, W: SmallIndex> StableMap<K, V, S, W> {
     /// Returns an empty map.
     pub fn new() -> Self {
         Self::default()
@@ -42,7 +42,7 @@ impl<K, V, S: Default> StableMap<K, V, S> {
     }
 }
 
-impl<K, V, S> StableMap<K, V, S> {
+impl<K, V, S, W: SmallIndex> StableMap<K, V, S, W> {
     /// Returns an empty map with the provided BuildHasher.
     pub fn with_hasher(build_hasher: S) -> Self {
         StableMap {
@@ -61,13 +61,13 @@ impl<K, V, S> StableMap<K, V, S> {
     }
 }
 
-impl<K: std::fmt::Debug, V: std::fmt::Debug, S> std::fmt::Debug for StableMap<K, V, S> {
+impl<K: std::fmt::Debug, V: std::fmt::Debug, S, W: SmallIndex> std::fmt::Debug for StableMap<K, V, S, W> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_map().entries(self.iter()).finish()
     }
 }
 
-impl<K, V, S> StableMap<K, V, S> {
+impl<K, V, S, W: SmallIndex> StableMap<K, V, S, W> {
     /// Returns the number of items in the map.
     pub fn len(&self) -> usize {
         self.items.len()
@@ -123,7 +123,7 @@ impl<K, V, S> StableMap<K, V, S> {
     }
 }
 
-impl<K: Hash + Eq, V, S: BuildHasher> StableMap<K, V, S> {
+impl<K: Hash + Eq, V, S: BuildHasher, W: SmallIndex> StableMap<K, V, S, W> {
     /// Inserts `value` at `key`, replacing any previous value.
     /// Returns the index of the item and any previous value.
     ///
@@ -159,7 +159,7 @@ impl<K: Hash + Eq, V, S: BuildHasher> StableMap<K, V, S> {
     }
 }
 
-impl<K: Hash + Eq, V, S: BuildHasher> StableMap<K, V, S> {
+impl<K: Hash + Eq, V, S: BuildHasher, W: SmallIndex> StableMap<K, V, S, W> {
     /// Returns the index of the entry with the specified key, if it exists.
     pub fn get_index_of<Q>(&self, key: &Q) -> Option<usize>
     where
@@ -384,7 +384,7 @@ impl<K, V> Iterator for IntoIter<K, V> {
     type Item = (K, V);
     impl_iterator!();
 }
-impl<K, V, S> IntoIterator for StableMap<K, V, S> {
+impl<K, V, S, W> IntoIterator for StableMap<K, V, S, W> {
     type Item = (K, V);
     type IntoIter = IntoIter<K, V>;
     fn into_iter(self) -> Self::IntoIter {
@@ -404,14 +404,14 @@ impl<K, V> Iterator for Drain<'_, K, V> {
     impl_iterator!();
 }
 
-impl<'a, K, V, S> IntoIterator for &'a StableMap<K, V, S> {
+impl<'a, K, V, S, W: SmallIndex> IntoIterator for &'a StableMap<K, V, S, W> {
     type Item = (&'a K, &'a V);
     type IntoIter = Iter<'a, K, V>;
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
     }
 }
-impl<'a, K, V, S> IntoIterator for &'a mut StableMap<K, V, S> {
+impl<'a, K, V, S, W: SmallIndex> IntoIterator for &'a mut StableMap<K, V, S, W> {
     type Item = (&'a K, &'a mut V);
     type IntoIter = IterMut<'a, K, V>;
     fn into_iter(self) -> Self::IntoIter {
@@ -419,7 +419,7 @@ impl<'a, K, V, S> IntoIterator for &'a mut StableMap<K, V, S> {
     }
 }
 
-impl<K: Hash + Eq, V, S: BuildHasher + Default> FromIterator<(K, V)> for StableMap<K, V, S> {
+impl<K: Hash + Eq, V, S: BuildHasher + Default, W: SmallIndex> FromIterator<(K, V)> for StableMap<K, V, S, W> {
     fn from_iter<Iter: IntoIterator<Item = (K, V)>>(iter: Iter) -> Self {
         let iter = iter.into_iter();
         let (lower_bound, _) = iter.size_hint();
@@ -432,8 +432,8 @@ impl<K: Hash + Eq, V, S: BuildHasher + Default> FromIterator<(K, V)> for StableM
 }
 
 /// A vacant entry in a [`StableMap`].
-pub struct VacantEntry<'a, K, V, S> {
-    entry: index_table::VacantEntry<'a>,
+pub struct VacantEntry<'a, K, V, S, W> {
+    entry: index_table::VacantEntry<'a, W>,
     key: K,
     items: &'a mut Vec<(K, V)>,
     #[allow(dead_code)] // for consistency with OccupiedEntry
@@ -441,23 +441,23 @@ pub struct VacantEntry<'a, K, V, S> {
 }
 
 /// An occupied entry in a [`StableMap`].
-pub struct OccupiedEntry<'a, K, V, S> {
-    entry: index_table::OccupiedEntry<'a>,
+pub struct OccupiedEntry<'a, K, V, S, W> {
+    entry: index_table::OccupiedEntry<'a, W>,
     items: &'a mut Vec<(K, V)>,
     build_hasher: &'a S,
 }
 
 /// An entry in a [`StableMap`].
-pub enum Entry<'a, K, V, S> {
+pub enum Entry<'a, K, V, S, W> {
     /// A vacant entry.
-    Vacant(VacantEntry<'a, K, V, S>),
+    Vacant(VacantEntry<'a, K, V, S, W>),
     /// An occupied entry.
-    Occupied(OccupiedEntry<'a, K, V, S>),
+    Occupied(OccupiedEntry<'a, K, V, S, W>),
 }
 
-impl<K: Hash + Eq, V, S: BuildHasher> StableMap<K, V, S> {
+impl<K: Hash + Eq, V, S: BuildHasher, W: SmallIndex> StableMap<K, V, S, W> {
     /// Returns the entry corresponding to the given key, allowing for insertion and/or in-place mutation.
-    pub fn entry(&mut self, key: K) -> Entry<'_, K, V, S> {
+    pub fn entry(&mut self, key: K) -> Entry<'_, K, V, S, W> {
         // make sure we can insert an entry. do this now because we don't have access to index_table later.
         self.index_table.grow_for(self.items.len(), |index| {
             self.build_hasher.hash_one(&self.items[index].0)
@@ -483,7 +483,7 @@ impl<K: Hash + Eq, V, S: BuildHasher> StableMap<K, V, S> {
     }
 }
 
-impl<'a, K, V, S> VacantEntry<'a, K, V, S> {
+impl<'a, K, V, S, W: SmallIndex> VacantEntry<'a, K, V, S, W> {
     /// Returns a reference to the key that would be used for insertion.
     pub fn key(&self) -> &K {
         &self.key
@@ -505,7 +505,7 @@ impl<'a, K, V, S> VacantEntry<'a, K, V, S> {
     }
 }
 
-impl<'a, K, V, S> OccupiedEntry<'a, K, V, S> {
+impl<'a, K, V, S, W: SmallIndex> OccupiedEntry<'a, K, V, S, W> {
     /// Returns a reference to the key of the entry.
     pub fn key(&self) -> &K {
         &self.items[self.index()].0
@@ -530,7 +530,7 @@ impl<'a, K, V, S> OccupiedEntry<'a, K, V, S> {
     }
 }
 
-impl<K: Hash, V, S: BuildHasher> OccupiedEntry<'_, K, V, S> {
+impl<K: Hash, V, S: BuildHasher, W: SmallIndex> OccupiedEntry<'_, K, V, S, W> {
     /// Removes the entry from the map and returns the key-value pair.
     ///
     /// The last entry in the map is put in its place.
@@ -553,7 +553,7 @@ impl<K: Hash, V, S: BuildHasher> OccupiedEntry<'_, K, V, S> {
     }
 }
 
-impl<'a, K, V, S> Entry<'a, K, V, S> {
+impl<'a, K, V, S, W: SmallIndex> Entry<'a, K, V, S, W> {
     /// Returns a refernece to the key of the entry.
     pub fn key(&self) -> &K {
         match self {
@@ -611,7 +611,7 @@ impl<'a, K, V, S> Entry<'a, K, V, S> {
     }
 }
 
-impl<K: Hash, V, S: BuildHasher> StableMap<K, V, S> {
+impl<K: Hash, V, S: BuildHasher, W: SmallIndex> StableMap<K, V, S, W> {
     #[cfg(test)]
     fn check(&self) {
         assert!(self.index_table.len() == self.items.len());

@@ -4,27 +4,32 @@ use crate::{
     util::{impl_iterator, simplify_range},
 };
 use core::hash::Hash;
-use index_table::IndexTable;
+use index_table::{IndexTable, SmallIndex};
 use std::{borrow::Borrow, hash::BuildHasher, ops::RangeBounds};
 
 #[path = "test_set.rs"]
 mod test_set;
 
 /// A hash set that maintains the order of its elements.
+/// 
+/// In `StableSet<T, S, W>`,
+/// `T: Hash + Eq` is the type of elements of the set,
+/// `S: BuildHasher` is used for hashing elements
+/// and `W: SmallIndex` is the type used for small indices internally (`W` should usually be omitted, it then defaults to `u32`).
 #[derive(Clone)]
-pub struct StableSet<T, S> {
-    index_table: IndexTable,
+pub struct StableSet<T, S, W=u32> {
+    index_table: IndexTable<W>,
     items: Vec<T>,
     build_hasher: S,
 }
 
-impl<T: std::fmt::Debug, S> std::fmt::Debug for StableSet<T, S> {
+impl<T: std::fmt::Debug, S, W> std::fmt::Debug for StableSet<T, S, W> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_set().entries(self).finish()
     }
 }
 
-impl<T, S: Default> Default for StableSet<T, S> {
+impl<T, S: Default, W> Default for StableSet<T, S, W> {
     fn default() -> Self {
         StableSet {
             index_table: IndexTable::default(),
@@ -34,7 +39,7 @@ impl<T, S: Default> Default for StableSet<T, S> {
     }
 }
 
-impl<T, S: Default> StableSet<T, S> {
+impl<T, S: Default, W: SmallIndex> StableSet<T, S, W> {
     /// Returns an empty set.
     pub fn new() -> Self {
         Self::default()
@@ -49,7 +54,7 @@ impl<T, S: Default> StableSet<T, S> {
     }
 }
 
-impl<T, S> StableSet<T, S> {
+impl<T, S, W: SmallIndex> StableSet<T, S, W> {
     /// Returns an empty set with the provided BuildHasher.
     pub fn with_hasher(build_hasher: S) -> Self {
         StableSet {
@@ -103,7 +108,7 @@ impl<T, S> StableSet<T, S> {
     }
 }
 
-impl<T: Hash, S: BuildHasher> StableSet<T, S> {
+impl<T: Hash, S: BuildHasher, W: SmallIndex> StableSet<T, S, W> {
     /// Reserve memory for an extra `additional` items.
     pub fn reserve(&mut self, additional: usize) {
         self.items.reserve(additional);
@@ -113,7 +118,7 @@ impl<T: Hash, S: BuildHasher> StableSet<T, S> {
     }
 }
 
-impl<T: Hash + Eq, S: BuildHasher> StableSet<T, S> {
+impl<T: Hash + Eq, S: BuildHasher, W: SmallIndex> StableSet<T, S, W> {
     /// Removes the last item from the set and returns it, if it exists.
     pub fn pop(&mut self) -> Option<T> {
         let opt_item = self.items.pop();
@@ -129,6 +134,11 @@ impl<T: Hash + Eq, S: BuildHasher> StableSet<T, S> {
     /// Inserts an item to the end of the set, unless the set contains an equivalent item already.
     /// Returns `true` if the item was inserted.
     pub fn insert(&mut self, value: T) -> bool {
+        self.insert_full(value).1
+    }
+    /// Inserts an item to the end of the set, unless the set contains an equivalent item already.
+    /// Returns the index of the existing or new item, and `true` if the given item was inserted.
+    pub fn insert_full(&mut self, value: T) -> (usize, bool) {
         self.index_table.grow_for(self.items.len(), |index| {
             self.build_hasher.hash_one(&self.items[index])
         });
@@ -138,12 +148,12 @@ impl<T: Hash + Eq, S: BuildHasher> StableSet<T, S> {
             |index| self.items[index] == value,
             |index| self.build_hasher.hash_one(&self.items[index]),
         ) {
-            index_table::Entry::Occupied(_) => false,
+            index_table::Entry::Occupied(entry) => (entry.get(), false),
             index_table::Entry::Vacant(entry) => {
                 let new_index = self.items.len();
                 self.items.push(value);
                 entry.insert(new_index);
-                true
+                (new_index, true)
             }
         }
     }
@@ -253,7 +263,7 @@ impl<T: Hash + Eq, S: BuildHasher> StableSet<T, S> {
     /// Returns `true` if the set is a subset of `other`.
     /// 
     /// The order of elements is ignored.
-    pub fn is_subset<S2: BuildHasher>(&self, other: &StableSet<T, S2>) -> bool {
+    pub fn is_subset<S2: BuildHasher>(&self, other: &StableSet<T, S2, W>) -> bool {
         self.len() <= other.len() && self.iter().all(|t| other.contains(t))
     }
     /// Removes all items from the set for which `f` evaluates to `false`.
@@ -286,15 +296,15 @@ impl<T: Hash + Eq, S: BuildHasher> StableSet<T, S> {
     }
 }
 
-impl<T: Hash + Eq, S1: BuildHasher, S2: BuildHasher> PartialEq<StableSet<T, S2>>
-    for StableSet<T, S1>
+impl<T: Hash + Eq, S1: BuildHasher, S2: BuildHasher, W: SmallIndex> PartialEq<StableSet<T, S2, W>>
+    for StableSet<T, S1, W>
 {
-    fn eq(&self, other: &StableSet<T, S2>) -> bool {
+    fn eq(&self, other: &StableSet<T, S2, W>) -> bool {
         self.len() == other.len() && self.is_subset(other)
     }
 }
 
-impl<T: Hash + Eq, S: BuildHasher> Eq for StableSet<T, S> {}
+impl<T: Hash + Eq, S: BuildHasher, W: SmallIndex> Eq for StableSet<T, S, W> {}
 
 /// An iterator that moves out of a set.
 /// 
@@ -306,7 +316,7 @@ impl<T> Iterator for IntoIter<T> {
     type Item = T;
     impl_iterator!();
 }
-impl<T, S> IntoIterator for StableSet<T, S> {
+impl<T, S, W> IntoIterator for StableSet<T, S, W> {
     type Item = T;
     type IntoIter = IntoIter<T>;
     fn into_iter(self) -> Self::IntoIter {
@@ -316,7 +326,7 @@ impl<T, S> IntoIterator for StableSet<T, S> {
     }
 }
 
-impl<'a, T, S> IntoIterator for &'a StableSet<T, S> {
+impl<'a, T, S, W> IntoIterator for &'a StableSet<T, S, W> {
     type Item = &'a T;
     type IntoIter = Iter<'a, T>;
     fn into_iter(self) -> Self::IntoIter {
@@ -335,7 +345,7 @@ impl<'a, T> Iterator for Iter<'a, T> {
     impl_iterator!();
 }
 
-impl<T, S> StableSet<T, S> {
+impl<T, S, W> StableSet<T, S, W> {
     /// Returns an iterator over the set.
     /// 
     /// The iterator yields all items in order.
@@ -346,7 +356,7 @@ impl<T, S> StableSet<T, S> {
     }
 }
 
-impl<T: Hash + Eq, S: BuildHasher> Extend<T> for StableSet<T, S> {
+impl<T: Hash + Eq, S: BuildHasher, W: SmallIndex> Extend<T> for StableSet<T, S, W> {
     fn extend<IntoIter: IntoIterator<Item = T>>(&mut self, iter: IntoIter) {
         let iter = iter.into_iter();
         let (lower_bound, _) = iter.size_hint();
@@ -357,7 +367,7 @@ impl<T: Hash + Eq, S: BuildHasher> Extend<T> for StableSet<T, S> {
     }
 }
 
-impl<T: Hash + Eq, S: BuildHasher + Default> FromIterator<T> for StableSet<T, S> {
+impl<T: Hash + Eq, S: BuildHasher + Default, W: SmallIndex> FromIterator<T> for StableSet<T, S, W> {
     fn from_iter<IntoIter: IntoIterator<Item = T>>(iter: IntoIter) -> Self {
         let iter = iter.into_iter();
         let (lower_bound, _) = iter.size_hint();
@@ -369,7 +379,7 @@ impl<T: Hash + Eq, S: BuildHasher + Default> FromIterator<T> for StableSet<T, S>
     }
 }
 
-impl<T: Hash, S: BuildHasher> StableSet<T, S> {
+impl<T: Hash, S: BuildHasher, W: SmallIndex> StableSet<T, S, W> {
     #[cfg(test)]
     fn check(&self) {
         assert!(self.index_table.len() == self.items.len());
@@ -389,7 +399,7 @@ impl<T> Iterator for Drain<'_, T> {
     impl_iterator!();
 }
 
-impl<T, S> StableSet<T, S> {
+impl<T, S, W: SmallIndex> StableSet<T, S, W> {
     /// Returns an iterator yielding all elements with indices in the specified range and removes those elements from the set.
     /// 
     /// Panics if the range is invalid or out of bounds.
