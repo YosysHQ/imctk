@@ -1,5 +1,7 @@
+use crate::NoUninit;
+
 #[allow(dead_code)] // Only constructed via transmutation and/or pointer casts
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, NoUninit)]
 #[repr(u8)]
 pub enum NonMaxU8 {
     Val00 = 0x00,
@@ -260,7 +262,7 @@ pub enum NonMaxU8 {
 }
 
 #[allow(dead_code)] // Only constructed via transmutation and/or pointer casts
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, NoUninit)]
 #[repr(u8)]
 pub enum NonMaxHighNibbleU8 {
     Val00 = 0x00,
@@ -506,7 +508,7 @@ pub enum NonMaxHighNibbleU8 {
 }
 
 #[allow(dead_code)] // Only constructed via transmutation and/or pointer casts
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, NoUninit)]
 #[repr(u8)]
 pub enum NonMaxMsbU8 {
     Val00 = 0x00,
