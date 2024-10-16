@@ -24,7 +24,6 @@ pub struct Generation(u64);
 pub struct ObserverId(Id64);
 
 /// An `ObserverToken` represents an observer of a `TrackedUnionFind`.
-#[derive(Debug)]
 pub struct ObserverToken {
     tuf_id: TrackedUnionFindId,
     generation: Generation,
@@ -57,6 +56,16 @@ impl ObserverToken {
     /// This is equivalent to whether they are on the same generation of the same `TrackedUnionFind`.
     pub fn is_compatible(&self, other: &ObserverToken) -> bool {
         self.tuf_id == other.tuf_id && self.generation == other.generation
+    }
+}
+
+impl std::fmt::Debug for ObserverToken {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ObserverToken")
+            .field("tuf_id", &self.tuf_id.0)
+            .field("generation", &self.generation.0)
+            .field("observer_id", &self.observer_id.0)
+            .finish()
     }
 }
 
@@ -196,12 +205,24 @@ impl<Atom: Id, Elem: Id> std::fmt::Debug for Change<Atom, Elem> {
 
 /// A `TrackedUnionFind` augments a [`UnionFind`] structure with change tracking.
 pub struct TrackedUnionFind<Atom, Elem> {
+    /// Globally unique ID.
     tuf_id: TrackedUnionFindId,
     union_find: UnionFind<Atom, Elem>,
+    /// Log of changes with new changes appended to the end.
+    /// Indices into this log are relative positions.
+    /// The start of this log has relative position 0 and absolute position `log_start`.
     log: VecDeque<Change<Atom, Elem>>,
     observer_id_alloc: IdAlloc<ObserverId>,
+    /// This stores absolute positions of each observers in the log,
+    /// and also allows retrieving the minimum absolute position of any observer.
+    ///
+    /// `truncate_log` will reset that minimum position to be at relative position 0.
     observers: PriorityQueue<ObserverId, Reverse<u64>>,
+    /// Offset between absolute and relative positions in the log.
+    ///
+    /// absolute position = relative position + `log_start`
     log_start: u64,
+    /// Incremented on every renumbering.
     generation: Generation,
 }
 
@@ -274,16 +295,17 @@ impl<Atom: Id, Elem: Id + Element<Atom>> TrackedUnionFind<Atom, Elem> {
     /// This resets the `UnionFind` to the trivial state (`find(a) == a` for all `a`) and increments the generation ID.
     ///
     /// This method will panic in debug mode if said preconditions are not met.
-    pub fn renumber(&mut self, forward: IdVec<Atom, Option<Elem>>, reverse: IdVec<Atom, Elem>) {
+    pub fn renumber(&mut self, forward: IdVec<Atom, Option<Elem>>, reverse: IdVec<Atom, Elem>) -> Arc<Renumbering<Atom, Elem>> {
         let old_generation = self.generation;
         let new_generation = Generation(old_generation.0 + 1);
         self.generation = new_generation;
-        let renumbering = Renumbering::new(forward, reverse, old_generation, new_generation);
+        let renumbering = Arc::new(Renumbering::new(forward, reverse, old_generation, new_generation));
         debug_assert!(renumbering.is_repr_reduction(&self.union_find));
         if !self.observers.is_empty() {
-            self.log.push_back(Change::Renumber(Arc::new(renumbering)));
+            self.log.push_back(Change::Renumber(renumbering.clone()));
         }
         self.union_find = UnionFind::new();
+        renumbering
     }
 }
 
@@ -401,7 +423,7 @@ impl<Atom, Elem> TrackedUnionFind<Atom, Elem> {
     ///
     /// The method assumes that you will immediately process any `Renumbering` operations in the log
     /// and will update the token's generation field.
-    /// 
+    ///
     /// Returns `true` iff `f` has been called at least once.
     pub fn drain_changes_with_fn(
         &mut self,
@@ -460,15 +482,15 @@ pub struct DrainChangesMap<'a, 'b, Atom, Elem, F> {
 
 impl<'a, 'b, Atom, Elem> DrainChanges<'a, 'b, Atom, Elem> {
     /// Returns a reference to the first entry in the token's private log, without deleting it.
-    /// 
+    ///
     /// Returns `None` if the log is empty.
     pub fn peek(&mut self) -> Option<&Change<Atom, Elem>> {
         self.tuf.log.get(self.rel_pos)
     }
     /// Returns a reference to the first entry in the token's private log. The entry will be deleted after its use.
-    /// 
+    ///
     /// If this returns a `Renumbering`, it is assumed that you will process it and the token's generation number will be updated.
-    /// 
+    ///
     /// Returns `None` if the log is empty. If `next` returned `None`, it will never return any more entries (the iterator is fused).
     ///
     /// As reflected by the lifetimes, the API only guarantees that the returned reference until the next call of any method of this iterator.
@@ -519,8 +541,7 @@ impl<'a, 'b, Atom: Clone, Elem: Clone> DrainChanges<'a, 'b, Atom, Elem> {
 impl<Atom, Elem> Drop for DrainChanges<'_, '_, Atom, Elem> {
     fn drop(&mut self) {
         // mark any renumberings as seen
-        while self.next().is_some() {
-        }
+        while self.next().is_some() {}
         self.tuf
             .observer_set_rel_pos(self.token, self.tuf.log.len());
     }

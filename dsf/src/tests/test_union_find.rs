@@ -143,11 +143,11 @@ impl<Atom: Id, Elem: Id + Element<Atom>> CheckedUnionFind<Atom, Elem> {
 }
 
 #[test]
-fn test() {
+fn test_suite() {
     let mut u: CheckedUnionFind<Var, Lit> = CheckedUnionFind::new();
     let mut rng = rand_pcg::Pcg64::seed_from_u64(25);
     let max_var = 2000;
-    for i in 0..2000 {
+    for _ in 0..2000 {
         match rng.gen_range(0..10) {
             0..=4 => {
                 let a = Lit::from_code(rng.gen_range(0..=2 * max_var + 1));
