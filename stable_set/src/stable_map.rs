@@ -8,6 +8,12 @@ use index_table::{IndexTable, SmallIndex};
 use std::{borrow::Borrow, hash::BuildHasher, ops::RangeBounds};
 
 /// A hash map that maintains the order of its elements.
+///
+/// In `StableMap<K, V, S, W>`,
+/// `K: Hash + Eq` is the type of keys,
+/// `V` is the type of values,
+/// `S: BuildHasher` is used for hashing elements
+/// and `W: SmallIndex` is the type used for small indices internally (`W` should usually be omitted, it then defaults to `u32`).
 #[derive(Clone)]
 pub struct StableMap<K, V, S, W=u32> {
     index_table: IndexTable<W>,
