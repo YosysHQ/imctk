@@ -24,3 +24,8 @@ pub use stable_map::StableMap;
 
 pub mod stable_set;
 pub mod stable_map;
+
+#[cfg(test)]
+mod test_set;
+#[cfg(test)]
+mod test_map;

@@ -1,4 +1,3 @@
-#![cfg(test)]
 #![allow(missing_docs)]
 use crate::StableSet;
 use indexmap::IndexSet;
@@ -23,6 +22,9 @@ impl<T: Hash + Eq + Clone + std::fmt::Debug> CheckedSet<T> {
             dut: ZwoSet::new(),
             ref_set: IndexSet::new(),
         }
+    }
+    fn len(&self) -> usize {
+        self.ref_set.len()
     }
     fn get_full<Q>(&mut self, value: &Q) -> Option<(usize, &T)>
     where
@@ -81,6 +83,24 @@ impl<T: Hash + Eq + Clone + std::fmt::Debug> CheckedSet<T> {
         self.dut.reserve(additional);
         self.ref_set.reserve(additional);
     }
+    /// NB: `random_likelihood` is **not** a probability. `random_likelihood == 2.0` would be 2:1 odds random:present, i.e. 2/3 probability.
+    fn present_or_random<R: Rng + SeedableRng>(
+        &self,
+        random_likelihood: f64,
+        rng: &mut R,
+        mut rand_t: impl FnMut(&mut R) -> T,
+    ) -> T {
+        debug_assert!(random_likelihood >= 0.0);
+        if self.len() == 0 || rng.gen_range(0.0..1.0 + random_likelihood) >= 1.0 {
+            rand_t(rng)
+        } else {
+            self.ref_set.iter().choose(rng).unwrap().clone()
+        }
+    }
+    fn random_index<R: Rng + SeedableRng>(&self, error_likelihood: f64, rng: &mut R) -> usize {
+        let max = (self.len() as f64 * (1.0 + error_likelihood)).ceil() as usize;
+        rng.gen_range(0..=max)
+    }
 }
 
 macro_rules! weighted_choose {
@@ -105,47 +125,29 @@ fn test_suite<T: Hash + Eq + Clone + std::fmt::Debug, R: Rng + SeedableRng>(
     let verbosity = 1;
     for _ in 0..5000 {
         weighted_choose! {&mut rng,
-            Insert: 1.0 => {
-                let item = rand_t(&mut rng);
+            InsertRandom: 1.5 => {
+                let item = set.present_or_random(4.0, &mut rng, &mut rand_t);
                 let result = set.insert_full(item.clone());
                 if verbosity > 0 {
                     println!("inserting {item:?} -> {result:?}");
                 }
             },
-            GetPresent: 0.5 => {
-                if let Some(item) = set.ref_set.iter().choose(&mut rng).cloned() {
-                    let result = set.get_full(&item);
-                    if verbosity > 0 {
-                        println!("getting {item:?} -> {result:?}");
-                    }
-                }
-            },
-            GetRandom: 0.5 => {
-                let item = rand_t(&mut rng);
+            Get: 1.0 => {
+                let item = set.present_or_random(1.0, &mut rng, &mut rand_t);
                 let result = set.get_full(&item);
                 if verbosity > 0 {
                     println!("getting {item:?} -> {result:?}");
                 }
             },
-            RemovePresent: 0.3 => {
-                if let Some(item) = set.ref_set.iter().choose(&mut rng).cloned() {
-                    let result = set.swap_remove_full(&item);
-                    if verbosity > 0 {
-                        println!("removing {item:?} -> {result:?}");
-                    }
-                }
-            },
-            RemoveRandom: 0.5 => {
-                let item = rand_t(&mut rng);
+            Remove: 0.5 => {
+                let item = set.present_or_random(0.5, &mut rng, &mut rand_t);
                 let result = set.swap_remove_full(&item);
                 if verbosity > 0 {
                     println!("removing {item:?} -> {result:?}");
                 }
             },
             RemoveIndex: 0.2 => {
-                let len = set.ref_set.len();
-                // try to generate invalid indices sometimes
-                let index = rng.gen_range(0..=(len + len.div_ceil(10)));
+                let index = set.random_index(0.1, &mut rng);
                 let result = set.swap_remove_index(index);
                 if verbosity > 0 {
                     println!("removing index {index:?} -> {result:?}");
@@ -158,9 +160,9 @@ fn test_suite<T: Hash + Eq + Clone + std::fmt::Debug, R: Rng + SeedableRng>(
                 }
             },
             Retain: 0.05 => {
-                let old_len = set.ref_set.len();
+                let old_len = set.len();
                 set.retain(&retain_fn);
-                let new_len = set.ref_set.len();
+                let new_len = set.len();
                 if verbosity > 0 {
                     println!("retaining, {old_len} -> {new_len}");
                 }
@@ -172,7 +174,7 @@ fn test_suite<T: Hash + Eq + Clone + std::fmt::Debug, R: Rng + SeedableRng>(
                 }
             }
         };
-        max_size = std::cmp::max(max_size, set.ref_set.len());
+        max_size = std::cmp::max(max_size, set.len());
     }
     set.check();
     println!("max size: {max_size}");
@@ -201,7 +203,7 @@ fn test_suite_string() {
             let len = rng.gen_range(4..32);
             String::from_iter((0..len).map(|_| rng.gen_range('!'..'~')))
         },
-        |item| !item.contains('!')
+        |item| !item.contains('!'),
     );
 }
 
@@ -226,7 +228,10 @@ fn test_from_iter_extend() {
     set.extend((0..1000).map(|_| rng.gen()));
     set.check();
     rng = rng_start.clone();
-    assert!(set.iter().copied().eq((0..2000).map(|_| rng.gen::<usize>())));
+    assert!(set
+        .iter()
+        .copied()
+        .eq((0..2000).map(|_| rng.gen::<usize>())));
 }
 
 #[test]

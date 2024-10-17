@@ -7,9 +7,6 @@ use core::hash::Hash;
 use index_table::{IndexTable, SmallIndex};
 use std::{borrow::Borrow, hash::BuildHasher, ops::RangeBounds};
 
-#[path = "test_map.rs"]
-mod test_map;
-
 /// A hash map that maintains the order of its elements.
 #[derive(Clone)]
 pub struct StableMap<K, V, S, W=u32> {
@@ -260,19 +257,13 @@ impl<K: Hash + Eq, V, S: BuildHasher, W: SmallIndex> StableMap<K, V, S, W> {
     /// Removes the entry with the specified index from the set and returns its key and value, if it exists.
     ///
     /// The last item is put in its place.
-    pub fn swap_remove_index_full(&mut self, index: usize) -> Option<(K, V)> {
+    pub fn swap_remove_index(&mut self, index: usize) -> Option<(K, V)> {
         let hash = self.build_hasher.hash_one(&self.items.get(index)?.0);
         self.index_table
             .find_entry(hash, |i| i == index)
             .unwrap()
             .remove();
         Some(self.swap_remove_finish(index))
-    }
-    /// Removes the entry with the specified index from the set and returns its value, if it exists.
-    ///
-    /// The last item is put in its place.
-    pub fn swap_remove_index(&mut self, index: usize) -> Option<V> {
-        self.swap_remove_index_full(index).map(|x| x.1)
     }
     /// Removes all items for which `f` evaluates to `false`.
     ///
@@ -554,7 +545,7 @@ impl<K: Hash, V, S: BuildHasher, W: SmallIndex> OccupiedEntry<'_, K, V, S, W> {
 }
 
 impl<'a, K, V, S, W: SmallIndex> Entry<'a, K, V, S, W> {
-    /// Returns a refernece to the key of the entry.
+    /// Returns a reference to the key of the entry.
     pub fn key(&self) -> &K {
         match self {
             Entry::Vacant(entry) => entry.key(),
@@ -613,7 +604,7 @@ impl<'a, K, V, S, W: SmallIndex> Entry<'a, K, V, S, W> {
 
 impl<K: Hash, V, S: BuildHasher, W: SmallIndex> StableMap<K, V, S, W> {
     #[cfg(test)]
-    fn check(&self) {
+    pub(crate) fn check(&self) {
         assert!(self.index_table.len() == self.items.len());
         for (index, (key, _)) in self.items.iter().enumerate() {
             let hash = self.build_hasher.hash_one(key);

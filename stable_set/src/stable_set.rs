@@ -7,9 +7,6 @@ use core::hash::Hash;
 use index_table::{IndexTable, SmallIndex};
 use std::{borrow::Borrow, hash::BuildHasher, ops::RangeBounds};
 
-#[path = "test_set.rs"]
-mod test_set;
-
 /// A hash set that maintains the order of its elements.
 /// 
 /// In `StableSet<T, S, W>`,
@@ -381,7 +378,7 @@ impl<T: Hash + Eq, S: BuildHasher + Default, W: SmallIndex> FromIterator<T> for 
 
 impl<T: Hash, S: BuildHasher, W: SmallIndex> StableSet<T, S, W> {
     #[cfg(test)]
-    fn check(&self) {
+    pub(crate) fn check(&self) {
         assert!(self.index_table.len() == self.items.len());
         for (index, item) in self.items.iter().enumerate() {
             let hash = self.build_hasher.hash_one(item);
