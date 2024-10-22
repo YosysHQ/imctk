@@ -1,0 +1,18 @@
+[package]
+name = "imctk-rtlil"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+arrayvec = "0.7.4"
+bstr = "1.9.1"
+flussab = "0.3.1"
+hashbrown = { version = "0.14.3", default-features = false, features = ["allocator-api2", "inline-more"] }
+indexmap = "2.2.6"
+itoap = "1.0.1"
+radix_trie = "0.2.1"
+smallvec = { version = "1.13.2", features = ["const_generics"] }
+thiserror = "1.0.59"
+zwohash = "0.1.2"
