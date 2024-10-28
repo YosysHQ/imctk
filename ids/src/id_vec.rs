@@ -575,7 +575,7 @@ impl<'a, K: Id, V> LengthGuard<'a, K, V> {
     }
 }
 
-impl<'a, K: Id, V> Drop for LengthGuard<'a, K, V> {
+impl<K: Id, V> Drop for LengthGuard<'_, K, V> {
     #[inline]
     fn drop(&mut self) {
         if self.values.len() > K::MAX_ID_INDEX.saturating_add(1) {
