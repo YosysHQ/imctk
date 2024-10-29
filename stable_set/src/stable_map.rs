@@ -15,7 +15,7 @@ use std::{borrow::Borrow, hash::BuildHasher, ops::RangeBounds};
 /// `S: BuildHasher` is used for hashing elements
 /// and `W: SmallIndex` is the type used for small indices internally (`W` should usually be omitted, it then defaults to `u32`).
 #[derive(Clone)]
-pub struct StableMap<K, V, S, W=u32> {
+pub struct StableMap<K, V, S, W = u32> {
     index_table: IndexTable<W>,
     items: Vec<(K, V)>,
     build_hasher: S,
@@ -64,7 +64,9 @@ impl<K, V, S, W: SmallIndex> StableMap<K, V, S, W> {
     }
 }
 
-impl<K: std::fmt::Debug, V: std::fmt::Debug, S, W: SmallIndex> std::fmt::Debug for StableMap<K, V, S, W> {
+impl<K: std::fmt::Debug, V: std::fmt::Debug, S, W: SmallIndex> std::fmt::Debug
+    for StableMap<K, V, S, W>
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_map().entries(self.iter()).finish()
     }
@@ -416,7 +418,9 @@ impl<'a, K, V, S, W: SmallIndex> IntoIterator for &'a mut StableMap<K, V, S, W> 
     }
 }
 
-impl<K: Hash + Eq, V, S: BuildHasher + Default, W: SmallIndex> FromIterator<(K, V)> for StableMap<K, V, S, W> {
+impl<K: Hash + Eq, V, S: BuildHasher + Default, W: SmallIndex> FromIterator<(K, V)>
+    for StableMap<K, V, S, W>
+{
     fn from_iter<Iter: IntoIterator<Item = (K, V)>>(iter: Iter) -> Self {
         let iter = iter.into_iter();
         let (lower_bound, _) = iter.size_hint();

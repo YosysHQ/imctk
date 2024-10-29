@@ -8,13 +8,13 @@ use index_table::{IndexTable, SmallIndex};
 use std::{borrow::Borrow, hash::BuildHasher, ops::RangeBounds};
 
 /// A hash set that maintains the order of its elements.
-/// 
+///
 /// In `StableSet<T, S, W>`,
 /// `T: Hash + Eq` is the type of elements of the set,
 /// `S: BuildHasher` is used for hashing elements
 /// and `W: SmallIndex` is the type used for small indices internally (`W` should usually be omitted, it then defaults to `u32`).
 #[derive(Clone)]
-pub struct StableSet<T, S, W=u32> {
+pub struct StableSet<T, S, W = u32> {
     index_table: IndexTable<W>,
     items: Vec<T>,
     build_hasher: S,
@@ -206,7 +206,7 @@ impl<T: Hash + Eq, S: BuildHasher, W: SmallIndex> StableSet<T, S, W> {
         item
     }
     /// Removes the specified value from the set, if it exists. Returns `true` if an item was removed.
-    /// 
+    ///
     /// The last item is put in its place.
     pub fn swap_remove<Q>(&mut self, value: &Q) -> bool
     where
@@ -216,7 +216,7 @@ impl<T: Hash + Eq, S: BuildHasher, W: SmallIndex> StableSet<T, S, W> {
         self.swap_remove_full(value).is_some()
     }
     /// Removes the specified value from the set and returns it, if it exists.
-    /// 
+    ///
     /// The last item is put in its place.
     pub fn swap_take<Q>(&mut self, value: &Q) -> Option<T>
     where
@@ -226,7 +226,7 @@ impl<T: Hash + Eq, S: BuildHasher, W: SmallIndex> StableSet<T, S, W> {
         self.swap_remove_full(value).map(|x| x.1)
     }
     /// Removes the specified value from the set and returns its index and it, if it exists.
-    /// 
+    ///
     /// The last item is put in its place.
     pub fn swap_remove_full<Q>(&mut self, value: &Q) -> Option<(usize, T)>
     where
@@ -247,7 +247,7 @@ impl<T: Hash + Eq, S: BuildHasher, W: SmallIndex> StableSet<T, S, W> {
         }
     }
     /// Removes the item at the given index and returns it, if it exists.
-    /// 
+    ///
     /// The last item is put in its place.
     pub fn swap_remove_index(&mut self, index: usize) -> Option<T> {
         let hash = self.build_hasher.hash_one(self.items.get(index)?);
@@ -258,15 +258,15 @@ impl<T: Hash + Eq, S: BuildHasher, W: SmallIndex> StableSet<T, S, W> {
         Some(self.swap_remove_finish(index))
     }
     /// Returns `true` if the set is a subset of `other`.
-    /// 
+    ///
     /// The order of elements is ignored.
     pub fn is_subset<S2: BuildHasher>(&self, other: &StableSet<T, S2, W>) -> bool {
         self.len() <= other.len() && self.iter().all(|t| other.contains(t))
     }
     /// Removes all items from the set for which `f` evaluates to `false`.
-    /// 
+    ///
     /// `f` is guaranteed to be called exactly once for each item and in order.
-    /// 
+    ///
     /// The order of elements is preserved.
     pub fn retain(&mut self, mut f: impl FnMut(&T) -> bool) {
         let mut in_index = 0;
@@ -304,7 +304,7 @@ impl<T: Hash + Eq, S1: BuildHasher, S2: BuildHasher, W: SmallIndex> PartialEq<St
 impl<T: Hash + Eq, S: BuildHasher, W: SmallIndex> Eq for StableSet<T, S, W> {}
 
 /// An iterator that moves out of a set.
-/// 
+///
 /// This struct is created by the `into_iter` method on [`StableSet`].
 pub struct IntoIter<T> {
     inner: std::vec::IntoIter<T>,
@@ -332,7 +332,7 @@ impl<'a, T, S, W> IntoIterator for &'a StableSet<T, S, W> {
 }
 
 /// An iterator that returns references into a set.
-/// 
+///
 /// This struct is created by the [`iter`](StableSet::iter) method on [`StableSet`].
 pub struct Iter<'a, T> {
     inner: std::slice::Iter<'a, T>,
@@ -344,7 +344,7 @@ impl<'a, T> Iterator for Iter<'a, T> {
 
 impl<T, S, W> StableSet<T, S, W> {
     /// Returns an iterator over the set.
-    /// 
+    ///
     /// The iterator yields all items in order.
     pub fn iter(&self) -> Iter<'_, T> {
         Iter {
@@ -398,9 +398,9 @@ impl<T> Iterator for Drain<'_, T> {
 
 impl<T, S, W: SmallIndex> StableSet<T, S, W> {
     /// Returns an iterator yielding all elements with indices in the specified range and removes those elements from the set.
-    /// 
+    ///
     /// Panics if the range is invalid or out of bounds.
-    /// 
+    ///
     /// If the returned iterator is leaked, the set is left in an invalid state and can only be dropped.
     /// Any other operations may panic or return incorrect results.
     pub fn drain(&mut self, range: impl RangeBounds<usize>) -> Drain<'_, T> {

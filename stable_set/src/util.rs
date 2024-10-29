@@ -11,9 +11,15 @@ pub fn simplify_range(range: impl RangeBounds<usize>, len: usize) -> Range<usize
         std::ops::Bound::Included(&n) => n.checked_add(1).expect("end point of range too large"),
         std::ops::Bound::Excluded(&n) => n,
     };
-    assert!(lower < len, "start point {lower} of range is >= length {len}");
+    assert!(
+        lower < len,
+        "start point {lower} of range is >= length {len}"
+    );
     assert!(upper <= len, "end point {upper} of range is > length {len}");
-    assert!(lower <= upper, "start point {lower} is larger than end point {upper}");
+    assert!(
+        lower <= upper,
+        "start point {lower} is larger than end point {upper}"
+    );
     lower..upper
 }
 
