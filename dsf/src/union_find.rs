@@ -28,25 +28,25 @@ mod test_union_find;
 /// To declare two elements as equivalent, use the `union` or `union_full` methods, see their documentation for details on their use.
 ///
 /// NB: Since this structure stores atoms in an `IdVec`, the atoms used should ideally be a contiguous set starting at `Atom::MIN_ID`.
-/// 
+///
 /// ## Example ##
 /// ```
 /// use imctk_lit::{Var, Lit};
 /// use dsf::UnionFind;
-/// 
+///
 /// let mut union_find: UnionFind<Var, Lit> = UnionFind::new();
 /// let lit = |n| Var::from_index(n).as_lit();
-/// 
+///
 /// assert_eq!(union_find.find(lit(4)), lit(4));
-/// 
+///
 /// union_find.union([lit(3), lit(4)]);
 /// assert_eq!(union_find.find(lit(4)), lit(3));
-/// 
+///
 /// union_find.union([lit(1), !lit(2)]);
 /// union_find.union([lit(2), lit(3)]);
 /// assert_eq!(union_find.find(lit(1)), lit(1));
 /// assert_eq!(union_find.find(lit(4)), !lit(1));
-/// 
+///
 /// ```
 pub struct UnionFind<Atom, Elem> {
     parent: IdVec<Atom, Atomic<Elem>>,

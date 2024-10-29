@@ -3,21 +3,21 @@
 use imctk_lit::{Lit, Var};
 
 /// A trait for "elements" that can be split into an "atom" and a "polarity".
-/// 
+///
 /// This lets code generically manipulate variables and literals, and further serves to abstract over their concrete representation.
-/// 
+///
 /// The two most common case this trait is used for are:
 /// 1) The element and the atom are both `Var`. In this case there is only one polarity and the trait implementation is trivial.
 /// 2) The element is `Lit` and the atom is `Var`. Here there are two polarities (`+` and `-`) to keep track of.
-/// 
+///
 /// Mathematically, implementing this trait signifies that elements can be written as pairs `(a, p)` with an atom `a` and a polarity `p`.
 /// The polarities are assumed to form a group `(P, *, 1)`. The trait operations then correspond to:
 /// 1) `from_atom(a) = (a, 1)`
 /// 2) `atom((a, p)) = a`
 /// 3) `apply_pol_of((a, p), (b, q)) = (a, p * q)`
-/// 
+///
 /// Currently, code assumes that `P` is either trivial or isomorphic to `Z_2`.
-/// 
+///
 /// Code using this trait may assume the following axioms to hold:
 /// 1) `from_atom(atom(x)) == x`
 /// 2) `apply_pol_of(atom(x), x) == x`

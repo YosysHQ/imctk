@@ -1,8 +1,8 @@
 #![allow(dead_code, missing_docs)]
 
 use super::*;
-use imctk_lit::{Var, Lit};
 use imctk_ids::id_set_seq::IdSetSeq;
+use imctk_lit::{Lit, Var};
 use rand::prelude::*;
 use std::collections::{HashSet, VecDeque};
 

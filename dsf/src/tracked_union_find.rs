@@ -295,11 +295,20 @@ impl<Atom: Id, Elem: Id + Element<Atom>> TrackedUnionFind<Atom, Elem> {
     /// This resets the `UnionFind` to the trivial state (`find(a) == a` for all `a`) and increments the generation ID.
     ///
     /// This method will panic in debug mode if said preconditions are not met.
-    pub fn renumber(&mut self, forward: IdVec<Atom, Option<Elem>>, reverse: IdVec<Atom, Elem>) -> Arc<Renumbering<Atom, Elem>> {
+    pub fn renumber(
+        &mut self,
+        forward: IdVec<Atom, Option<Elem>>,
+        reverse: IdVec<Atom, Elem>,
+    ) -> Arc<Renumbering<Atom, Elem>> {
         let old_generation = self.generation;
         let new_generation = Generation(old_generation.0 + 1);
         self.generation = new_generation;
-        let renumbering = Arc::new(Renumbering::new(forward, reverse, old_generation, new_generation));
+        let renumbering = Arc::new(Renumbering::new(
+            forward,
+            reverse,
+            old_generation,
+            new_generation,
+        ));
         debug_assert!(renumbering.is_repr_reduction(&self.union_find));
         if !self.observers.is_empty() {
             self.log.push_back(Change::Renumber(renumbering.clone()));
