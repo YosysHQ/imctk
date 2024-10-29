@@ -1,0 +1,11 @@
+[package]
+name = "imctk-paged_storage"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+imctk-ids = { version = "0.1.0", path = "../ids" }
+imctk-util = { version = "0.1.0", path = "../util" }
+
+[lints]
+workspace = true

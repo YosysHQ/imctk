@@ -516,6 +516,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "imctk-paged_storage"
+version = "0.1.0"
+dependencies = [
+ "imctk-ids",
+ "imctk-util",
+]
+
+[[package]]
 name = "imctk-transparent"
 version = "0.1.0"
 dependencies = [
