@@ -312,7 +312,7 @@ impl<K: Id, V: Clone> Clone for IdVec<K, V> {
     }
 }
 
-impl<K: Id, V> Default for IdVec<K, V> {
+impl<K, V> Default for IdVec<K, V> {
     #[inline(always)]
     fn default() -> Self {
         Self {

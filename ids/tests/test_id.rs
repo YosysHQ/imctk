@@ -383,7 +383,7 @@ fn conversion_usize() {
 
 #[derive(Id)]
 #[repr(transparent)]
-pub struct NewtypePhantom<T>(usize, PhantomData<T>);
+pub struct NewtypePhantom<T: 'static>(usize, PhantomData<T>);
 
 impl<T> std::fmt::Debug for NewtypePhantom<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

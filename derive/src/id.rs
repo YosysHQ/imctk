@@ -28,6 +28,7 @@ pub fn derive_id(input: DeriveInput, internal_generic_id: bool) -> syn::Result<T
 
     let Id = quote![#imctk_ids::Id];
     let ConstIdFromIdIndex = quote![#imctk_ids::ConstIdFromIdIndex];
+    let NoUninit = quote![#imctk_ids::NoUninit];
 
     let Clone = quote![::core::prelude::rust_2021::Clone];
     let Copy = quote![::core::prelude::rust_2021::Copy];
@@ -112,6 +113,10 @@ pub fn derive_id(input: DeriveInput, internal_generic_id: bool) -> syn::Result<T
 
             // SAFETY: we ensure that the newtype wrapped type is `Id` and thus `Sync`
             unsafe impl #impl_generics #Sync for #target_type #where_clause {
+            }
+
+            // SAFETY: we ensure that the newtype wrapped type is `Id` and thus `NoUninit`
+            unsafe impl #impl_generics #NoUninit for #target_type #where_clause {
             }
         }
     };

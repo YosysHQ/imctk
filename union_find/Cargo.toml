@@ -1,0 +1,19 @@
+[package]
+name = "imctk_union_find"
+version = "0.1.0"
+edition = "2021"
+
+publish = false
+
+[dependencies]
+imctk-ids = { version = "0.1.0", path = "../ids" }
+imctk-lit = { version = "0.1.0", path = "../lit" }
+atomic = "0.6"
+priority-queue = "*"
+
+[dev-dependencies]
+rand = "*"
+rand_pcg = "*"
+
+[lints]
+workspace = true

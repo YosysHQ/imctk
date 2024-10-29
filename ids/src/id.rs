@@ -1,3 +1,4 @@
+use crate::NoUninit;
 use core::{fmt::Debug, hash::Hash};
 
 mod id_types;
@@ -43,7 +44,7 @@ pub trait ConstIdFromIdIndex<const INDEX: usize> {
 ///
 /// Users of this trait may depend on implementing types following these requirements for upholding
 /// their own safety invariants.
-pub unsafe trait Id: Copy + Ord + Hash + Send + Sync + Debug {
+pub unsafe trait Id: Copy + Ord + Hash + Send + Sync + Debug + NoUninit {
     /// An [`Id`] type that has the same representation and index range as this type.
     ///
     /// This is provided to enable writing generic code that during monomorphization is only
@@ -160,6 +161,12 @@ pub unsafe trait Id: Copy + Ord + Hash + Send + Sync + Debug {
 #[derive(imctk_derive::UnsafeInternalGenericId)]
 #[repr(transparent)]
 pub struct GenericId<const MAX_ID_INDEX: usize, Repr: Id = usize>(Repr);
+
+// SAFETY: #[repr(transparent)] and the only field is explicitly required to be NoUninit
+unsafe impl<const MAX_ID_INDEX: usize, Repr> NoUninit for GenericId<MAX_ID_INDEX, Repr> where
+    Repr: Id + NoUninit
+{
+}
 
 impl<const MAX_ID_INDEX: usize, Repr: Id> Debug for GenericId<MAX_ID_INDEX, Repr> {
     #[inline(always)]

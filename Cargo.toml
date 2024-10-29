@@ -17,6 +17,7 @@ members = [
     "imctk",
     "lit",
     "stable_set",
+    "union_find",
 
     # comment to force multi-line layout
 ]
