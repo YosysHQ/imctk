@@ -253,18 +253,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "22ec99545bb0ed0ea7bb9b8e1e9122ea386ff8a48c0922e43f36d45ab09e0e80"
 
 [[package]]
-name = "dsf"
-version = "0.1.0"
-dependencies = [
- "atomic",
- "imctk-ids",
- "imctk-lit",
- "priority-queue",
- "rand",
- "rand_pcg",
-]
-
-[[package]]
 name = "encode_unicode"
 version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -469,7 +457,7 @@ name = "imctk-ids"
 version = "0.1.0"
 dependencies = [
  "bytemuck",
- "hashbrown",
+ "hashbrown 0.14.5",
  "imctk-derive",
  "imctk-transparent",
  "rand",
@@ -540,6 +528,18 @@ version = "0.1.0"
 dependencies = [
  "imctk-ids",
  "zwohash",
+]
+
+[[package]]
+name = "imctk_union_find"
+version = "0.1.0"
+dependencies = [
+ "atomic",
+ "imctk-ids",
+ "imctk-lit",
+ "priority-queue",
+ "rand",
+ "rand_pcg",
 ]
 
 [[package]]

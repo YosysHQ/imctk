@@ -1,5 +1,5 @@
 [package]
-name = "dsf"
+name = "imctk_union_find"
 version = "0.1.0"
 edition = "2021"
 

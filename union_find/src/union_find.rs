@@ -32,7 +32,7 @@ mod test_union_find;
 /// ## Example ##
 /// ```
 /// use imctk_lit::{Var, Lit};
-/// use dsf::UnionFind;
+/// use imctk_union_find::UnionFind;
 ///
 /// let mut union_find: UnionFind<Var, Lit> = UnionFind::new();
 /// let lit = |n| Var::from_index(n).as_lit();
