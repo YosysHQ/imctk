@@ -100,11 +100,17 @@ unsafe impl<'a> PagedStorageItemRef<'a, ExampleCatalog> for ExampleItemRef<'a> {
 }
 
 unsafe impl<'a> PagedStorageItemRef<'a, ExampleCatalog> for &'a u32 {
-    unsafe fn ref_storage(ptr: *const u8, _catalog: &ExampleCatalog, variant: <ExampleCatalog as PagedStorageCatalog>::Variant) -> Option<Self> {
+    unsafe fn ref_storage(
+        ptr: *const u8,
+        _catalog: &ExampleCatalog,
+        variant: <ExampleCatalog as PagedStorageCatalog>::Variant,
+    ) -> Option<Self> {
         (variant == 1).then(|| unsafe { &*(ptr as *const u32) })
     }
 
-    fn possible_storage_variants(_catalog: &ExampleCatalog) -> impl Iterator<Item = <ExampleCatalog as PagedStorageCatalog>::Variant> + '_ {
+    fn possible_storage_variants(
+        _catalog: &ExampleCatalog,
+    ) -> impl Iterator<Item = <ExampleCatalog as PagedStorageCatalog>::Variant> + '_ {
         1..=1
     }
 }
@@ -199,11 +205,7 @@ where
         assert_eq!(dut_set, ref_set);
     }
     /// NB: `random_likelihood` is **not** a probability. `random_likelihood == 2.0` would be 2:1 odds random:present, i.e. 2/3 probability.
-    fn present_or_random<R: Rng + SeedableRng>(
-        &self,
-        random_likelihood: f64,
-        rng: &mut R,
-    ) -> u32 {
+    fn present_or_random<R: Rng + SeedableRng>(&self, random_likelihood: f64, rng: &mut R) -> u32 {
         debug_assert!(random_likelihood >= 0.0);
         if self.ref_map.is_empty() || rng.gen_range(0.0..1.0 + random_likelihood) >= 1.0 {
             rng.gen()
