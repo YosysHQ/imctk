@@ -482,7 +482,7 @@ impl<K: Id, V> IdVec<K, V> {
 
     /// Appends values using the given closure until there is an entry with the given key.
     #[inline(always)]
-    pub fn grow_for_key_with(&mut self, key: K, f: impl Fn() -> V) -> &mut V {
+    pub fn grow_for_key_with(&mut self, key: K, f: impl FnMut() -> V) -> &mut V {
         if self.len() <= key.id_index() {
             self.values.resize_with(key.id_index() + 1, f)
         }
