@@ -7,5 +7,9 @@ edition = "2021"
 imctk-ids = { version = "0.1.0", path = "../ids" }
 imctk-util = { version = "0.1.0", path = "../util" }
 
+[dev-dependencies]
+rand = "0.8.5"
+rand_pcg = "0.3.1"
+
 [lints]
 workspace = true

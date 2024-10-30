@@ -1,9 +1,13 @@
 //! A paged storage stores nodes of different types efficiently by packing nodes of the same type into pages.
 // TODO: more detail
 
-use std::{alloc::Layout, collections::HashSet, marker::PhantomData};
+use std::{
+    alloc::Layout,
+    collections::{HashMap, HashSet},
+    marker::PhantomData,
+};
 
-use imctk_ids::{id_vec::IdVec, Id};
+use imctk_ids::Id;
 
 use crate::page::{RawPage, PAGE_BITS, PAGE_SIZE};
 
@@ -82,7 +86,7 @@ pub unsafe trait PagedStorageItem<C: PagedStorageCatalog>: Sized {
 /// The invariants in the `PagedStorageItem` documentation are upheld.
 pub unsafe trait PagedStorageItemRef<'storage, C: PagedStorageCatalog>: Sized {
     /// Creates a reference to or copy of the node at `ptr` of the given variant.
-    /// 
+    ///
     /// Returns `None` if either the variant or the data at `ptr` is not valid for this type.
     ///
     /// # Safety
@@ -118,7 +122,7 @@ pub unsafe trait PagedStorageItemMut<'storage, C: PagedStorageCatalog>: Sized {
 }
 
 /// This trait is a promise that all values of this type have the same variant.
-/// 
+///
 /// # Safety
 /// - If `PagedStorageItem` is also implemented, then `PagedStorageItem::storage_variant(value, catalog)` always returns `VARIANT`.
 pub unsafe trait PagedStorageVariant<C: PagedStorageCatalog> {
@@ -143,7 +147,7 @@ struct VariantPages {
 pub struct PagedStorage<ID, C: PagedStorageCatalog> {
     catalog: C,
     pages: Vec<StoragePage<C>>,
-    variant_index: IdVec<C::Variant, VariantPages>,
+    variant_index: HashMap<C::Variant, VariantPages>,
     len: usize,
     _phantom_data: PhantomData<ID>,
 }
@@ -187,7 +191,7 @@ impl<ID: Id, C: PagedStorageCatalog> PagedStorage<ID, C> {
         Self {
             catalog,
             pages: Vec::new(),
-            variant_index: IdVec::default(),
+            variant_index: HashMap::new(),
             len: 0,
             _phantom_data: PhantomData,
         }
@@ -208,12 +212,12 @@ impl<ID: Id, C: PagedStorageCatalog> PagedStorage<ID, C> {
         id
     }
     fn variant_pages(&mut self, variant: C::Variant) -> &mut VariantPages {
-        self.variant_index.grow_for_key_with(variant, || {
+        self.variant_index.entry(variant).or_insert_with(|| {
             VariantPages::new(Self::alloc_page(&self.catalog, &mut self.pages, variant))
         })
     }
     fn did_insertion(&mut self, variant: C::Variant) {
-        let variant_page = &mut self.variant_index[variant];
+        let variant_page = self.variant_index.get_mut(&variant).unwrap();
         let page = &mut self.pages[variant_page.active_page as usize].page;
         if page.len() == PAGE_SIZE {
             variant_page.active_page = variant_page
@@ -231,7 +235,7 @@ impl<ID: Id, C: PagedStorageCatalog> PagedStorage<ID, C> {
         result: Option<R>,
     ) -> Option<R> {
         if result.is_some() {
-            let variant_page = &mut self.variant_index[variant];
+            let variant_page = self.variant_index.get_mut(&variant).unwrap();
             let page = &mut self.pages[page_id].page;
             if page.len() == PAGE_SIZE - 1 {
                 variant_page.pages_with_spare_capacity.push(page_id as u32);
@@ -345,7 +349,7 @@ impl<ID: Id, C: PagedStorageCatalog> PagedStorage<ID, C> {
     /// Returns the number of nodes with the given variant in the paged storage.
     pub fn len_by_variant(&self, variant: C::Variant) -> usize {
         self.variant_index
-            .get(variant)
+            .get(&variant)
             .map(|page| page.len)
             .unwrap_or(0)
     }
@@ -354,7 +358,7 @@ impl<ID: Id, C: PagedStorageCatalog> PagedStorage<ID, C> {
         variant: C::Variant,
     ) -> impl Iterator<Item = (usize, &RawPage)> + '_ {
         self.variant_index
-            .get(variant)
+            .get(&variant)
             .into_iter()
             .flat_map(|variant_pages| {
                 variant_pages
