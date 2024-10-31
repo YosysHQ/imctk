@@ -1,0 +1,16 @@
+[package]
+name = "new_ir"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+imctk-ids = { version = "0.1.0", path = "../ids" }
+imctk-lit = { version = "0.1.0", path = "../lit" }
+imctk-paged_storage = { version = "0.1.0", path = "../paged_storage" }
+imctk-util = { version = "0.1.0", path = "../util" }
+imctk_union_find = { version = "0.1.0", path = "../union_find" }
+strum = "0.26.3"
+strum_macros = "0.26.4"
+
+[lints]
+workspace = true

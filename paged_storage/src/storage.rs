@@ -19,7 +19,7 @@ use crate::page::{RawPage, PAGE_BITS, PAGE_SIZE};
 /// - Items of a variant fit within the layout returned by `item_layout(catalog, variant)`.
 pub unsafe trait PagedStorageCatalog {
     /// `Id` type that represents variants.
-    type Variant: Id;
+    type Variant: Copy + Eq + std::hash::Hash;
 
     /// Drops the item of the given variant at the given pointer.
     ///
