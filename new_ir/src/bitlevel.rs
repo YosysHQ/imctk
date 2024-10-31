@@ -3,29 +3,29 @@ use std::{alloc::Layout, ptr};
 use imctk_ids::Id;
 use imctk_lit::{Lit, Var};
 use imctk_paged_storage::{
-    index::{IndexedCatalog, IndexedNode, IndexedTerm},
+    index::{IndexedCatalog, IndexedNode, IndexedNodeMut, IndexedTerm, NewLifetime},
     PagedStorageCatalog, PagedStorageItem, PagedStorageItemMut, PagedStorageItemRef,
 };
 use imctk_util::unordered_pair::UnorderedPair;
 
 #[derive(Debug, Id)]
 #[repr(transparent)]
-pub struct InputId(u32);
+pub struct InputId(pub u32);
 #[derive(Debug, Id)]
 #[repr(transparent)]
-pub struct SteadyInputId(u32);
+pub struct SteadyInputId(pub u32);
 
-#[derive(PartialEq, Eq, Hash, Debug)]
-pub struct AndTerm(UnorderedPair<Lit>);
-#[derive(PartialEq, Eq, Hash, Debug)]
-pub struct XorTerm(UnorderedPair<Lit>);
-#[derive(PartialEq, Eq, Hash, Debug)]
+#[derive(PartialEq, Eq, Hash, Debug, Clone)]
+pub struct AndTerm(pub UnorderedPair<Lit>);
+#[derive(PartialEq, Eq, Hash, Debug, Clone)]
+pub struct XorTerm(pub UnorderedPair<Lit>);
+#[derive(PartialEq, Eq, Hash, Debug, Clone)]
 pub struct Reg {
-    next: Lit,
-    init: Lit,
+    pub next: Lit,
+    pub init: Lit,
 }
 
-#[derive(PartialEq, Eq, Hash, Debug)]
+#[derive(PartialEq, Eq, Hash, Debug, Clone)]
 pub enum BitlevelTerm {
     Input(InputId),
     SteadyInput(SteadyInputId),
@@ -42,6 +42,7 @@ pub enum BitlevelTermMut<'a> {
     Reg(&'a mut Reg),
 }
 
+#[derive(Clone, Debug)]
 pub struct Node<Term> {
     pub output: Lit,
     pub term: Term,
@@ -79,7 +80,14 @@ impl<'a, Term> From<&'a mut Node<Term>> for NodeMut<'a, &'a mut Term> {
     }
 }
 
-struct BitlevelCatalog;
+impl<'a> From<&'a BitlevelTerm> for BitlevelTerm {
+    fn from(value: &'a BitlevelTerm) -> Self {
+        value.clone()
+    }
+}
+
+#[derive(Default)]
+pub struct BitlevelCatalog;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, EnumIter)]
 pub enum BitlevelVariant {
@@ -87,7 +95,7 @@ pub enum BitlevelVariant {
     SteadyInput,
     And,
     Xor,
-    Reg
+    Reg,
 }
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
@@ -231,7 +239,7 @@ unsafe impl<'a> PagedStorageItemMut<'a, BitlevelCatalog> for NodeMut<'a, Bitleve
     }
 }
 
-impl IndexedTerm<Var> for BitlevelTerm {
+impl IndexedTerm<BitlevelCatalog> for BitlevelTerm {
     fn use_vars(&self) -> impl Iterator<Item = Var> + '_ {
         match self {
             BitlevelTerm::Input(_) => vec![],
@@ -245,18 +253,50 @@ impl IndexedTerm<Var> for BitlevelTerm {
     }
 }
 
-impl IndexedNode<Var> for Node<BitlevelTerm> {
+impl IndexedNode<BitlevelCatalog> for Node<BitlevelTerm> {
     fn def_var(&self) -> Option<Var> {
         Some(self.output.var())
     }
 
-    fn term(&self) -> &Self::Term {
-        &self.term
+    fn term(&self) -> BitlevelTerm {
+        self.term.clone()
     }
 }
 
-impl IndexedCatalog<Var> for BitlevelCatalog {
+impl<'a> IndexedNodeMut<BitlevelCatalog> for NodeMut<'a, BitlevelTermMut<'a>> {
+    fn rewrite(&mut self, mut fun: impl FnMut(Lit) -> Lit) {
+        *self.output = fun(*self.output);
+        match &mut self.term {
+            BitlevelTermMut::Input(_) => {}
+            BitlevelTermMut::SteadyInput(_) => {}
+            BitlevelTermMut::And(and_term) => {
+                and_term.0 = [fun(and_term.0[0]), fun(and_term.0[1])].into();
+            }
+            BitlevelTermMut::Xor(xor_term) => {
+                xor_term.0 = [fun(xor_term.0[0]), fun(xor_term.0[1])].into();
+            }
+            BitlevelTermMut::Reg(reg) => {
+                reg.init = fun(reg.init);
+                reg.next = fun(reg.next);
+            }
+        }
+    }
+}
+
+impl<'a> NewLifetime for NodeMut<'a, BitlevelTermMut<'a>> {
+    type NewLifetime<'b> = NodeMut<'b, BitlevelTermMut<'b>>
+    where 'a: 'b;
+}
+
+impl IndexedCatalog for BitlevelCatalog {
+    type Var = Var;
+    type Lit = Lit;
     type Ref<'a> = Node<BitlevelTerm>;
+    type Mut<'a> = NodeMut<'a, BitlevelTermMut<'a>>;
     type Term = BitlevelTerm;
-    type TermRef<'a> = &'a BitlevelTerm;
+    type TermRef<'a> = BitlevelTerm;
+
+    fn term_eq(a: &Self::TermRef<'_>, b: &Self::TermRef<'_>) -> bool {
+        a == b
+    }
 }
