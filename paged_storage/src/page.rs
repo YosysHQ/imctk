@@ -54,9 +54,8 @@ impl RawPage {
     pub fn new(item_layout: Layout) -> Self {
         // We pad the item so that we can store a u16 free list index in an item slot
         let align = ((item_layout.align() - 1) | 0b1) + 1;
-        let item_size = item_layout.size();
-        let size = item_size.max(align);
-        let item_layout = Layout::from_size_align(size, align).unwrap();
+        let size = item_layout.size();
+        let item_layout = Layout::from_size_align(size, align).unwrap().pad_to_align();
 
         Self {
             buf: null_mut(),
