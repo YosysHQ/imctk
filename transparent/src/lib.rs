@@ -195,7 +195,7 @@ unsafe impl<'a, T: SubtypeCast + ?Sized> SubtypeCast for &'a T {
 
 // SAFETY: References are covariant wrt valid representations and we require compatible pointer
 // metadata
-unsafe impl<'a, T: NewtypeCast + ?Sized> NewtypeCast for &'a T {}
+unsafe impl<T: NewtypeCast + ?Sized> NewtypeCast for &T {}
 
 // SAFETY: Mutable references are invariant wrt valid representations and we require compatible
 // pointer metadata
@@ -205,7 +205,7 @@ unsafe impl<'a, T: NewtypeCast + ?Sized> SubtypeCast for &'a mut T {
 
 // SAFETY: Mutable references are invariant wrt valid representations and we require compatible
 // pointer metadata
-unsafe impl<'a, T: NewtypeCast + ?Sized> NewtypeCast for &'a mut T {}
+unsafe impl<T: NewtypeCast + ?Sized> NewtypeCast for &mut T {}
 
 // SAFETY: Slices are covariant wrt to valid item representations
 unsafe impl<T: SubtypeCast> SubtypeCast for [T]

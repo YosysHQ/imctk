@@ -68,7 +68,7 @@ pub struct RefinementContext<'a> {
     pub sim_model: &'a mut SimModel,
 }
 
-impl<'a> RefinementContext<'a> {
+impl RefinementContext<'_> {
     pub fn sync_equivs(&mut self) {
         self.env.rebuild_egraph();
         self.refine.sync_equivs(self.env);

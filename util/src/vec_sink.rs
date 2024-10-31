@@ -84,7 +84,7 @@ impl<'a, T> VecSink<'a, T> {
     }
 }
 
-impl<'a, T> Deref for VecSink<'a, T> {
+impl<T> Deref for VecSink<'_, T> {
     type Target = [T];
 
     fn deref(&self) -> &Self::Target {
@@ -92,13 +92,13 @@ impl<'a, T> Deref for VecSink<'a, T> {
     }
 }
 
-impl<'a, T> DerefMut for VecSink<'a, T> {
+impl<T> DerefMut for VecSink<'_, T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.target[self.fixed..]
     }
 }
 
-impl<'a, A> Extend<A> for VecSink<'a, A> {
+impl<A> Extend<A> for VecSink<'_, A> {
     fn extend<T: IntoIterator<Item = A>>(&mut self, iter: T) {
         self.target.extend(iter)
     }

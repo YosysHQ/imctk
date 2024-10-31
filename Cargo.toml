@@ -18,6 +18,7 @@ members = [
     "lit",
     "stable_set",
     "union_find",
+    "paged_storage",
 
     # comment to force multi-line layout
 ]

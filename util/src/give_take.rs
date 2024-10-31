@@ -21,7 +21,7 @@ pub use crate::give;
 #[repr(transparent)]
 pub struct Take<'a, T: ?Sized>(&'a mut ManuallyDrop<T>);
 
-impl<'a, T> Take<'a, T> {
+impl<T> Take<'_, T> {
     /// Returns the referenced value, taking ownership and moving it out of the referenced
     /// storage.
     pub fn take(self) -> T {
@@ -59,7 +59,7 @@ impl<'a, T: ?Sized> Take<'a, T> {
     }
 }
 
-impl<'a, T: ?Sized> Deref for Take<'a, T> {
+impl<T: ?Sized> Deref for Take<'_, T> {
     type Target = T;
 
     #[inline(always)]
@@ -68,14 +68,14 @@ impl<'a, T: ?Sized> Deref for Take<'a, T> {
     }
 }
 
-impl<'a, T: ?Sized> DerefMut for Take<'a, T> {
+impl<T: ?Sized> DerefMut for Take<'_, T> {
     #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
         self.0
     }
 }
 
-impl<'a, T: ?Sized> Drop for Take<'a, T> {
+impl<T: ?Sized> Drop for Take<'_, T> {
     #[inline(always)]
     fn drop(&mut self) {
         // SAFETY: we have ownership of the value and either pass ownership elsewhere in which
