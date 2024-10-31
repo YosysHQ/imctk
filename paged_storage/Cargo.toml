@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 imctk-ids = { version = "0.1.0", path = "../ids" }
 imctk-util = { version = "0.1.0", path = "../util" }
+table_seq = { version = "0.1.0", path = "../table_seq" }
 
 [dev-dependencies]
 rand = "0.8.5"

@@ -9,3 +9,5 @@ pub use storage::{
     PagedStorage, PagedStorageCatalog, PagedStorageItem, PagedStorageItemMut, PagedStorageItemRef,
     PagedStorageVariant,
 };
+
+pub mod index;
