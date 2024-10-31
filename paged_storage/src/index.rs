@@ -2,26 +2,13 @@
 use std::hash::Hash;
 
 use imctk_ids::{id_set_seq::IdSetSeq, Id};
+use imctk_union_find::Element;
 use imctk_util::hash::hash_value;
 use table_seq::TableSeq;
 
 use crate::{
     PagedStorage, PagedStorageCatalog, PagedStorageItem, PagedStorageItemMut, PagedStorageItemRef,
 };
-
-pub trait NewLifetime {
-    type NewLifetime<'a>
-    where
-        Self: 'a;
-}
-
-impl<T> NewLifetime for &T {
-    type NewLifetime<'b> = &'b T where Self: 'b;
-}
-
-impl<T> NewLifetime for &mut T {
-    type NewLifetime<'b> = &'b mut T where Self: 'b;
-}
 
 pub trait IndexedTerm<C: IndexedCatalog>: Eq + Hash {
     fn use_vars(&self) -> impl Iterator<Item = C::Var> + '_;
@@ -31,7 +18,13 @@ pub trait IndexedTerm<C: IndexedCatalog>: Eq + Hash {
 }
 
 pub trait IndexedNode<C: IndexedCatalog> {
-    fn def_var(&self) -> Option<C::Var>;
+    fn output(&self) -> C::Lit;
+    fn term(&self) -> C::TermRef<'_>;
+    fn new(output: C::Lit, term: C::Term) -> Self;
+}
+
+pub trait IndexedNodeRef<C: IndexedCatalog> {
+    fn output(&self) -> C::Lit;
     fn term(&self) -> C::TermRef<'_>;
 }
 
@@ -39,23 +32,38 @@ pub trait IndexedNodeMut<C: IndexedCatalog> {
     fn rewrite(&mut self, fun: impl FnMut(C::Lit) -> C::Lit);
 }
 
+pub trait IndexedNodeMutFamily<C: IndexedCatalog> {
+    type Instantiate<'a>: PagedStorageItemMut<'a, C> + IndexedNodeMut<C>
+    where
+        Self: 'a;
+}
+
+impl<C: IndexedCatalog, T> IndexedNodeMutFamily<C> for &mut T
+where
+    for<'a> &'a mut T: PagedStorageItemMut<'a, C> + IndexedNodeMut<C>,
+{
+    type Instantiate<'a> = &'a mut T where Self: 'a;
+}
+
 pub trait IndexedCatalog: PagedStorageCatalog + Sized {
     type Var: Id;
-    type Lit: Id;
-    type Ref<'a>: PagedStorageItemRef<'a, Self> + IndexedNode<Self>;
-    type Mut<'a>: PagedStorageItemMut<'a, Self> + IndexedNodeMut<Self> + NewLifetime;
+    type Lit: Id + Element<Self::Var>;
+    type NodeId: Id;
+    type Node: 'static + PagedStorageItem<Self> + IndexedNode<Self>;
+    type NodeRef<'a>: PagedStorageItemRef<'a, Self> + IndexedNodeRef<Self>;
+    type NodeMut: IndexedNodeMutFamily<Self>;
     type Term: 'static;
     type TermRef<'a>: IndexedTerm<Self> + From<&'a Self::Term>;
     fn term_eq(a: &Self::TermRef<'_>, b: &Self::TermRef<'_>) -> bool;
 }
 
-pub struct NodeIndex<NodeId, C: IndexedCatalog> {
-    defs: IdSetSeq<C::Var, NodeId>,
-    uses: IdSetSeq<C::Var, NodeId>,
-    unique: TableSeq<NodeId>,
+pub struct NodeIndex<C: IndexedCatalog> {
+    defs: IdSetSeq<C::Var, C::NodeId>,
+    uses: IdSetSeq<C::Var, C::NodeId>,
+    unique: TableSeq<C::NodeId>,
 }
 
-impl<NodeId, C: IndexedCatalog> Default for NodeIndex<NodeId, C> {
+impl<C: IndexedCatalog> Default for NodeIndex<C> {
     fn default() -> Self {
         Self {
             defs: Default::default(),
@@ -65,15 +73,15 @@ impl<NodeId, C: IndexedCatalog> Default for NodeIndex<NodeId, C> {
     }
 }
 
-impl<NodeId: Id, C: IndexedCatalog> NodeIndex<NodeId, C> {
+impl<C: IndexedCatalog> NodeIndex<C> {
     fn insert<'a, R>(
         &mut self,
-        id: NodeId,
+        id: C::NodeId,
         item: R,
-        storage: &'a PagedStorage<NodeId, C>,
-    ) -> Option<NodeId>
+        storage: &'a PagedStorage<C::NodeId, C>,
+    ) -> Option<C::NodeId>
     where
-        R: PagedStorageItemRef<'a, C> + IndexedNode<C>,
+        R: PagedStorageItemRef<'a, C> + IndexedNodeRef<C>,
     {
         let term = item.term();
         let subtable = term.max_var().id_index();
@@ -88,22 +96,18 @@ impl<NodeId: Id, C: IndexedCatalog> NodeIndex<NodeId, C> {
         if result.1.is_some() {
             Some(*result.0)
         } else {
-            if let Some(def) = item.def_var() {
-                self.defs.grow_for(def).insert(id);
-            }
+            self.defs.grow_for(item.output().atom()).insert(id);
             for var in term.use_vars() {
                 self.uses.grow_for(var).insert(id);
             }
             None
         }
     }
-    fn remove<'a, R>(&mut self, id: NodeId, item: R, storage: &'a PagedStorage<NodeId, C>)
+    fn remove<'a, R>(&mut self, id: C::NodeId, item: R, storage: &'a PagedStorage<C::NodeId, C>)
     where
-        R: PagedStorageItemRef<'a, C> + IndexedNode<C>,
+        R: PagedStorageItemRef<'a, C> + IndexedNodeRef<C>,
     {
-        if let Some(def) = item.def_var() {
-            self.defs.at_mut(def).remove(&id);
-        }
+        self.defs.at_mut(item.output().atom()).remove(&id);
         let term = item.term();
         for var in term.use_vars() {
             self.uses.at_mut(var).remove(&id);
@@ -117,9 +121,9 @@ impl<NodeId: Id, C: IndexedCatalog> NodeIndex<NodeId, C> {
     }
 }
 
-pub struct IndexedPagedStorage<NodeId, C: IndexedCatalog> {
-    storage: PagedStorage<NodeId, C>,
-    index: NodeIndex<NodeId, C>,
+pub struct IndexedPagedStorage<C: IndexedCatalog> {
+    storage: PagedStorage<C::NodeId, C>,
+    index: NodeIndex<C>,
 }
 
 #[derive(Debug, Clone)]
@@ -130,53 +134,49 @@ pub enum MutateResult<NodeId> {
     Equivalent(NodeId),
 }
 
-impl<NodeId: Id, C: IndexedCatalog> IndexedPagedStorage<NodeId, C> {
+impl<C: IndexedCatalog> IndexedPagedStorage<C> {
     pub fn with_catalog(catalog: C) -> Self {
         Self {
             storage: PagedStorage::with_catalog(catalog),
             index: NodeIndex::default(),
         }
     }
-    pub fn insert<T: PagedStorageItem<C>>(&mut self, item: T) -> NodeId {
+    pub fn insert<T: PagedStorageItem<C>>(&mut self, item: T) -> C::NodeId {
         let id = self.storage.insert(item);
-        let item = self.storage.get::<C::Ref<'_>>(id);
+        let item = self.storage.get::<C::NodeRef<'_>>(id);
         self.index.insert(id, item, &self.storage);
         id
     }
-    pub fn try_get<'a, R: PagedStorageItemRef<'a, C>>(&'a self, id: NodeId) -> Option<R> {
+    pub fn try_get<'a, R: PagedStorageItemRef<'a, C>>(&'a self, id: C::NodeId) -> Option<R> {
         self.storage.try_get(id)
     }
-    pub fn get<'a, R: PagedStorageItemRef<'a, C>>(&'a self, id: NodeId) -> R {
+    pub fn get<'a, R: PagedStorageItemRef<'a, C>>(&'a self, id: C::NodeId) -> R {
         self.storage.get(id)
     }
-    pub fn try_remove<T: PagedStorageItem<C>>(&mut self, id: NodeId) -> Option<T> {
-        let item: C::Ref<'_> = self.storage.try_get(id)?;
+    pub fn try_remove<T: PagedStorageItem<C>>(&mut self, id: C::NodeId) -> Option<T> {
+        let item: C::NodeRef<'_> = self.storage.try_get(id)?;
         self.index.remove(id, item, &self.storage);
         Some(self.storage.remove(id))
     }
-    pub fn try_discard(&mut self, id: NodeId) -> bool {
-        let Some(item) = self.storage.try_get::<C::Ref<'_>>(id) else {
+    pub fn try_discard(&mut self, id: C::NodeId) -> bool {
+        let Some(item) = self.storage.try_get::<C::NodeRef<'_>>(id) else {
             return false;
         };
         self.index.remove(id, item, &self.storage);
         self.storage.discard(id);
         true
     }
-    pub fn try_mutate<R>(
+    pub fn try_mutate<R: IndexedNodeMutFamily<C>>(
         &mut self,
-        id: NodeId,
-        fun: impl for<'a> FnOnce(<R as NewLifetime>::NewLifetime<'a>),
-    ) -> MutateResult<NodeId>
-    where
-        R: NewLifetime,
-        for<'a> R::NewLifetime<'a>: PagedStorageItemMut<'a, C>,
-    {
-        let Some(item) = self.storage.try_get::<C::Ref<'_>>(id) else {
+        id: C::NodeId,
+        fun: impl for<'a> FnOnce(R::Instantiate<'a>),
+    ) -> MutateResult<C::NodeId> {
+        let Some(item) = self.storage.try_get::<C::NodeRef<'_>>(id) else {
             return MutateResult::NotFound;
         };
         self.index.remove(id, item, &self.storage);
         let mutation_result = self.storage.try_get_mut(id).map(fun);
-        let item: C::Ref<'_> = self.storage.get(id);
+        let item: C::NodeRef<'_> = self.storage.get(id);
         let insertion_result = self.index.insert(id, item, &self.storage);
         match (mutation_result, insertion_result) {
             (Some(()), None) => MutateResult::Ok,
@@ -185,29 +185,29 @@ impl<NodeId: Id, C: IndexedCatalog> IndexedPagedStorage<NodeId, C> {
             (None, None) => MutateResult::TypeError,
         }
     }
-    pub fn indices_by_variant(&self, variant: C::Variant) -> impl Iterator<Item = NodeId> + '_ {
+    pub fn indices_by_variant(&self, variant: C::Variant) -> impl Iterator<Item = C::NodeId> + '_ {
         self.storage.indices_by_variant(variant)
     }
     pub fn iter<'a, R: PagedStorageItemRef<'a, C> + 'a>(
         &'a self,
-    ) -> impl Iterator<Item = (NodeId, R)> + 'a {
+    ) -> impl Iterator<Item = (C::NodeId, R)> + 'a {
         self.storage.iter()
     }
-    pub fn find_defs(&self, var: C::Var) -> impl Iterator<Item = NodeId> + '_ {
+    pub fn find_defs(&self, var: C::Var) -> impl Iterator<Item = C::NodeId> + '_ {
         self.index
             .defs
             .get(var)
             .into_iter()
             .flat_map(|set| set.iter().copied())
     }
-    pub fn find_uses(&self, var: C::Var) -> impl Iterator<Item = NodeId> + '_ {
+    pub fn find_uses(&self, var: C::Var) -> impl Iterator<Item = C::NodeId> + '_ {
         self.index
             .uses
             .get(var)
             .into_iter()
             .flat_map(|set| set.iter().copied())
     }
-    pub fn find_term(&self, term: &C::TermRef<'_>) -> Option<NodeId> {
+    pub fn find_term(&self, term: &C::TermRef<'_>) -> Option<C::NodeId> {
         let subtable = term.max_var().id_index();
         if subtable >= self.index.unique.len() {
             return None;
@@ -215,7 +215,7 @@ impl<NodeId: Id, C: IndexedCatalog> IndexedPagedStorage<NodeId, C> {
         self.index
             .unique
             .find(subtable, hash_value(term), |id| {
-                C::term_eq(&self.storage.get::<C::Ref<'_>>(*id).term(), term)
+                C::term_eq(&self.storage.get::<C::NodeRef<'_>>(*id).term(), term)
             })
             .copied()
     }
@@ -376,10 +376,6 @@ mod tests {
         }
     }
 
-    impl<'a> NewLifetime for ExampleItemMut<'a> {
-        type NewLifetime<'b> = ExampleItemMut<'b> where 'a: 'b;
-    }
-
     impl<'a> IndexedTerm<ExampleCatalog> for ExampleTermRef<'a> {
         fn use_vars(&self) -> impl Iterator<Item = Var> + '_ {
             match self {
@@ -401,12 +397,29 @@ mod tests {
         }
     }
 
-    impl<'a> IndexedNode<ExampleCatalog> for ExampleItemRef<'a> {
-        fn def_var(&self) -> Option<Var> {
-            Some(self.0)
+    impl IndexedNode<ExampleCatalog> for ExampleItem {
+        fn output(&self) -> <ExampleCatalog as IndexedCatalog>::Lit {
+            self.0
         }
 
-        fn term(&self) -> ExampleTermRef<'a> {
+        fn term(&self) -> <ExampleCatalog as IndexedCatalog>::TermRef<'_> {
+            (&self.1).into()
+        }
+
+        fn new(
+            output: <ExampleCatalog as IndexedCatalog>::Lit,
+            term: <ExampleCatalog as IndexedCatalog>::Term,
+        ) -> Self {
+            ExampleItem(output, term)
+        }
+    }
+
+    impl IndexedNodeRef<ExampleCatalog> for ExampleItemRef<'_> {
+        fn output(&self) -> <ExampleCatalog as IndexedCatalog>::Lit {
+            self.0
+        }
+
+        fn term(&self) -> <ExampleCatalog as IndexedCatalog>::TermRef<'_> {
             self.1.clone()
         }
     }
@@ -417,11 +430,19 @@ mod tests {
         }
     }
 
+    impl<'a> IndexedNodeMutFamily<ExampleCatalog> for ExampleItemMut<'a> {
+        type Instantiate<'b> = ExampleItemMut<'b>
+        where
+            'a: 'b;
+    }
+
     impl IndexedCatalog for ExampleCatalog {
         type Var = Var;
         type Lit = Var;
-        type Ref<'a> = ExampleItemRef<'a>;
-        type Mut<'a> = ExampleItemMut<'a>;
+        type NodeId = u32;
+        type Node = ExampleItem;
+        type NodeRef<'a> = ExampleItemRef<'a>;
+        type NodeMut = ExampleItemMut<'static>;
         type Term = ExampleTerm;
         type TermRef<'a> = ExampleTermRef<'a>;
 
@@ -440,10 +461,15 @@ mod tests {
         }
     }
 
+    impl IndexedNodeMut<ExampleCatalog> for &mut AndTerm {
+        fn rewrite(&mut self, _fun: impl FnMut(Var) -> Var) {
+            todo!()
+        }
+    }
+
     #[test]
     fn test() {
-        let mut storage: IndexedPagedStorage<u32, ExampleCatalog> =
-            IndexedPagedStorage::with_catalog(ExampleCatalog);
+        let mut storage = IndexedPagedStorage::with_catalog(ExampleCatalog);
         let a = storage.insert(ExampleItem(14, ExampleTerm::And(AndTerm(3, 8))));
         storage.insert(ExampleItem(16, ExampleTerm::Or(OrTerm(3, 10))));
         storage.insert(ExampleItem(8, ExampleTerm::Not(NotTerm(4))));

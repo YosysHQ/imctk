@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 imctk-ids = { version = "0.1.0", path = "../ids" }
 imctk-util = { version = "0.1.0", path = "../util" }
+imctk_union_find = { version = "0.1.0", path = "../union_find" }
 table_seq = { version = "0.1.0", path = "../table_seq" }
 
 [dev-dependencies]

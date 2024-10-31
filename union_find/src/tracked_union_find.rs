@@ -264,6 +264,10 @@ impl<Atom: Id, Elem: Id + Element<Atom>> TrackedUnionFind<Atom, Elem> {
     pub fn find(&self, elem: Elem) -> Elem {
         self.union_find.find(elem)
     }
+    /// Returns `true` if `atom` is a representative.
+    pub fn is_repr(&self, atom: Atom) -> bool {
+        self.union_find.find(Elem::from_atom(atom)) == Elem::from_atom(atom)
+    }
     /// Declares two elements to be equivalent. See [`UnionFind::union_full`].
     pub fn union_full(&mut self, elems: [Elem; 2]) -> (bool, [Elem; 2]) {
         let (ok, roots) = self.union_find.union_full(elems);

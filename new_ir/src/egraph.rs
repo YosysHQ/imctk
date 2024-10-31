@@ -4,40 +4,40 @@ use std::{
 };
 
 use imctk_ids::{Id, IdAlloc};
-use imctk_lit::{Lit, Var};
 use imctk_paged_storage::{
-    index::{IndexedCatalog, IndexedNodeMut, IndexedPagedStorage, MutateResult, NewLifetime},
-    PagedStorageItem, PagedStorageItemMut, PagedStorageItemRef,
+    index::{
+        IndexedCatalog, IndexedNode, IndexedNodeMut, IndexedNodeRef, IndexedPagedStorage,
+        MutateResult,
+    },
+    PagedStorageItemRef,
 };
 use imctk_union_find::{
     tracked_union_find::{Change, ObserverToken},
-    TrackedUnionFind,
+    Element, TrackedUnionFind,
 };
 
-use crate::bitlevel::Node;
-
-struct EgraphStorage<NodeId: Id, C: IndexedCatalog> {
-    storage: IndexedPagedStorage<NodeId, C>,
+struct EgraphStorage<C: IndexedCatalog> {
+    storage: IndexedPagedStorage<C>,
     observer_token: ObserverToken,
-    var_alloc: IdAlloc<Var>,
+    var_alloc: IdAlloc<C::Var>,
 }
 
-impl<NodeId: Id, Catalog: IndexedCatalog> Deref for EgraphStorage<NodeId, Catalog> {
-    type Target = IndexedPagedStorage<NodeId, Catalog>;
+impl<Catalog: IndexedCatalog> Deref for EgraphStorage<Catalog> {
+    type Target = IndexedPagedStorage<Catalog>;
 
     fn deref(&self) -> &Self::Target {
         &self.storage
     }
 }
 
-impl<NodeId: Id, Catalog: IndexedCatalog> DerefMut for EgraphStorage<NodeId, Catalog> {
+impl<Catalog: IndexedCatalog> DerefMut for EgraphStorage<Catalog> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.storage
     }
 }
 
-impl<NodeId: Id, Catalog: IndexedCatalog + Default> EgraphStorage<NodeId, Catalog> {
-    fn new(tuf: &mut TrackedUnionFind<Var, Lit>) -> Self {
+impl<Catalog: IndexedCatalog + Default> EgraphStorage<Catalog> {
+    fn new(tuf: &mut TrackedUnionFind<Catalog::Var, Catalog::Lit>) -> Self {
         let var_alloc = IdAlloc::new();
         // since 0 is false, skip it
         var_alloc.alloc().unwrap();
@@ -50,117 +50,111 @@ impl<NodeId: Id, Catalog: IndexedCatalog + Default> EgraphStorage<NodeId, Catalo
 }
 
 #[repr(C)]
-struct EgraphRef<'a, NodeId: Id, Catalog: IndexedCatalog> {
-    storage: &'a EgraphStorage<NodeId, Catalog>,
-    union_find: &'a TrackedUnionFind<Var, Lit>,
+struct EgraphRef<'a, Catalog: IndexedCatalog> {
+    storage: &'a EgraphStorage<Catalog>,
+    union_find: &'a TrackedUnionFind<Catalog::Var, Catalog::Lit>,
 }
 
 #[repr(C)]
-struct EgraphMut<'a, NodeId: Id, Catalog: IndexedCatalog> {
-    storage: &'a mut EgraphStorage<NodeId, Catalog>,
-    union_find: &'a mut TrackedUnionFind<Var, Lit>,
+struct EgraphMut<'a, Catalog: IndexedCatalog> {
+    storage: &'a mut EgraphStorage<Catalog>,
+    union_find: &'a mut TrackedUnionFind<Catalog::Var, Catalog::Lit>,
 }
 
-impl<'a, NodeId: Id, Catalog: IndexedCatalog> Deref for EgraphMut<'a, NodeId, Catalog> {
-    type Target = EgraphRef<'a, NodeId, Catalog>;
+impl<'a, Catalog: IndexedCatalog> Deref for EgraphMut<'a, Catalog> {
+    type Target = EgraphRef<'a, Catalog>;
 
     fn deref(&self) -> &Self::Target {
-        unsafe {
-            &*(self as *const EgraphMut<'a, NodeId, Catalog>
-                as *const EgraphRef<'a, NodeId, Catalog>)
-        }
+        unsafe { &*(self as *const EgraphMut<'a, Catalog> as *const EgraphRef<'a, Catalog>) }
     }
 }
 
-impl<'a, NodeId: Id, Catalog: IndexedCatalog> EgraphRef<'a, NodeId, Catalog> {
-    pub fn try_get<T: PagedStorageItemRef<'a, Catalog>>(&self, id: NodeId) -> Option<T> {
+impl<'a, Catalog: IndexedCatalog> EgraphRef<'a, Catalog> {
+    pub fn try_get<T: PagedStorageItemRef<'a, Catalog>>(&self, id: Catalog::NodeId) -> Option<T> {
         self.storage.try_get(id)
     }
-    pub fn get<T: PagedStorageItemRef<'a, Catalog>>(&self, id: NodeId) -> T {
+    pub fn get<T: PagedStorageItemRef<'a, Catalog>>(&self, id: Catalog::NodeId) -> T {
         self.storage.get(id)
     }
 }
 
-impl<NodeId: Id, Catalog: IndexedCatalog<Var = Var, Lit = Lit>> EgraphMut<'_, NodeId, Catalog>
-where
-    for<'b> Node<Catalog::TermRef<'b>>: PagedStorageItemRef<'b, Catalog>,
-    for<'b> <Catalog::Mut<'static> as NewLifetime>::NewLifetime<'b>:
-        PagedStorageItemMut<'b, Catalog> + IndexedNodeMut<Catalog>,
-    Node<Catalog::Term>: PagedStorageItem<Catalog>,
-{
-    pub fn insert_term_full(&mut self, term: Catalog::Term) -> (NodeId, Lit) {
+impl<Catalog: IndexedCatalog> EgraphMut<'_, Catalog> {
+    pub fn insert_term_full(&mut self, term: Catalog::Term) -> (Catalog::NodeId, Catalog::Lit) {
         let node_id = self.storage.find_term(&(&term).into());
         if let Some(node_id) = node_id {
-            let node = self.storage.get::<Node<Catalog::TermRef<'_>>>(node_id);
-            (node_id, node.output)
+            let node = self.storage.get::<Catalog::NodeRef<'_>>(node_id);
+            (node_id, node.output())
         } else {
-            let output = self.storage.var_alloc.alloc().unwrap().as_lit();
-            let node_id = self.storage.insert(Node { output, term });
+            let output = Element::from_atom(self.storage.var_alloc.alloc().unwrap());
+            let node_id = self.storage.insert(Catalog::Node::new(output, term));
             (node_id, output)
         }
     }
-    pub fn insert_node(&mut self, node: Node<Catalog::Term>) -> NodeId {
-        let node_id = self.storage.find_term(&(&node.term).into());
+    pub fn insert_node(&mut self, node: Catalog::Node) -> Catalog::NodeId {
+        let node_id = self.storage.find_term(&node.term());
         if let Some(node_id) = node_id {
-            let existing_node = self.storage.get::<Node<Catalog::TermRef<'_>>>(node_id);
+            let existing_node = self.storage.get::<Catalog::NodeRef<'_>>(node_id);
             let (ok, r) = self
                 .union_find
-                .union_full([node.output, existing_node.output]);
+                .union_full([node.output(), existing_node.output()]);
             assert!(ok || r[0] == r[1]);
             node_id
         } else {
             self.storage.insert(node)
         }
     }
-    pub fn union_full(&mut self, lits: [Lit; 2]) -> (bool, [Lit; 2]) {
+    pub fn union_full(&mut self, lits: [Catalog::Lit; 2]) -> (bool, [Catalog::Lit; 2]) {
         self.union_find.union_full(lits)
     }
-    fn collect_rebuild_variables(&mut self) -> HashSet<Var> {
-        let mut result: HashSet<Var> = HashSet::new();
+    fn collect_rebuild_variables(&mut self) -> HashSet<Catalog::Var> {
+        let mut result: HashSet<Catalog::Var> = HashSet::new();
         let mut iter = self
             .union_find
             .drain_changes(&mut self.storage.observer_token);
         while let Some(change) = iter.next() {
-            match change {
+            match *change {
                 Change::Union {
                     new_repr,
                     merged_repr,
-                } => result.extend([*new_repr, merged_repr.var()]),
+                } => result.extend([new_repr, merged_repr.atom()]),
                 Change::MakeRepr { new_repr, old_repr } => {
-                    result.extend([*new_repr, old_repr.var()])
+                    result.extend([new_repr, old_repr.atom()])
                 }
                 Change::Renumber(_) => todo!(),
             }
         }
         result
     }
-    fn choose_representatives(&mut self, _variables: &HashSet<Var>) {
-        self.union_find.make_repr(Var::FALSE);
+    fn choose_representatives(&mut self, _variables: &HashSet<Catalog::Var>) {
+        self.union_find.make_repr(Catalog::Var::MIN_ID);
     }
-    fn collect_rebuild_nodes(&mut self, variables: &HashSet<Var>) -> HashSet<NodeId> {
-        let mut result: HashSet<NodeId> = HashSet::new();
+    fn collect_rebuild_nodes(
+        &mut self,
+        variables: &HashSet<Catalog::Var>,
+    ) -> HashSet<Catalog::NodeId> {
+        let mut result: HashSet<Catalog::NodeId> = HashSet::new();
         for &variable in variables {
             result.extend(self.storage.find_defs(variable));
             result.extend(self.storage.find_uses(variable));
         }
         result
     }
-    fn rewrite_nodes(&mut self, nodes: &HashSet<NodeId>) {
+    fn rewrite_nodes(&mut self, nodes: &HashSet<Catalog::NodeId>) {
         for &node_id in nodes {
             let result = self
                 .storage
-                .try_mutate::<Catalog::Mut<'_>>(node_id, |mut r| {
+                .try_mutate::<Catalog::NodeMut>(node_id, |mut r| {
                     r.rewrite(|lit| self.union_find.find(lit))
                 });
             match result {
                 MutateResult::Ok => {}
                 MutateResult::NotFound | MutateResult::TypeError => unreachable!(),
                 MutateResult::Equivalent(other_node_id) => {
-                    let node = self.storage.get::<Node<Catalog::TermRef<'_>>>(node_id);
-                    let other_node = self
-                        .storage
-                        .get::<Node<Catalog::TermRef<'_>>>(other_node_id);
-                    let (ok, r) = self.union_find.union_full([node.output, other_node.output]);
+                    let node = self.storage.get::<Catalog::NodeRef<'_>>(node_id);
+                    let other_node = self.storage.get::<Catalog::NodeRef<'_>>(other_node_id);
+                    let (ok, r) = self
+                        .union_find
+                        .union_full([node.output(), other_node.output()]);
                     assert!(ok || r[0] == r[1]);
                 }
             }
@@ -173,7 +167,7 @@ where
             !variables.is_empty()
         } {
             self.choose_representatives(&variables);
-            variables.retain(|v| self.union_find.find(v.as_lit()) != v.as_lit());
+            variables.retain(|v| !self.union_find.is_repr(*v));
             let nodes = self.collect_rebuild_nodes(&variables);
             self.rewrite_nodes(&nodes);
         }
@@ -184,11 +178,12 @@ where
 mod tests {
     use super::*;
     use crate::bitlevel::*;
+    use imctk_lit::{Lit, Var};
 
     #[test]
     fn test() {
         let mut tuf = TrackedUnionFind::<Var, Lit>::new();
-        let mut storage: EgraphStorage<u32, BitlevelCatalog> = EgraphStorage::new(&mut tuf);
+        let mut storage: EgraphStorage<BitlevelCatalog> = EgraphStorage::new(&mut tuf);
         let mut egraph = EgraphMut {
             storage: &mut storage,
             union_find: &mut tuf,

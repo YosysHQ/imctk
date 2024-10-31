@@ -3,7 +3,10 @@ use std::{alloc::Layout, ptr};
 use imctk_ids::Id;
 use imctk_lit::{Lit, Var};
 use imctk_paged_storage::{
-    index::{IndexedCatalog, IndexedNode, IndexedNodeMut, IndexedTerm, NewLifetime},
+    index::{
+        IndexedCatalog, IndexedNode, IndexedNodeMut, IndexedNodeMutFamily, IndexedNodeRef,
+        IndexedTerm,
+    },
     PagedStorageCatalog, PagedStorageItem, PagedStorageItemMut, PagedStorageItemRef,
 };
 use imctk_util::unordered_pair::UnorderedPair;
@@ -254,10 +257,21 @@ impl IndexedTerm<BitlevelCatalog> for BitlevelTerm {
 }
 
 impl IndexedNode<BitlevelCatalog> for Node<BitlevelTerm> {
-    fn def_var(&self) -> Option<Var> {
-        Some(self.output.var())
+    fn term(&self) -> BitlevelTerm {
+        self.term.clone()
     }
+    fn output(&self) -> Lit {
+        self.output
+    }
+    fn new(output: Lit, term: BitlevelTerm) -> Self {
+        Node { output, term }
+    }
+}
 
+impl IndexedNodeRef<BitlevelCatalog> for Node<BitlevelTerm> {
+    fn output(&self) -> Lit {
+        self.output
+    }
     fn term(&self) -> BitlevelTerm {
         self.term.clone()
     }
@@ -283,16 +297,17 @@ impl<'a> IndexedNodeMut<BitlevelCatalog> for NodeMut<'a, BitlevelTermMut<'a>> {
     }
 }
 
-impl<'a> NewLifetime for NodeMut<'a, BitlevelTermMut<'a>> {
-    type NewLifetime<'b> = NodeMut<'b, BitlevelTermMut<'b>>
-    where 'a: 'b;
+impl<'a> IndexedNodeMutFamily<BitlevelCatalog> for NodeMut<'a, BitlevelTermMut<'a>> {
+    type Instantiate<'b> = NodeMut<'b, BitlevelTermMut<'b>> where 'a: 'b;
 }
 
 impl IndexedCatalog for BitlevelCatalog {
     type Var = Var;
     type Lit = Lit;
-    type Ref<'a> = Node<BitlevelTerm>;
-    type Mut<'a> = NodeMut<'a, BitlevelTermMut<'a>>;
+    type NodeId = u32;
+    type Node = Node<BitlevelTerm>;
+    type NodeRef<'a> = Node<BitlevelTerm>;
+    type NodeMut = NodeMut<'static, BitlevelTermMut<'static>>;
     type Term = BitlevelTerm;
     type TermRef<'a> = BitlevelTerm;
 

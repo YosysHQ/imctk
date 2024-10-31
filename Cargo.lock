@@ -521,6 +521,7 @@ version = "0.1.0"
 dependencies = [
  "imctk-ids",
  "imctk-util",
+ "imctk_union_find",
  "rand",
  "rand_pcg",
  "table_seq",
