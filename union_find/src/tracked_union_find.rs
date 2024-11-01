@@ -97,6 +97,12 @@ impl<Atom: Id, Elem: Id> std::fmt::Debug for Renumbering<Atom, Elem> {
 }
 
 impl<Atom: Id, Elem: Id + Element<Atom>> Renumbering<Atom, Elem> {
+    pub fn forward(&self) -> &IdVec<Atom, Option<Elem>> {
+        &self.forward
+    }
+    pub fn reverse(&self) -> &IdVec<Atom, Elem> {
+        &self.reverse
+    }
     /// Returns the inverse of a reassignment of variables.
     pub fn get_reverse(
         forward: &IdVec<Atom, Option<Elem>>,
@@ -167,6 +173,28 @@ impl<Atom: Id, Elem: Id + Element<Atom>> Renumbering<Atom, Elem> {
                 let repr_new = self.old_to_new(repr);
                 repr_new == new
             })
+    }
+    pub fn compose(&self, other: &Renumbering<Atom, Elem>) -> Self {
+        debug_assert!(self.new_generation == other.old_generation);
+        let forward = IdVec::from_vec(
+            self.forward
+                .iter()
+                .map(|(_, new)| new.and_then(|new| other.old_to_new(new)))
+                .collect(),
+        );
+        let reverse = IdVec::from_vec(
+            other
+                .reverse
+                .iter()
+                .map(|(_, old)| self.new_to_old(*old).unwrap())
+                .collect(),
+        );
+        Renumbering {
+            forward,
+            reverse,
+            old_generation: self.old_generation,
+            new_generation: other.new_generation,
+        }
     }
 }
 
@@ -537,6 +565,10 @@ impl<'a, 'b, Atom, Elem> DrainChanges<'a, 'b, Atom, Elem> {
         F: FnMut(&Change<Atom, Elem>) -> B,
     {
         DrainChangesMap { inner: self, f }
+    }
+    /// Returns `true` if there are any unprocessed renumberings.
+    pub fn any_renumberings(&self) -> bool {
+        self.tuf.generation > self.token.generation
     }
 }
 

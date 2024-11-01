@@ -26,6 +26,7 @@ pub trait IndexedNode<C: IndexedCatalog> {
 pub trait IndexedNodeRef<C: IndexedCatalog> {
     fn output(&self) -> C::Lit;
     fn term(&self) -> C::TermRef<'_>;
+    fn map(&self, fun: impl FnMut(C::Lit) -> C::Lit) -> C::Node;
 }
 
 pub trait IndexedNodeMut<C: IndexedCatalog> {
@@ -166,6 +167,9 @@ impl<C: IndexedCatalog> IndexedPagedStorage<C> {
         self.storage.discard(id);
         true
     }
+    pub fn discard(&mut self, id: C::NodeId) {
+        assert!(self.try_discard(id));
+    }
     pub fn try_mutate<R: IndexedNodeMutFamily<C>>(
         &mut self,
         id: C::NodeId,
@@ -229,11 +233,11 @@ mod tests {
 
     use crate::{PagedStorageCatalog, PagedStorageItem, PagedStorageItemRef};
 
-    #[derive(PartialEq, Eq, Hash, Debug)]
+    #[derive(PartialEq, Eq, Hash, Debug, Clone)]
     struct AndTerm(Var, Var);
-    #[derive(PartialEq, Eq, Hash, Debug)]
+    #[derive(PartialEq, Eq, Hash, Debug, Clone)]
     struct OrTerm(Var, Var);
-    #[derive(PartialEq, Eq, Hash, Debug)]
+    #[derive(PartialEq, Eq, Hash, Debug, Clone)]
     struct NotTerm(Var);
 
     type Var = u32;
@@ -421,6 +425,10 @@ mod tests {
 
         fn term(&self) -> <ExampleCatalog as IndexedCatalog>::TermRef<'_> {
             self.1.clone()
+        }
+        
+        fn map(&self, fun: impl FnMut(<ExampleCatalog as IndexedCatalog>::Lit) -> <ExampleCatalog as IndexedCatalog>::Lit) -> <ExampleCatalog as IndexedCatalog>::Node {
+            todo!()
         }
     }
 

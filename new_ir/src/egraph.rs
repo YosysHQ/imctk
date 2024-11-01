@@ -1,6 +1,7 @@
 use std::{
     collections::HashSet,
     ops::{Deref, DerefMut},
+    sync::Arc,
 };
 
 use imctk_ids::{Id, IdAlloc};
@@ -12,7 +13,7 @@ use imctk_paged_storage::{
     PagedStorageItemRef,
 };
 use imctk_union_find::{
-    tracked_union_find::{Change, ObserverToken},
+    tracked_union_find::{Change, ObserverToken, Renumbering},
     Element, TrackedUnionFind,
 };
 
@@ -37,13 +38,13 @@ impl<Catalog: IndexedCatalog> DerefMut for EgraphStorage<Catalog> {
 }
 
 impl<Catalog: IndexedCatalog + Default> EgraphStorage<Catalog> {
-    fn new(tuf: &mut TrackedUnionFind<Catalog::Var, Catalog::Lit>) -> Self {
+    fn new(observer_token: ObserverToken) -> Self {
         let var_alloc = IdAlloc::new();
         // since 0 is false, skip it
         var_alloc.alloc().unwrap();
         EgraphStorage {
             storage: IndexedPagedStorage::with_catalog(Default::default()),
-            observer_token: tuf.start_observing(),
+            observer_token,
             var_alloc,
         }
     }
@@ -78,7 +79,7 @@ impl<'a, Catalog: IndexedCatalog> EgraphRef<'a, Catalog> {
     }
 }
 
-impl<Catalog: IndexedCatalog> EgraphMut<'_, Catalog> {
+impl<Catalog: IndexedCatalog + Default> EgraphMut<'_, Catalog> {
     pub fn insert_term_full(&mut self, term: Catalog::Term) -> (Catalog::NodeId, Catalog::Lit) {
         let node_id = self.storage.find_term(&(&term).into());
         if let Some(node_id) = node_id {
@@ -120,7 +121,7 @@ impl<Catalog: IndexedCatalog> EgraphMut<'_, Catalog> {
                 Change::MakeRepr { new_repr, old_repr } => {
                     result.extend([new_repr, old_repr.atom()])
                 }
-                Change::Renumber(_) => todo!(),
+                Change::Renumber(_) => unreachable!(),
             }
         }
         result
@@ -139,7 +140,8 @@ impl<Catalog: IndexedCatalog> EgraphMut<'_, Catalog> {
         }
         result
     }
-    fn rewrite_nodes(&mut self, nodes: &HashSet<Catalog::NodeId>) {
+    fn rewrite_nodes(&mut self, nodes: &HashSet<Catalog::NodeId>, delete_redundant: bool) {
+        let mut discarded_nodes = HashSet::new();
         for &node_id in nodes {
             let result = self
                 .storage
@@ -148,19 +150,33 @@ impl<Catalog: IndexedCatalog> EgraphMut<'_, Catalog> {
                 });
             match result {
                 MutateResult::Ok => {}
-                MutateResult::NotFound | MutateResult::TypeError => unreachable!(),
+                MutateResult::NotFound => {
+                    debug_assert!(discarded_nodes.contains(&node_id));
+                }
+                MutateResult::TypeError => unreachable!(),
                 MutateResult::Equivalent(other_node_id) => {
-                    let node = self.storage.get::<Catalog::NodeRef<'_>>(node_id);
-                    let other_node = self.storage.get::<Catalog::NodeRef<'_>>(other_node_id);
-                    let (ok, r) = self
-                        .union_find
-                        .union_full([node.output(), other_node.output()]);
-                    assert!(ok || r[0] == r[1]);
+                    {
+                        let node = self.storage.get::<Catalog::NodeRef<'_>>(node_id);
+                        let other_node = self.storage.get::<Catalog::NodeRef<'_>>(other_node_id);
+                        let (ok, r) = self
+                            .union_find
+                            .union_full([node.output(), other_node.output()]);
+                        assert!(ok || r[0] == r[1]);
+                    }
+                    if delete_redundant {
+                        self.storage.discard(other_node_id);
+                        discarded_nodes.insert(other_node_id);
+                    }
                 }
             }
         }
     }
     pub fn rebuild(&mut self) {
+        let mut delete_redundant = false;
+        if let Some(renumbering) = self.collect_renumberings() {
+            self.apply_renumbering(&renumbering);
+            delete_redundant = true;
+        }
         let mut variables;
         while {
             variables = self.collect_rebuild_variables();
@@ -169,8 +185,43 @@ impl<Catalog: IndexedCatalog> EgraphMut<'_, Catalog> {
             self.choose_representatives(&variables);
             variables.retain(|v| !self.union_find.is_repr(*v));
             let nodes = self.collect_rebuild_nodes(&variables);
-            self.rewrite_nodes(&nodes);
+            self.rewrite_nodes(&nodes, delete_redundant);
         }
+    }
+    fn collect_renumberings(&mut self) -> Option<Arc<Renumbering<Catalog::Var, Catalog::Lit>>> {
+        let mut iter = self
+            .union_find
+            .drain_changes(&mut self.storage.observer_token);
+        let mut renumbering: Option<Arc<Renumbering<_, _>>> = None;
+        while iter.any_renumberings() {
+            if let Change::Renumber(next_renumbering) = iter.next().unwrap() {
+                if let Some(previous_renumbering) = renumbering {
+                    renumbering = Some(Arc::new(previous_renumbering.compose(next_renumbering)));
+                } else {
+                    renumbering = Some(next_renumbering.clone());
+                }
+            }
+        }
+        iter.stop();
+        renumbering
+    }
+    fn apply_renumbering(&mut self, renumbering: &Renumbering<Catalog::Var, Catalog::Lit>) {
+        let mut new_storage: EgraphStorage<Catalog> =
+            EgraphStorage::new(self.union_find.clone_token(&self.storage.observer_token));
+        let mut new_egraph = EgraphMut {
+            storage: &mut new_storage,
+            union_find: self.union_find,
+        };
+        for (_, node) in self.storage.iter::<Catalog::NodeRef<'_>>() {
+            let node = node.map(|lit| renumbering.old_to_new(lit).unwrap());
+            new_egraph.insert_node(node);
+        }
+        new_storage
+            .var_alloc
+            .alloc_range(renumbering.reverse().len() - 1)
+            .unwrap();
+        let old_storage = std::mem::replace(self.storage, new_storage);
+        self.union_find.stop_observing(old_storage.observer_token);
     }
 }
 
@@ -178,12 +229,33 @@ impl<Catalog: IndexedCatalog> EgraphMut<'_, Catalog> {
 mod tests {
     use super::*;
     use crate::bitlevel::*;
+    use imctk_ids::{id_vec::IdVec, IdRange};
     use imctk_lit::{Lit, Var};
+    use imctk_union_find::UnionFind;
+
+    fn repr_reduction(
+        var_count: Var,
+        union_find: &UnionFind<Var, Lit>,
+    ) -> (IdVec<Var, Option<Lit>>, IdVec<Var, Lit>) {
+        let mut forward: IdVec<Var, Option<Lit>> = IdVec::default();
+        let mut reverse: IdVec<Var, Lit> = IdVec::default();
+        for atom in IdRange::from(Var::MIN_ID..var_count) {
+            let repr = union_find.find(atom.as_lit());
+            let new_repr = *forward.grow_for_key(repr.atom()).get_or_insert_with(|| {
+                let new_repr = reverse.push(Lit::from_atom(repr.var())).0;
+                Lit::from_atom(new_repr)
+            });
+            forward
+                .grow_for_key(atom)
+                .replace(Element::<Var>::apply_pol_of(new_repr, repr));
+        }
+        (forward, reverse)
+    }
 
     #[test]
     fn test() {
         let mut tuf = TrackedUnionFind::<Var, Lit>::new();
-        let mut storage: EgraphStorage<BitlevelCatalog> = EgraphStorage::new(&mut tuf);
+        let mut storage: EgraphStorage<BitlevelCatalog> = EgraphStorage::new(tuf.start_observing());
         let mut egraph = EgraphMut {
             storage: &mut storage,
             union_find: &mut tuf,
@@ -201,8 +273,12 @@ mod tests {
         for node in egraph.storage.iter::<Node<BitlevelTerm>>() {
             println!("{node:?}");
         }
+        let var_count = egraph.storage.var_alloc.alloc().unwrap();
         println!("-----");
         egraph.union_full([input0, input1]);
+        let (forward, reverse) = repr_reduction(var_count, egraph.union_find.get_union_find());
+        println!("{forward:?} {reverse:?}");
+        egraph.union_find.renumber(forward, reverse);
         egraph.rebuild();
         for node in egraph.storage.iter::<Node<BitlevelTerm>>() {
             println!("{node:?}");

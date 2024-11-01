@@ -275,6 +275,19 @@ impl IndexedNodeRef<BitlevelCatalog> for Node<BitlevelTerm> {
     fn term(&self) -> BitlevelTerm {
         self.term.clone()
     }
+    fn map(&self, mut fun: impl FnMut(Lit) -> Lit) -> Node<BitlevelTerm> {
+        let output = fun(self.output);
+        let term = match &self.term {
+            BitlevelTerm::Input(_) | BitlevelTerm::SteadyInput(_) => self.term.clone(),
+            BitlevelTerm::And(and_term) => BitlevelTerm::And(AndTerm(and_term.0.map(fun))),
+            BitlevelTerm::Xor(xor_term) => BitlevelTerm::Xor(XorTerm(xor_term.0.map(fun))),
+            BitlevelTerm::Reg(reg) => BitlevelTerm::Reg(Reg {
+                next: fun(reg.next),
+                init: fun(reg.init)
+            }),
+        };
+        Node { output, term }
+    }
 }
 
 impl<'a> IndexedNodeMut<BitlevelCatalog> for NodeMut<'a, BitlevelTermMut<'a>> {
