@@ -11,3 +11,4 @@ pub use union_find::UnionFind;
 pub mod element;
 pub mod tracked_union_find;
 pub mod union_find;
+pub mod change_tracking;

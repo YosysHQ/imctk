@@ -2,3 +2,6 @@
 
 pub mod bitlevel;
 pub mod egraph;
+pub mod aiger;
+pub mod ir;
+pub mod cnf;

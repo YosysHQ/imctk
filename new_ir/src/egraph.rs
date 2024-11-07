@@ -13,14 +13,34 @@ use imctk_paged_storage::{
     PagedStorageItemRef,
 };
 use imctk_union_find::{
-    tracked_union_find::{Change, ObserverToken, Renumbering},
+    change_tracking::{self, ChangeTracking},
+    tracked_union_find::{Change, Renumbering},
     Element, TrackedUnionFind,
 };
 
-struct EgraphStorage<C: IndexedCatalog> {
+pub use imctk_union_find::change_tracking::{Generation, ObserverToken};
+
+pub enum EgraphChange<C: IndexedCatalog> {
+    Insert(C::NodeId),
+    Renumber(Generation, Generation),
+}
+
+impl<C: IndexedCatalog> change_tracking::Change for EgraphChange<C> {
+    fn as_renumbering(&self) -> Option<(Generation, Generation)> {
+        match self {
+            EgraphChange::Renumber(old_generation, new_generation) => {
+                Some((*old_generation, *new_generation))
+            }
+            _ => None,
+        }
+    }
+}
+
+pub struct EgraphStorage<C: IndexedCatalog> {
     storage: IndexedPagedStorage<C>,
     observer_token: ObserverToken,
     var_alloc: IdAlloc<C::Var>,
+    change_tracking: ChangeTracking<EgraphChange<C>>,
 }
 
 impl<Catalog: IndexedCatalog> Deref for EgraphStorage<Catalog> {
@@ -46,18 +66,19 @@ impl<Catalog: IndexedCatalog + Default> EgraphStorage<Catalog> {
             storage: IndexedPagedStorage::with_catalog(Default::default()),
             observer_token,
             var_alloc,
+            change_tracking: Default::default(),
         }
     }
 }
 
 #[repr(C)]
-struct EgraphRef<'a, Catalog: IndexedCatalog> {
+pub struct EgraphRef<'a, Catalog: IndexedCatalog> {
     storage: &'a EgraphStorage<Catalog>,
     union_find: &'a TrackedUnionFind<Catalog::Var, Catalog::Lit>,
 }
 
 #[repr(C)]
-struct EgraphMut<'a, Catalog: IndexedCatalog> {
+pub struct EgraphMut<'a, Catalog: IndexedCatalog> {
     storage: &'a mut EgraphStorage<Catalog>,
     union_find: &'a mut TrackedUnionFind<Catalog::Var, Catalog::Lit>,
 }
@@ -71,15 +92,38 @@ impl<'a, Catalog: IndexedCatalog> Deref for EgraphMut<'a, Catalog> {
 }
 
 impl<'a, Catalog: IndexedCatalog> EgraphRef<'a, Catalog> {
+    pub fn new(
+        storage: &'a EgraphStorage<Catalog>,
+        union_find: &'a TrackedUnionFind<Catalog::Var, Catalog::Lit>,
+    ) -> Self {
+        EgraphRef {
+            storage,
+            union_find,
+        }
+    }
     pub fn try_get<T: PagedStorageItemRef<'a, Catalog>>(&self, id: Catalog::NodeId) -> Option<T> {
         self.storage.try_get(id)
     }
     pub fn get<T: PagedStorageItemRef<'a, Catalog>>(&self, id: Catalog::NodeId) -> T {
         self.storage.get(id)
     }
+    pub fn iter<T: PagedStorageItemRef<'a, Catalog> + 'a>(
+        &self,
+    ) -> impl Iterator<Item = (Catalog::NodeId, T)> + 'a {
+        self.storage.iter()
+    }
 }
 
-impl<Catalog: IndexedCatalog + Default> EgraphMut<'_, Catalog> {
+impl<'a, Catalog: IndexedCatalog + Default> EgraphMut<'a, Catalog> {
+    pub fn new(
+        storage: &'a mut EgraphStorage<Catalog>,
+        union_find: &'a mut TrackedUnionFind<Catalog::Var, Catalog::Lit>,
+    ) -> Self {
+        EgraphMut {
+            storage,
+            union_find,
+        }
+    }
     pub fn insert_term_full(&mut self, term: Catalog::Term) -> (Catalog::NodeId, Catalog::Lit) {
         let node_id = self.storage.find_term(&(&term).into());
         if let Some(node_id) = node_id {
@@ -88,8 +132,14 @@ impl<Catalog: IndexedCatalog + Default> EgraphMut<'_, Catalog> {
         } else {
             let output = Element::from_atom(self.storage.var_alloc.alloc().unwrap());
             let node_id = self.storage.insert(Catalog::Node::new(output, term));
+            self.storage
+                .change_tracking
+                .log(EgraphChange::Insert(node_id));
             (node_id, output)
         }
+    }
+    pub fn insert_term(&mut self, term: Catalog::Term) -> Catalog::Lit {
+        self.insert_term_full(term).1
     }
     pub fn insert_node(&mut self, node: Catalog::Node) -> Catalog::NodeId {
         let node_id = self.storage.find_term(&node.term());
@@ -101,8 +151,15 @@ impl<Catalog: IndexedCatalog + Default> EgraphMut<'_, Catalog> {
             assert!(ok || r[0] == r[1]);
             node_id
         } else {
-            self.storage.insert(node)
+            let node_id = self.storage.insert(node);
+            self.storage
+                .change_tracking
+                .log(EgraphChange::Insert(node_id));
+            node_id
         }
+    }
+    pub fn fresh_var(&mut self) -> Catalog::Var {
+        self.storage.var_alloc.alloc().unwrap()
     }
     pub fn union_full(&mut self, lits: [Catalog::Lit; 2]) -> (bool, [Catalog::Lit; 2]) {
         self.union_find.union_full(lits)
@@ -222,6 +279,35 @@ impl<Catalog: IndexedCatalog + Default> EgraphMut<'_, Catalog> {
             .unwrap();
         let old_storage = std::mem::replace(self.storage, new_storage);
         self.union_find.stop_observing(old_storage.observer_token);
+        self.storage.change_tracking.log(EgraphChange::Renumber(
+            renumbering.old_generation(),
+            renumbering.new_generation(),
+        ));
+    }
+    pub fn start_observing(&mut self) -> ObserverToken {
+        self.storage.change_tracking.start_observing()
+    }
+    pub fn clone_token(&mut self, token: &ObserverToken) -> ObserverToken {
+        self.storage.change_tracking.clone_token(token)
+    }
+    pub fn stop_observing(&mut self, token: ObserverToken) {
+        self.storage.change_tracking.stop_observing(token);
+    }
+    pub fn generation(&self) -> Generation {
+        self.storage.change_tracking.generation()
+    }
+    pub fn drain_changes_with_fn(
+        &mut self,
+        token: &mut ObserverToken,
+        mut f: impl FnMut(&[EgraphChange<Catalog>], &IndexedPagedStorage<Catalog>),
+    ) -> bool {
+        self.storage.change_tracking.drain_changes_with_fn(token, |ch| f(ch, &self.storage.storage))
+    }
+   pub fn drain_changes<'b>(
+        &mut self,
+        token: &'b mut ObserverToken,
+    ) -> (change_tracking::DrainChanges<'_, 'b, EgraphChange<Catalog>>, &IndexedPagedStorage<Catalog>) {
+        (self.storage.change_tracking.drain_changes(token), &self.storage.storage)
     }
 }
 

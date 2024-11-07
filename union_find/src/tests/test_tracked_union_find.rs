@@ -1,5 +1,6 @@
 #![allow(missing_docs, dead_code)]
 use super::*;
+use change_tracking::ObserverId;
 use imctk_lit::{Lit, Var};
 use rand::prelude::*;
 use std::collections::HashMap;
@@ -85,20 +86,20 @@ impl<Atom: Id, Elem: Id + Element<Atom>> CTUnionFind<Atom, Elem> {
     }
     fn start_observing(&mut self) -> ObserverToken {
         let token = self.dut.start_observing();
-        assert!(self.logs.insert(token.observer_id, Vec::new()).is_none());
+        assert!(self.logs.insert(token.observer_id(), Vec::new()).is_none());
         token
     }
     fn clone_token(&mut self, token: &ObserverToken) -> ObserverToken {
         let new_token = self.dut.clone_token(token);
-        let cloned_log = self.logs.get(&token.observer_id).unwrap().clone();
+        let cloned_log = self.logs.get(&token.observer_id()).unwrap().clone();
         assert!(self
             .logs
-            .insert(new_token.observer_id, cloned_log)
+            .insert(new_token.observer_id(), cloned_log)
             .is_none());
         new_token
     }
     fn stop_observing(&mut self, token: ObserverToken) {
-        assert!(self.logs.remove(&token.observer_id).is_some());
+        assert!(self.logs.remove(&token.observer_id()).is_some());
         self.dut.stop_observing(token);
     }
     fn drain_changes_with_fn(
@@ -106,7 +107,7 @@ impl<Atom: Id, Elem: Id + Element<Atom>> CTUnionFind<Atom, Elem> {
         token: &mut ObserverToken,
         mut f: impl FnMut(&[Change<Atom, Elem>]),
     ) {
-        let log = self.logs.get_mut(&token.observer_id).unwrap();
+        let log = self.logs.get_mut(&token.observer_id()).unwrap();
         let mut log_iter = log.drain(..);
         self.dut.drain_changes_with_fn(token, |changes, _| {
             f(changes);
@@ -124,10 +125,10 @@ impl<Atom: Id, Elem: Id + Element<Atom>> CTUnionFind<Atom, Elem> {
         token: &mut ObserverToken,
         calculate_count: impl FnOnce(usize) -> usize,
     ) -> usize {
-        let log = self.logs.get_mut(&token.observer_id).unwrap();
+        let log = self.logs.get_mut(&token.observer_id()).unwrap();
         let count = calculate_count(log.len());
         let log_iter = log.drain(..count);
-        let mut gen = token.generation;
+        let mut gen = token.generation();
         let mut dut_iter = self.dut.drain_changes(token);
         for c2 in log_iter {
             let Some(c1) = dut_iter.next() else {
@@ -140,7 +141,7 @@ impl<Atom: Id, Elem: Id + Element<Atom>> CTUnionFind<Atom, Elem> {
             }
         }
         dut_iter.stop();
-        assert_eq!(token.generation, gen);
+        assert_eq!(token.generation(), gen);
         count
     }
     fn repr_reduction(&self) -> (IdVec<Atom, Option<Elem>>, IdVec<Atom, Elem>) {
@@ -239,7 +240,7 @@ fn test_suite() {
             DrainAllChanges: 2.0 => {
                 if let Some(token) = active_tokens.iter_mut().choose(&mut rng) {
                     let mut count = 0;
-                    let mut gen = token.generation;
+                    let mut gen = token.generation();
                     u.drain_changes_with_fn(token, |changes| {
                         for change in changes {
                             if let Change::Renumber(renumbering) = change {
@@ -249,7 +250,7 @@ fn test_suite() {
                             count += 1;
                         }
                     });
-                    assert_eq!(gen, token.generation);
+                    assert_eq!(gen, token.generation());
                     if verbosity > 0 {
                         println!("drained all ({count}) changes from {token:?}");
                     }
@@ -267,7 +268,7 @@ fn test_suite() {
                 let renumbering = u.renumber();
                 if verbosity > 0 {
                     println!("renumbered all variables, now on generation {} ({} old variables, {} new variables)",
-                        u.dut.generation.0,
+                        u.dut.generation().0,
                         renumbering.forward.len(),
                         renumbering.reverse.len()
                     );

@@ -17,7 +17,7 @@ impl<T: Id> Default for IdAlloc<T> {
 }
 
 /// `IdAllocError` indicates that there are not enough IDs remaining.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct IdAllocError;
 
 impl<T: Id> IdAlloc<T> {
@@ -50,5 +50,9 @@ impl<T: Id> IdAlloc<T> {
             // SAFETY: the precondition was checked by `alloc_indices`
             unsafe { IdRange::from_index_range_unchecked(start..start + n) }
         })
+    }
+    /// Returns the ID that would be allocated by the next call to `alloc`.
+    pub fn peek(&self) -> Result<T, IdAllocError> {
+        T::try_from_id_index(self.counter.load(Relaxed)).ok_or(IdAllocError)
     }
 }
