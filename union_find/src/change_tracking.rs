@@ -89,6 +89,20 @@ pub struct ChangeTracking<Change> {
     generation: Generation,
 }
 
+impl<Change: std::fmt::Debug> std::fmt::Debug for ChangeTracking<Change> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // TODO include all of this?
+        f.debug_struct("ChangeTracking")
+            .field("tracking_id", &self.tracking_id)
+            .field("log", &self.log)
+            .field("observer_id_alloc", &self.observer_id_alloc)
+            .field("observers", &self.observers)
+            .field("log_start", &self.log_start)
+            .field("generation", &self.generation)
+            .finish()
+    }
+}
+
 static TRACKING_ID_ALLOC: IdAlloc<ChangeTrackingId> = IdAlloc::new();
 
 impl<C> Default for ChangeTracking<C> {

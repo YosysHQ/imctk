@@ -10,6 +10,12 @@ pub struct IdAlloc<T> {
     _phantom: PhantomData<T>,
 }
 
+impl<T: Id> std::fmt::Debug for IdAlloc<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_tuple("IdAlloc").field(&self.peek()).finish()
+    }
+}
+
 impl<T: Id> Default for IdAlloc<T> {
     fn default() -> Self {
         Self::new()

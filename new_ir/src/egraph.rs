@@ -58,7 +58,7 @@ impl<Catalog: IndexedCatalog> DerefMut for EgraphStorage<Catalog> {
 }
 
 impl<Catalog: IndexedCatalog + Default> EgraphStorage<Catalog> {
-    fn new(observer_token: ObserverToken) -> Self {
+    pub fn new(observer_token: ObserverToken) -> Self {
         let var_alloc = IdAlloc::new();
         // since 0 is false, skip it
         var_alloc.alloc().unwrap();
@@ -68,6 +68,17 @@ impl<Catalog: IndexedCatalog + Default> EgraphStorage<Catalog> {
             var_alloc,
             change_tracking: Default::default(),
         }
+    }
+}
+
+impl<C: imctk_paged_storage::index::IndexedCatalog> std::fmt::Debug for EgraphStorage<C>
+where
+    for<'a> C::NodeRef<'a>: std::fmt::Debug,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_map()
+            .entries(self.iter::<C::NodeRef<'_>>())
+            .finish()
     }
 }
 
@@ -301,13 +312,21 @@ impl<'a, Catalog: IndexedCatalog + Default> EgraphMut<'a, Catalog> {
         token: &mut ObserverToken,
         mut f: impl FnMut(&[EgraphChange<Catalog>], &IndexedPagedStorage<Catalog>),
     ) -> bool {
-        self.storage.change_tracking.drain_changes_with_fn(token, |ch| f(ch, &self.storage.storage))
+        self.storage
+            .change_tracking
+            .drain_changes_with_fn(token, |ch| f(ch, &self.storage.storage))
     }
-   pub fn drain_changes<'b>(
+    pub fn drain_changes<'b>(
         &mut self,
         token: &'b mut ObserverToken,
-    ) -> (change_tracking::DrainChanges<'_, 'b, EgraphChange<Catalog>>, &IndexedPagedStorage<Catalog>) {
-        (self.storage.change_tracking.drain_changes(token), &self.storage.storage)
+    ) -> (
+        change_tracking::DrainChanges<'_, 'b, EgraphChange<Catalog>>,
+        &IndexedPagedStorage<Catalog>,
+    ) {
+        (
+            self.storage.change_tracking.drain_changes(token),
+            &self.storage.storage,
+        )
     }
 }
 

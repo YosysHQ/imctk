@@ -198,11 +198,22 @@ pub struct TrackedUnionFind<Atom, Elem> {
     tracking: ChangeTracking<Change<Atom, Elem>>,
 }
 
+impl<Atom: std::fmt::Debug + Id, Elem: std::fmt::Debug + Id + Element<Atom>> std::fmt::Debug
+    for TrackedUnionFind<Atom, Elem>
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("TrackedUnionFind")
+            .field("union_find", &self.union_find)
+            .field("tracking", &self.tracking)
+            .finish()
+    }
+}
+
 impl<Atom, Elem> From<UnionFind<Atom, Elem>> for TrackedUnionFind<Atom, Elem> {
     fn from(union_find: UnionFind<Atom, Elem>) -> Self {
         Self {
             union_find,
-            tracking: Default::default()
+            tracking: Default::default(),
         }
     }
 }
