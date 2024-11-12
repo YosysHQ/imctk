@@ -37,6 +37,8 @@ mod test_union_find;
 /// let mut union_find: UnionFind<Var, Lit> = UnionFind::new();
 /// let lit = |n| Var::from_index(n).as_lit();
 ///
+/// union_find.ensure_allocated(Var::from_index(4));
+///
 /// assert_eq!(union_find.find(lit(4)), lit(4));
 ///
 /// union_find.union([lit(3), lit(4)]);
@@ -95,36 +97,30 @@ impl<Atom: Id, Elem: Id + Element<Atom>> UnionFind<Atom, Elem> {
         self.parent.clear();
     }
     fn read_parent(&self, atom: Atom) -> Elem {
-        if let Some(parent_cell) = self.parent.get(atom) {
-            // This load is allowed to reorder with stores from `update_parent`, see there for details.
-            parent_cell.load(Ordering::Relaxed)
-        } else {
-            Elem::from_atom(atom)
-        }
+        // This load is allowed to reorder with stores from `update_parent`, see there for details.
+        self.parent
+            .get(atom)
+            .expect("UnionFind method called with unallocated variable")
+            .load(Ordering::Relaxed)
     }
     // Important: Only semantically trivial changes are allowed using this method!!
     // Specifically, update_parent(atom, parent) should only be called if `parent` is already an ancestor of `atom`
     // Otherwise, concurrent calls to `read_parent` (which are explicitly allowed!) could return incorrect results.
     fn update_parent(&self, atom: Atom, parent: Elem) {
-        if let Some(parent_cell) = self.parent.get(atom) {
-            parent_cell.store(parent, Ordering::Relaxed);
-        } else {
-            // can only get here if the precondition or a data structure invariant is violated
-            panic!("shouldn't happen: update_parent called with out of bounds argument");
-        }
+        self.parent
+            .get(atom)
+            .expect("shouldn't happen: update_parent called with unallocated variable")
+            .store(parent, Ordering::Relaxed)
     }
     // Unlike `update_parent`, this is safe for arbitrary updates, since it requires &mut self.
     fn write_parent(&mut self, atom: Atom, parent: Elem) {
-        if let Some(parent_cell) = self.parent.get(atom) {
-            parent_cell.store(parent, Ordering::Relaxed);
-        } else {
-            debug_assert!(self.parent.next_unused_key() <= atom);
-            while self.parent.next_unused_key() < atom {
-                let next_elem = Elem::from_atom(self.parent.next_unused_key());
-                self.parent.push(Atomic::new(next_elem));
-            }
-            self.parent.push(Atomic::new(parent));
-        }
+        // use a non-atomic store to potentially allow for more compiler optimizations
+        let parent_cell = self
+            .parent
+            .get_mut(atom)
+            .expect("shouldn't happen: write_parent called with unallocated variable")
+            .get_mut();
+        *parent_cell = parent;
     }
     fn find_root(&self, mut elem: Elem) -> Elem {
         loop {
@@ -163,7 +159,7 @@ impl<Atom: Id, Elem: Id + Element<Atom>> UnionFind<Atom, Elem> {
     ///
     /// Elements `a` and `b` are equivalent up to a polarity change iff they obey `find(a) = find(b) ^ p` for some polarity `p`.
     ///
-    /// This operation is guaranteed to return `elem` itself for arguments `elem >= lowest_unused_atom()`.
+    /// This operation will panic for arguments `elem >= lowest_unused_atom()`.
     ///
     /// The amortised time complexity of this operation is **O**(log N).
     pub fn find(&self, elem: Elem) -> Elem {
@@ -178,6 +174,8 @@ impl<Atom: Id, Elem: Id + Element<Atom>> UnionFind<Atom, Elem> {
     ///
     /// In both cases it also returns the original representatives of both arguments.
     ///
+    /// This operation will panic for arguments `elem >= lowest_unused_atom()`.
+    ///
     /// The amortised time complexity of this operation is **O**(log N).
     pub fn union_full(&mut self, elems: [Elem; 2]) -> (bool, [Elem; 2]) {
         let [a, b] = elems;
@@ -186,9 +184,6 @@ impl<Atom: Id, Elem: Id + Element<Atom>> UnionFind<Atom, Elem> {
         if ra.atom() == rb.atom() {
             (false, [ra, rb])
         } else {
-            // The first write is only needed to ensure that the parent table actually contains `a`
-            // and is a no-op otherwise.
-            self.write_parent(ra.atom(), Elem::from_atom(ra.atom()));
             self.write_parent(rb.atom(), ra.apply_pol_of(rb));
             (true, [ra, rb])
         }
@@ -198,11 +193,15 @@ impl<Atom: Id, Elem: Id + Element<Atom>> UnionFind<Atom, Elem> {
     /// If the elements are already equivalent or cannot be made equivalent (are equivalent up to polarity),
     /// the operation returns `false` without making any changes. Otherwise it returns `true`.
     ///
+    /// This operation will panic for arguments `elem >= lowest_unused_atom()`.
+    ///
     /// The amortised time complexity of this operation is **O**(log N).
     pub fn union(&mut self, elems: [Elem; 2]) -> bool {
         self.union_full(elems).0
     }
     /// Sets `atom` to be its own representative, and updates other representatives to preserve all existing equivalences.
+    ///
+    /// This operation will panic for arguments `elem >= lowest_unused_atom()`.
     ///
     /// The amortised time complexity of this operation is **O**(log N).
     pub fn make_repr(&mut self, atom: Atom) -> Elem {
@@ -211,9 +210,20 @@ impl<Atom: Id, Elem: Id + Element<Atom>> UnionFind<Atom, Elem> {
         self.write_parent(root.atom(), Elem::from_atom(atom).apply_pol_of(root));
         root
     }
-    /// Returns the lowest `Atom` value for which no equivalences are known.
+    /// Allocates a new `Atom` about which no equivalences are known.
+    pub fn fresh_atom(&mut self) -> Atom {
+        self.parent
+            .push(Atomic::new(Elem::from_atom(self.parent.next_unused_key())))
+            .0
+    }
+    /// Ensures that all atoms up to and including `atom` are allocated.
     ///
-    /// It is guaranteed that `find(a) == a` if `a >= lowest_unused_atom`, but the converse may not hold.
+    /// After this call it is guaranteed that `lowest_unused_atom() > atom`.
+    pub fn ensure_allocated(&mut self, atom: Atom) {
+        self.parent
+            .grow_for_key_with(atom, |atom| Atomic::new(Elem::from_atom(atom)));
+    }
+    /// Returns the lowest `Atom` value for which no equivalences are known.
     pub fn lowest_unused_atom(&self) -> Atom {
         self.parent.next_unused_key()
     }

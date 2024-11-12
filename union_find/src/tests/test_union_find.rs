@@ -87,7 +87,7 @@ impl<Atom: Id, Elem: Id + Element<Atom>> CheckedUnionFind<Atom, Elem> {
                 }
             }
             seen.insert(place.atom());
-            for &next in self.equivs.grow_for(place.atom()).iter() {
+            for &next in self.equivs.get(place.atom()).unwrap().iter() {
                 if !seen.contains(&next.atom()) {
                     queue.push_back(next.apply_pol_of(place));
                 }
@@ -109,10 +109,12 @@ impl<Atom: Id, Elem: Id + Element<Atom>> CheckedUnionFind<Atom, Elem> {
         if ok {
             assert_eq!(self.dut.find_root(lits[1]), ra);
             self.equivs
-                .grow_for(lits[0].atom())
+                .get_mut(lits[0].atom())
+                .unwrap()
                 .insert(lits[1].apply_pol_of(lits[0]));
             self.equivs
-                .grow_for(lits[1].atom())
+                .get_mut(lits[1].atom())
+                .unwrap()
                 .insert(lits[0].apply_pol_of(lits[1]));
         } else {
             assert_eq!(self.dut.find_root(lits[1]).atom(), ra.atom());
@@ -135,10 +137,14 @@ impl<Atom: Id, Elem: Id + Element<Atom>> CheckedUnionFind<Atom, Elem> {
             let parent = self.dut.read_parent(atom);
             assert_eq!(self.ref_equal(Elem::from_atom(atom), parent), VarRel::Equiv);
             let root = self.dut.find_root(Elem::from_atom(atom));
-            for &child in self.equivs.grow_for(atom).iter() {
+            for &child in self.equivs.get(atom).unwrap().iter() {
                 assert_eq!(root, self.dut.find_root(child));
             }
         }
+    }
+    fn ensure_allocated(&mut self, atom: Atom) {
+        self.dut.ensure_allocated(atom);
+        self.equivs.grow_for(atom);
     }
 }
 
@@ -152,11 +158,13 @@ fn test_suite() {
             0..=4 => {
                 let a = Lit::from_code(rng.gen_range(0..=2 * max_var + 1));
                 let b = Lit::from_code(rng.gen_range(0..=2 * max_var + 1));
+                u.ensure_allocated(Var::max(a.atom(), b.atom()));
                 let result = u.union_full([a, b]);
                 println!("union({a}, {b}) = {result:?}");
             }
             5..=7 => {
                 let a = Lit::from_code(rng.gen_range(0..=2 * max_var + 1));
+                u.ensure_allocated(a.atom());
                 let result = u.find(a);
                 println!("find({a}) = {result}");
             }
@@ -165,6 +173,7 @@ fn test_suite() {
             }
             9 => {
                 let a = Var::from_index(rng.gen_range(0..=max_var));
+                u.ensure_allocated(a.atom());
                 u.make_repr(a);
                 println!("make_repr({a})");
             }

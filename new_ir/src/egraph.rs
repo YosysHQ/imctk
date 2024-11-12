@@ -39,7 +39,6 @@ impl<C: IndexedCatalog> change_tracking::Change for EgraphChange<C> {
 pub struct EgraphStorage<C: IndexedCatalog> {
     storage: IndexedPagedStorage<C>,
     observer_token: ObserverToken,
-    var_alloc: IdAlloc<C::Var>,
     change_tracking: ChangeTracking<EgraphChange<C>>,
 }
 
@@ -59,13 +58,9 @@ impl<Catalog: IndexedCatalog> DerefMut for EgraphStorage<Catalog> {
 
 impl<Catalog: IndexedCatalog + Default> EgraphStorage<Catalog> {
     pub fn new(observer_token: ObserverToken) -> Self {
-        let var_alloc = IdAlloc::new();
-        // since 0 is false, skip it
-        var_alloc.alloc().unwrap();
         EgraphStorage {
             storage: IndexedPagedStorage::with_catalog(Default::default()),
             observer_token,
-            var_alloc,
             change_tracking: Default::default(),
         }
     }
@@ -141,7 +136,7 @@ impl<'a, Catalog: IndexedCatalog + Default> EgraphMut<'a, Catalog> {
             let node = self.storage.get::<Catalog::NodeRef<'_>>(node_id);
             (node_id, node.output())
         } else {
-            let output = Element::from_atom(self.storage.var_alloc.alloc().unwrap());
+            let output = Element::from_atom(self.union_find.fresh_atom());
             let node_id = self.storage.insert(Catalog::Node::new(output, term));
             self.storage
                 .change_tracking
@@ -170,7 +165,7 @@ impl<'a, Catalog: IndexedCatalog + Default> EgraphMut<'a, Catalog> {
         }
     }
     pub fn fresh_var(&mut self) -> Catalog::Var {
-        self.storage.var_alloc.alloc().unwrap()
+        self.union_find.fresh_atom()
     }
     pub fn union_full(&mut self, lits: [Catalog::Lit; 2]) -> (bool, [Catalog::Lit; 2]) {
         self.union_find.union_full(lits)
@@ -189,6 +184,7 @@ impl<'a, Catalog: IndexedCatalog + Default> EgraphMut<'a, Catalog> {
                 Change::MakeRepr { new_repr, old_repr } => {
                     result.extend([new_repr, old_repr.atom()])
                 }
+                Change::AllocAtoms { .. } => {}
                 Change::Renumber(_) => unreachable!(),
             }
         }
@@ -284,10 +280,6 @@ impl<'a, Catalog: IndexedCatalog + Default> EgraphMut<'a, Catalog> {
             let node = node.map(|lit| renumbering.old_to_new(lit).unwrap());
             new_egraph.insert_node(node);
         }
-        new_storage
-            .var_alloc
-            .alloc_range(renumbering.reverse().len() - 1)
-            .unwrap();
         let old_storage = std::mem::replace(self.storage, new_storage);
         self.union_find.stop_observing(old_storage.observer_token);
         self.storage.change_tracking.log(EgraphChange::Renumber(
@@ -334,18 +326,16 @@ impl<'a, Catalog: IndexedCatalog + Default> EgraphMut<'a, Catalog> {
 mod tests {
     use super::*;
     use crate::bitlevel::*;
-    use imctk_ids::{id_vec::IdVec, IdRange};
+    use imctk_ids::id_vec::IdVec;
     use imctk_lit::{Lit, Var};
     use imctk_union_find::UnionFind;
 
     fn repr_reduction(
-        var_count: Var,
         union_find: &UnionFind<Var, Lit>,
     ) -> (IdVec<Var, Option<Lit>>, IdVec<Var, Lit>) {
         let mut forward: IdVec<Var, Option<Lit>> = IdVec::default();
         let mut reverse: IdVec<Var, Lit> = IdVec::default();
-        for atom in IdRange::from(Var::MIN_ID..var_count) {
-            let repr = union_find.find(atom.as_lit());
+        for (atom, repr) in union_find.iter() {
             let new_repr = *forward.grow_for_key(repr.atom()).get_or_insert_with(|| {
                 let new_repr = reverse.push(Lit::from_atom(repr.var())).0;
                 Lit::from_atom(new_repr)
@@ -378,10 +368,9 @@ mod tests {
         for node in egraph.storage.iter::<Node<BitlevelTerm>>() {
             println!("{node:?}");
         }
-        let var_count = egraph.storage.var_alloc.alloc().unwrap();
         println!("-----");
         egraph.union_full([input0, input1]);
-        let (forward, reverse) = repr_reduction(var_count, egraph.union_find.get_union_find());
+        let (forward, reverse) = repr_reduction(egraph.union_find.get_union_find());
         println!("{forward:?} {reverse:?}");
         egraph.union_find.renumber(forward, reverse);
         egraph.rebuild();

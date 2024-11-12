@@ -212,7 +212,7 @@ impl Unroll {
 
         let comb_from_seen = self
             .comb_from_seen
-            .grow_for_key_with(step, || IdVec::from_vec(vec![Some(Lit::FALSE)]));
+            .grow_for_key_with(step, |_| IdVec::from_vec(vec![Some(Lit::FALSE)]));
 
         let slot = comb_from_seen.grow_for_key(seen);
 
@@ -224,7 +224,7 @@ impl Unroll {
 
         let comb_from_seen = self
             .comb_from_seen
-            .grow_for_key_with(step, || IdVec::from_vec(vec![Some(Lit::FALSE)]));
+            .grow_for_key_with(step, |_| IdVec::from_vec(vec![Some(Lit::FALSE)]));
 
         let slot = comb_from_seen.grow_for_key(seen);
 

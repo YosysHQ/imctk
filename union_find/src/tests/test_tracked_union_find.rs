@@ -28,6 +28,7 @@ fn change_eq<Atom: Id, Elem: Id>(c1: &Change<Atom, Elem>, c2: &Change<Atom, Elem
             },
         ) => a1 == a2 && b1 == b2,
         (Change::Renumber(r1), Change::Renumber(r2)) => Arc::as_ptr(r1) == Arc::as_ptr(r2),
+        (Change::AllocAtoms { new_max: n1 }, Change::AllocAtoms { new_max: n2 }) => n1 == n2,
         _ => false,
     }
 }
@@ -83,6 +84,15 @@ impl<Atom: Id, Elem: Id + Element<Atom>> CTUnionFind<Atom, Elem> {
         let dut_old_repr = self.dut.make_repr(new_repr);
         assert_eq!(dut_old_repr, uf_old_repr);
         uf_old_repr
+    }
+    fn ensure_allocated(&mut self, atom: Atom) {
+        if atom >= self.uf.lowest_unused_atom() {
+            self.uf.ensure_allocated(atom);
+            for vec in self.logs.values_mut() {
+                vec.push(Change::AllocAtoms { new_max: atom });
+            }
+            self.dut.ensure_allocated(atom);
+        }
     }
     fn start_observing(&mut self) -> ObserverToken {
         let token = self.dut.start_observing();
@@ -193,6 +203,7 @@ fn test_suite() {
             Union: 8.0 => {
                 let a = Lit::from_code(rng.gen_range(0..=2 * max_var + 1));
                 let b = Lit::from_code(rng.gen_range(0..=2 * max_var + 1));
+                u.ensure_allocated(Var::max(a.atom(), b.atom()));
                 let result = u.union_full([a, b]);
                 if verbosity > 1 {
                     println!("union({a}, {b}) = {result:?}");
@@ -200,6 +211,7 @@ fn test_suite() {
             },
             Find: 1.0 => {
                 let a = Lit::from_code(rng.gen_range(0..=2 * max_var + 1));
+                u.ensure_allocated(a.atom());
                 let result = u.find(a);
                 if verbosity > 1 {
                     println!("find({a}) = {result}");
@@ -207,6 +219,7 @@ fn test_suite() {
             },
             MakeRepr: 2.0 => {
                 let a = Var::from_index(rng.gen_range(0..=max_var));
+                u.ensure_allocated(a.atom());
                 u.make_repr(a);
                 if verbosity > 1 {
                     println!("make_repr({a})");

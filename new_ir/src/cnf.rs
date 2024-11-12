@@ -121,8 +121,8 @@ impl IncrementalCnf {
                         let merged_repr_cnf = merged_repr.lookup(|var| sink.var(var).into());
                         sink.equiv([new_repr_cnf.into(), merged_repr_cnf])?;
                     }
-                    Change::MakeRepr { .. } => { }
-                    Change::Renumber(_) => unimplemented!()
+                    Change::MakeRepr { .. } | Change::AllocAtoms { .. } => {}
+                    Change::Renumber(_) => unimplemented!(),
                 }
             }
         }

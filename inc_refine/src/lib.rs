@@ -229,7 +229,7 @@ impl<T: Id> IncrementalRefinement<T> {
         }
 
         self.bump_timestamp();
-        *self.timestamp.grow_for_key_with(id, || u32::MAX) = self.current_timestamp;
+        *self.timestamp.grow_for_key_with(id, |_| u32::MAX) = self.current_timestamp;
 
         self.prepend_node(enter);
         self.clear_skip(enter);

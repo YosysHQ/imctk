@@ -146,7 +146,7 @@ pub fn solve_with_pdr(
                     if sat.query_lit(&mut bmc_env, bmc_target) == Some(true) {
                         stats.pre_check_success = true;
                         let mut inputs = <IdVec<TimeStep, HashSet<Lit>>>::default();
-                        inputs.grow_for_key_with(t, HashSet::default);
+                        inputs.grow_for_key_with(t, |_| HashSet::default());
 
                         for &lit in sat.input_model() {
                             let (time, seq_lit) = bmc.find_seq_input(env, &bmc_env, lit).unwrap();

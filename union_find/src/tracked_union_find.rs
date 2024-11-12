@@ -1,6 +1,6 @@
 //! A `TrackedUnionFind` augments a [`UnionFind`] structure with change tracking.
-use std::sync::Arc;
 use imctk_ids::{id_vec::IdVec, Id};
+use std::sync::Arc;
 
 use crate::{
     change_tracking::{self, ChangeTracking, DrainChanges},
@@ -158,6 +158,8 @@ pub enum Change<Atom, Elem> {
     MakeRepr { new_repr: Atom, old_repr: Elem },
     /// A renumbering operation.
     Renumber(Arc<Renumbering<Atom, Elem>>),
+    /// An allocation of variables up to `new_max`.
+    AllocAtoms { new_max: Atom },
 }
 
 impl<Atom, Elem> change_tracking::Change for Change<Atom, Elem> {
@@ -188,6 +190,10 @@ impl<Atom: Id, Elem: Id> std::fmt::Debug for Change<Atom, Elem> {
                 .field("old_repr", old_repr)
                 .finish(),
             Self::Renumber(arg0) => f.debug_tuple("Renumber").field(arg0).finish(),
+            Self::AllocAtoms { new_max } => f
+                .debug_struct("AllocVars")
+                .field("new_max", new_max)
+                .finish(),
         }
     }
 }
@@ -269,6 +275,17 @@ impl<Atom: Id, Elem: Id + Element<Atom>> TrackedUnionFind<Atom, Elem> {
         }
         old_repr
     }
+    pub fn fresh_atom(&mut self) -> Atom {
+        let atom = self.union_find.fresh_atom();
+        self.tracking.log(Change::AllocAtoms { new_max: atom });
+        atom
+    }
+    pub fn ensure_allocated(&mut self, atom: Atom) {
+        if atom >= self.union_find.lowest_unused_atom() {
+            self.union_find.ensure_allocated(atom);
+            self.tracking.log(Change::AllocAtoms { new_max: atom });
+        }
+    }
     /// Renumbers all the variables in the `UnionFind`.
     /// The provided mapping **must** meet all the preconditions listed for [`Renumbering`].
     ///
@@ -282,6 +299,7 @@ impl<Atom: Id, Elem: Id + Element<Atom>> TrackedUnionFind<Atom, Elem> {
     ) -> Arc<Renumbering<Atom, Elem>> {
         let old_generation = self.tracking.generation();
         let new_generation = Generation(old_generation.0 + 1);
+        let new_max = Atom::from_id_index(reverse.len().checked_sub(1).unwrap());
         let renumbering = Arc::new(Renumbering::new(
             forward,
             reverse,
@@ -291,6 +309,7 @@ impl<Atom: Id, Elem: Id + Element<Atom>> TrackedUnionFind<Atom, Elem> {
         debug_assert!(renumbering.is_repr_reduction(&self.union_find));
         self.tracking.log(Change::Renumber(renumbering.clone()));
         self.union_find = UnionFind::new();
+        self.union_find.ensure_allocated(new_max);
         renumbering
     }
 }
@@ -328,7 +347,8 @@ impl<Atom, Elem> TrackedUnionFind<Atom, Elem> {
         token: &mut ObserverToken,
         mut f: impl FnMut(&[Change<Atom, Elem>], &UnionFind<Atom, Elem>),
     ) -> bool {
-        self.tracking.drain_changes_with_fn(token, |ch| f(ch, &self.union_find))
+        self.tracking
+            .drain_changes_with_fn(token, |ch| f(ch, &self.union_find))
     }
     /// Returns a draining iterator that returns and deletes entries from the token's private log.
     ///
