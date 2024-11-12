@@ -303,7 +303,9 @@ impl CircuitSat {
             self.equiv_pos += 1;
             let env_repr_lit = env.lit_repr(env_var.as_lit());
 
-            let Some(sat_lit) = self.sat_from_env.get(env_var).copied().flatten() else { continue };
+            let Some(sat_lit) = self.sat_from_env.get(env_var).copied().flatten() else {
+                continue;
+            };
 
             if let Some(sat_repr_lit) = self
                 .sat_from_env

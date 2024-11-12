@@ -495,7 +495,9 @@ mod tests {
             },
         );
 
-        let Some(PdrResult::Cex(cex)) = result else { panic!() };
+        let Some(PdrResult::Cex(cex)) = result else {
+            panic!()
+        };
 
         let sim_model = extract_sim_model(&env, env.var_defs().repr_vars());
 

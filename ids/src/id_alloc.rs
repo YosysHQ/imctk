@@ -1,6 +1,8 @@
 //! An allocator for IDs that allows concurrent access from multiple threads.
-use std::sync::atomic::Ordering::Relaxed;
-use std::{marker::PhantomData, sync::atomic::AtomicUsize};
+use std::{
+    marker::PhantomData,
+    sync::atomic::{AtomicUsize, Ordering::Relaxed},
+};
 
 use crate::{Id, IdRange};
 

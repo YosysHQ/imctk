@@ -50,7 +50,9 @@ impl<T: Id, P: Ord + Copy, V: Ord + Hash + Copy> RefinementDriver<T, P, V> {
 
     pub fn refine(&mut self, mut eq: impl FnMut(T, T) -> bool) -> bool {
         assert!(self.pending.is_none(), "call update before calling refine");
-        let Some((_, first, last)) = self.heap.pop() else { return false };
+        let Some((_, first, last)) = self.heap.pop() else {
+            return false;
+        };
         let start = first.id_index();
         let end = last.id_index() + 1;
 
@@ -85,7 +87,9 @@ impl<T: Id, P: Ord + Copy, V: Ord + Hash + Copy> RefinementDriver<T, P, V> {
     }
 
     pub fn update(&mut self, mut value: impl FnMut(T) -> V) {
-        let Some((start, end)) = self.pending.take() else { return };
+        let Some((start, end)) = self.pending.take() else {
+            return;
+        };
 
         for i in start..end {
             self.values[self.order[i]] = value(self.items[self.order[i]]);
@@ -93,7 +97,9 @@ impl<T: Id, P: Ord + Copy, V: Ord + Hash + Copy> RefinementDriver<T, P, V> {
 
         self.subdivide(start, end);
 
-        let Some((_, first, last)) = self.heap.pop() else { return };
+        let Some((_, first, last)) = self.heap.pop() else {
+            return;
+        };
         let start = first.id_index();
         let end = last.id_index() + 1;
 

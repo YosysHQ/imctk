@@ -76,7 +76,9 @@ impl RefineSim {
         for &env_var in env.equiv_vars()[self.equiv_pos..].iter() {
             let env_repr_lit = env.var_defs().lit_repr(env_var.as_lit());
 
-            let Some(sim_lit) = self.sim_from_env.get(env_var).copied().flatten() else { continue };
+            let Some(sim_lit) = self.sim_from_env.get(env_var).copied().flatten() else {
+                continue;
+            };
 
             if let Some(sim_repr_lit) = self
                 .sim_from_env

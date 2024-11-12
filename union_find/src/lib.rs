@@ -8,7 +8,7 @@ pub use tracked_union_find::TrackedUnionFind;
 #[doc(inline)]
 pub use union_find::UnionFind;
 
+pub mod change_tracking;
 pub mod element;
 pub mod tracked_union_find;
 pub mod union_find;
-pub mod change_tracking;

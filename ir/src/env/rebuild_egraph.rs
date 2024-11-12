@@ -257,12 +257,18 @@ impl Env {
             log::trace!("steady iteration dedup {}", pending_nodes.len());
 
             for node_id in pending_nodes.drain(..) {
-                let Some(node) = self.nodes.get_dyn(node_id) else { continue };
-                let Some(output_var) = node.output_var() else { continue };
+                let Some(node) = self.nodes.get_dyn(node_id) else {
+                    continue;
+                };
+                let Some(output_var) = node.output_var() else {
+                    continue;
+                };
                 if self.var_defs.var_defs[output_var].is_steady() {
                     continue;
                 }
-                let Some(term) = node.dyn_term() else { continue };
+                let Some(term) = node.dyn_term() else {
+                    continue;
+                };
 
                 if term.dyn_is_steady_in_env(self) {
                     self.var_defs.var_defs[output_var].set_steady(true);

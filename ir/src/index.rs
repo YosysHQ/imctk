@@ -168,16 +168,19 @@ impl StructuralHashIndex {
 
         if var.index() < self.tables.len() {
             let mut output = <T::Output>::default();
-            let node_id = *self.tables
-                .find(var.index(), hash, |&candidate| {
-                    let Some(candidate_ref) = nodes.get_dyn(candidate) else {return false};
-                    let Some(candidate_ref) = candidate_ref.dyn_cast::<TermNode<T>>() else {return false};
-                    let eq = candidate_ref.term.def_eq(term);
-                    if eq {
-                        output = candidate_ref.output;
-                    }
-                    eq
-                })?;
+            let node_id = *self.tables.find(var.index(), hash, |&candidate| {
+                let Some(candidate_ref) = nodes.get_dyn(candidate) else {
+                    return false;
+                };
+                let Some(candidate_ref) = candidate_ref.dyn_cast::<TermNode<T>>() else {
+                    return false;
+                };
+                let eq = candidate_ref.term.def_eq(term);
+                if eq {
+                    output = candidate_ref.output;
+                }
+                eq
+            })?;
 
             Some((node_id, output))
         } else {
@@ -193,8 +196,12 @@ impl StructuralHashIndex {
         if var.index() < self.tables.len() {
             let mut output = Lit::FALSE;
             let node_id = *self.tables.find(var.index(), hash, |&candidate| {
-                let Some(candidate_ref) = nodes.get_dyn(candidate) else { return false };
-                let Some(candidate_term_ref) = candidate_ref.dyn_term() else { return false };
+                let Some(candidate_ref) = nodes.get_dyn(candidate) else {
+                    return false;
+                };
+                let Some(candidate_term_ref) = candidate_ref.dyn_term() else {
+                    return false;
+                };
                 let eq = candidate_term_ref.dyn_def_eq(term);
                 if eq {
                     output = candidate_ref.output_lit().unwrap();
@@ -402,7 +409,9 @@ impl DynamicIndex for DefsIndex {
         if matches!(node_role, NodeRole::PrimaryDef(_)) {
             return;
         }
-        let Some(output_var) = node.output_var() else { return };
+        let Some(output_var) = node.output_var() else {
+            return;
+        };
 
         if self.tables.len() <= output_var.index() {
             self.tables.resize(output_var.index() + 1);
@@ -421,7 +430,9 @@ impl DynamicIndex for DefsIndex {
             return;
         }
 
-        let Some(output_var) = node.output_var() else { return };
+        let Some(output_var) = node.output_var() else {
+            return;
+        };
 
         if self.tables.len() > output_var.index() {
             let hash = Self::node_id_hash(node_id);

@@ -183,7 +183,9 @@ impl Unroll {
             .seq_from_comb
             .lit_entries(dest.var_defs().lit_repr(unroll_lit))
         {
-            let Some(node) = source.def_node(entry.lit.var()) else { continue };
+            let Some(node) = source.def_node(entry.lit.var()) else {
+                continue;
+            };
             if node.dyn_cast::<InputNode>().is_some()
                 || node.dyn_cast::<SteadyInputNode>().is_some()
             {

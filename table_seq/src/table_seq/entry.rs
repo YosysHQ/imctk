@@ -95,13 +95,11 @@ impl<T> TableSeq<T> {
             }
 
             match chunk.meta.entry_type(chunk_slot) {
-                EntryType::Empty => {
-                    Entry::Vacant(VacantEntry {
-                        tables: self,
-                        subtable,
-                        kind: VacantEntryKind::EmptyTable,
-                    })
-                }
+                EntryType::Empty => Entry::Vacant(VacantEntry {
+                    tables: self,
+                    subtable,
+                    kind: VacantEntryKind::EmptyTable,
+                }),
                 EntryType::Single => {
                     let node = chunk.node(chunk_alloc);
                     let entry_offset = chunk.meta.entry_offset(chunk_slot);

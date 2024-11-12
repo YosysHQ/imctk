@@ -16,7 +16,10 @@ impl Default for BitIr {
     fn default() -> Self {
         let mut union_find = TrackedUnionFind::default();
         let observer = union_find.start_observing();
-        Self { union_find, egraph: EgraphStorage::new(observer) }
+        Self {
+            union_find,
+            egraph: EgraphStorage::new(observer),
+        }
     }
 }
 

@@ -1,9 +1,7 @@
 #![allow(missing_docs, dead_code, clippy::undocumented_unsafe_blocks)]
 use std::{collections::HashMap, fmt::Debug};
 
-use rand::distributions::Standard;
-use rand::prelude::*;
-use rand::SeedableRng;
+use rand::{distributions::Standard, prelude::*, SeedableRng};
 
 use super::*;
 

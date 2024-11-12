@@ -13,10 +13,10 @@
 use core::hash::Hash;
 
 mod id;
+pub mod id_alloc;
 mod id_range;
 pub mod id_vec;
 pub mod indexed_id_vec;
-pub mod id_alloc;
 
 pub mod id_set_seq;
 

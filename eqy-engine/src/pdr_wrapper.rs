@@ -332,7 +332,9 @@ pub fn solve_with_pdr(
             }
 
             for (i, &steady_input) in steady_inputs_used.iter().enumerate() {
-                let Some((_term, input_lit)) = env.lookup_term(&steady_input) else { continue };
+                let Some((_term, input_lit)) = env.lookup_term(&steady_input) else {
+                    continue;
+                };
                 let offset = (*cex).nRegs as usize + i + aiger.aig.input_count;
                 let value =
                     abc::Abc_InfoHasBit((&mut (*cex).pData) as *mut _ as *mut _, offset as c_int)

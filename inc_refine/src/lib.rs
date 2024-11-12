@@ -244,7 +244,9 @@ impl<T: Id> IncrementalRefinement<T> {
     /// Stops tracking a given item as part of the incremental partition.
     pub fn remove_item(&mut self, id: T) -> bool {
         let enter = Self::enter_id(id);
-        let Some(node) = self.node.get(enter) else { return false };
+        let Some(node) = self.node.get(enter) else {
+            return false;
+        };
         if node.next.is_none() {
             return false;
         }
@@ -261,7 +263,9 @@ impl<T: Id> IncrementalRefinement<T> {
     /// Returns whether a given item is tracked as part of the incremental partition.
     pub fn contains_item(&self, id: T) -> bool {
         let enter = Self::enter_id(id);
-        let Some(node) = self.node.get(enter) else { return false };
+        let Some(node) = self.node.get(enter) else {
+            return false;
+        };
         node.next.is_some()
     }
 
@@ -323,7 +327,9 @@ impl<T: Id> IncrementalRefinement<T> {
     /// Panics when the given item is not currently tracked.
     pub fn first_sibling(&mut self, id: T) -> T {
         let enter = Self::enter_id(id);
-        let Some(node) = self.node.get(enter) else { panic!("item not present") };
+        let Some(node) = self.node.get(enter) else {
+            panic!("item not present")
+        };
         if node.next.is_none() {
             panic!("item not present");
         }
@@ -399,7 +405,9 @@ impl<T: Id> IncrementalRefinement<T> {
 
     fn first_in_leaf_run(&mut self, id: T) -> T {
         let enter = Self::enter_id(id);
-        let Some(node) = self.node.get(enter) else { panic!("item not present") };
+        let Some(node) = self.node.get(enter) else {
+            panic!("item not present")
+        };
         if node.next.is_none() {
             panic!("item not present");
         }
@@ -506,7 +514,9 @@ impl<T: Id> IncrementalRefinement<T> {
         let mut count = 0;
 
         let enter = Self::enter_id(id);
-        let Some(node) = self.node.get(enter) else { panic!("item not present") };
+        let Some(node) = self.node.get(enter) else {
+            panic!("item not present")
+        };
         let Some(mut iter) = node.next else {
             panic!("item not present");
         };
@@ -528,7 +538,9 @@ impl<T: Id> IncrementalRefinement<T> {
         let mut count = 0;
 
         let enter = Self::enter_id(id);
-        let Some(node) = self.node.get(enter) else { panic!("item not present") };
+        let Some(node) = self.node.get(enter) else {
+            panic!("item not present")
+        };
         let Some(mut iter) = node.next else {
             panic!("item not present");
         };
@@ -549,7 +561,9 @@ impl<T: Id> IncrementalRefinement<T> {
     /// Panics when the given item is not currently tracked.
     pub fn is_leaf(&self, id: T) -> bool {
         let enter = Self::enter_id(id);
-        let Some(node) = self.node.get(enter) else { panic!("item not present") };
+        let Some(node) = self.node.get(enter) else {
+            panic!("item not present")
+        };
         if node.next.is_none() {
             panic!("item not present");
         }
@@ -714,7 +728,9 @@ impl<T: Id> IncrementalRefinement<T> {
     /// Panics when the given item is not currently tracked.
     pub fn postorder_descendants_iter(&self, id: T) -> impl Iterator<Item = T> + '_ {
         let enter = Self::enter_id(id);
-        let Some(node) = self.node.get(enter) else { panic!("item not present") };
+        let Some(node) = self.node.get(enter) else {
+            panic!("item not present")
+        };
         let Some(mut iter) = node.next else {
             panic!("item not present");
         };
@@ -738,7 +754,9 @@ impl<T: Id> IncrementalRefinement<T> {
     /// Panics when the given item is not currently tracked.
     pub fn child_iter(&self, id: T) -> impl Iterator<Item = T> + '_ {
         let enter = Self::enter_id(id);
-        let Some(node) = self.node.get(enter) else { panic!("item not present") };
+        let Some(node) = self.node.get(enter) else {
+            panic!("item not present")
+        };
         let Some(mut iter) = node.next else {
             panic!("item not present");
         };

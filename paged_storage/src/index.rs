@@ -43,7 +43,10 @@ impl<C: IndexedCatalog, T> IndexedNodeMutFamily<C> for &mut T
 where
     for<'a> &'a mut T: PagedStorageItemMut<'a, C> + IndexedNodeMut<C>,
 {
-    type Instantiate<'a> = &'a mut T where Self: 'a;
+    type Instantiate<'a>
+        = &'a mut T
+    where
+        Self: 'a;
 }
 
 pub trait IndexedCatalog: PagedStorageCatalog + Sized {
@@ -426,8 +429,13 @@ mod tests {
         fn term(&self) -> <ExampleCatalog as IndexedCatalog>::TermRef<'_> {
             self.1.clone()
         }
-        
-        fn map(&self, fun: impl FnMut(<ExampleCatalog as IndexedCatalog>::Lit) -> <ExampleCatalog as IndexedCatalog>::Lit) -> <ExampleCatalog as IndexedCatalog>::Node {
+
+        fn map(
+            &self,
+            fun: impl FnMut(
+                <ExampleCatalog as IndexedCatalog>::Lit,
+            ) -> <ExampleCatalog as IndexedCatalog>::Lit,
+        ) -> <ExampleCatalog as IndexedCatalog>::Node {
             todo!()
         }
     }
@@ -439,7 +447,8 @@ mod tests {
     }
 
     impl<'a> IndexedNodeMutFamily<ExampleCatalog> for ExampleItemMut<'a> {
-        type Instantiate<'b> = ExampleItemMut<'b>
+        type Instantiate<'b>
+            = ExampleItemMut<'b>
         where
             'a: 'b;
     }

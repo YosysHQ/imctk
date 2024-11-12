@@ -182,7 +182,9 @@ pub fn select_primary_defs_by(env: &mut Env, mut candidate: impl FnMut(&Env, Nod
     updated[Var::FALSE] = true;
 
     for (node_id, node) in env.nodes().iter() {
-        let Some(output_var) = node.output_var() else { continue };
+        let Some(output_var) = node.output_var() else {
+            continue;
+        };
         let mut source = true;
         node.dyn_foreach_unguarded_input_var(&mut |var| {
             if var != Var::FALSE {
@@ -217,7 +219,9 @@ pub fn select_primary_defs_by(env: &mut Env, mut candidate: impl FnMut(&Env, Nod
         }
 
         for use_id in env.uses_index().find_uses_unordered(var) {
-            let Some(output_var) = env.nodes().get_dyn(use_id).unwrap().output_var() else { continue };
+            let Some(output_var) = env.nodes().get_dyn(use_id).unwrap().output_var() else {
+                continue;
+            };
 
             let mut ready = true;
 

@@ -366,13 +366,17 @@ pub trait EnvWrapper {
 impl Env {
     /// Returns the node that is the primary definition of a variable.
     pub fn def_node(&self, var: Var) -> Option<&DynNode> {
-        let Some(VarDef::Node(node_id)) = self.var_defs().var_def(var) else { return None };
+        let Some(VarDef::Node(node_id)) = self.var_defs().var_def(var) else {
+            return None;
+        };
         Some(self.nodes().get_dyn(node_id).unwrap())
     }
 
     /// Returns the node id and node for the primary definition of a variable.
     pub fn def_node_with_id(&self, var: Var) -> Option<(NodeId, &DynNode)> {
-        let Some(VarDef::Node(node_id)) = self.var_defs().var_def(var) else { return None };
+        let Some(VarDef::Node(node_id)) = self.var_defs().var_def(var) else {
+            return None;
+        };
         Some((node_id, self.nodes().get_dyn(node_id).unwrap()))
     }
 

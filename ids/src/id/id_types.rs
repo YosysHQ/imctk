@@ -1,7 +1,9 @@
 mod id8 {
     use imctk_transparent::SubtypeCast;
 
-    use crate::id::{u8_range_types::NonMaxHighNibbleU8, ConstIdFromIdIndex, GenericId, Id, NoUninit};
+    use crate::id::{
+        u8_range_types::NonMaxHighNibbleU8, ConstIdFromIdIndex, GenericId, Id, NoUninit,
+    };
     use core::{fmt, fmt::Debug, hash::Hash};
 
     /// [`Id`] type representing indices in the range `0..0xf0`.

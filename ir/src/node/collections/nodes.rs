@@ -627,7 +627,9 @@ impl Nodes {
     pub fn discard(&mut self, node_id: NodeId) -> bool {
         log::trace!("discard {node_id:?}");
         let (chunk_index, chunk_slot) = split_id(node_id);
-        let Some(chunk) = self.chunks.get_mut(chunk_index) else { return false };
+        let Some(chunk) = self.chunks.get_mut(chunk_index) else {
+            return false;
+        };
 
         let dropped = chunk.drop(chunk_slot);
         self.len -= dropped as usize;

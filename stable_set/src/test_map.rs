@@ -2,9 +2,11 @@
 use crate::StableMap;
 use indexmap::IndexMap;
 use rand::prelude::*;
-use std::fmt::Debug;
-use std::hash::Hash;
-use std::{borrow::Borrow, hash::BuildHasherDefault};
+use std::{
+    borrow::Borrow,
+    fmt::Debug,
+    hash::{BuildHasherDefault, Hash},
+};
 use zwohash::ZwoHasher;
 
 type ZwoMap<K, V> = StableMap<K, V, BuildHasherDefault<ZwoHasher>, u8>;

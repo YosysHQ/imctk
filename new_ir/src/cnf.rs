@@ -116,7 +116,10 @@ impl IncrementalCnf {
             let mut iter = ir.union_find.drain_changes(&mut self.tuf_token);
             while let Some(change) = iter.next() {
                 match change {
-                    &Change::Union { new_repr, merged_repr } => {
+                    &Change::Union {
+                        new_repr,
+                        merged_repr,
+                    } => {
                         let new_repr_cnf = sink.var(new_repr);
                         let merged_repr_cnf = merged_repr.lookup(|var| sink.var(var).into());
                         sink.equiv([new_repr_cnf.into(), merged_repr_cnf])?;

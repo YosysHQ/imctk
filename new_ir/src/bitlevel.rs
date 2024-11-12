@@ -283,7 +283,7 @@ impl IndexedNodeRef<BitlevelCatalog> for Node<BitlevelTerm> {
             BitlevelTerm::Xor(xor_term) => BitlevelTerm::Xor(XorTerm(xor_term.0.map(fun))),
             BitlevelTerm::Reg(reg) => BitlevelTerm::Reg(Reg {
                 next: fun(reg.next),
-                init: fun(reg.init)
+                init: fun(reg.init),
             }),
         };
         Node { output, term }
@@ -311,7 +311,10 @@ impl<'a> IndexedNodeMut<BitlevelCatalog> for NodeMut<'a, BitlevelTermMut<'a>> {
 }
 
 impl<'a> IndexedNodeMutFamily<BitlevelCatalog> for NodeMut<'a, BitlevelTermMut<'a>> {
-    type Instantiate<'b> = NodeMut<'b, BitlevelTermMut<'b>> where 'a: 'b;
+    type Instantiate<'b>
+        = NodeMut<'b, BitlevelTermMut<'b>>
+    where
+        'a: 'b;
 }
 
 impl IndexedCatalog for BitlevelCatalog {
