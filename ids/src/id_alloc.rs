@@ -45,19 +45,36 @@ impl<T: Id> IdAlloc<T> {
             })
             .map_err(|_| IdAllocError)
     }
-    /// Allocates a single ID.
-    pub fn alloc(&self) -> Result<T, IdAllocError> {
+    /// Tries to allocate a single ID.
+    ///
+    /// Returns `Err(IdAllocError)` if there are no IDs available.
+    pub fn try_alloc(&self) -> Result<T, IdAllocError> {
         self.alloc_indices(1).map(|index| {
             // SAFETY: the precondition was checked by `alloc_indices`
             unsafe { T::from_id_index_unchecked(index) }
         })
     }
-    /// Allocates a contiguous range of the specified size.
-    pub fn alloc_range(&self, n: usize) -> Result<IdRange<T>, IdAllocError> {
+    /// Tries to allocates a contiguous range of the specified size.
+    ///
+    /// Returns `Err(IdAllocError)` if there are not enough IDs available.
+    pub fn try_alloc_range(&self, n: usize) -> Result<IdRange<T>, IdAllocError> {
         self.alloc_indices(n).map(|start| {
             // SAFETY: the precondition was checked by `alloc_indices`
             unsafe { IdRange::from_index_range_unchecked(start..start + n) }
         })
+    }
+    /// Allocates a single ID.
+    ///
+    /// Panics if there are no IDs available.
+    pub fn alloc(&self) -> T {
+        self.try_alloc().expect("IdAlloc::alloc: no IDs available")
+    }
+    /// Allocates a contiguous range of the specified size.
+    ///
+    /// Panics if there are not enough IDs available.
+    pub fn alloc_range(&self, n: usize) -> IdRange<T> {
+        self.try_alloc_range(n)
+            .expect("IdAlloc::alloc_range: not enough IDs available")
     }
     /// Returns the ID that would be allocated by the next call to `alloc`.
     pub fn peek(&self) -> Result<T, IdAllocError> {

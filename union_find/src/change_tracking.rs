@@ -108,7 +108,7 @@ static TRACKING_ID_ALLOC: IdAlloc<ChangeTrackingId> = IdAlloc::new();
 impl<C> Default for ChangeTracking<C> {
     fn default() -> Self {
         ChangeTracking {
-            tracking_id: TRACKING_ID_ALLOC.alloc().unwrap(),
+            tracking_id: TRACKING_ID_ALLOC.alloc(),
             log: VecDeque::new(),
             observer_id_alloc: IdAlloc::new(),
             observers: PriorityQueue::new(),
@@ -148,7 +148,7 @@ impl<C: Change> ChangeTracking<C> {
     /// After use, the `ObserverToken` must be disposed of with a call to `stop_observing`, otherwise
     /// the memory corresponding to old log entries cannot be reclaimed until the `ChangeTracking` is dropped.
     pub fn start_observing(&mut self) -> ObserverToken {
-        let observer_id = self.observer_id_alloc.alloc().unwrap();
+        let observer_id = self.observer_id_alloc.alloc();
         self.observers.push(observer_id, Reverse(self.log_end()));
         ObserverToken {
             tracking_id: self.tracking_id,
@@ -159,7 +159,7 @@ impl<C: Change> ChangeTracking<C> {
     /// Clones an `ObserverToken`, conceptually cloning the token's private log.
     pub fn clone_token(&mut self, token: &ObserverToken) -> ObserverToken {
         assert!(token.tracking_id == self.tracking_id);
-        let new_observer_id = self.observer_id_alloc.alloc().unwrap();
+        let new_observer_id = self.observer_id_alloc.alloc();
         let pos = *self.observers.get_priority(&token.observer_id).unwrap();
         self.observers.push(new_observer_id, pos);
         ObserverToken {

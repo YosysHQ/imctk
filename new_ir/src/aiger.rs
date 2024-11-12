@@ -69,9 +69,9 @@ impl AigerImporter {
             .resize_with(aig.max_var_index + 1, Default::default);
         self.var_map[AigerVar::FALSE].get_or_insert(Lit::FALSE);
         let aiger_vars = IdAlloc::<AigerVar>::new();
-        assert_eq!(aiger_vars.alloc(), Ok(AigerVar::FALSE));
+        assert_eq!(aiger_vars.alloc(), AigerVar::FALSE);
 
-        for input_var in aiger_vars.alloc_range(aig.input_count).unwrap() {
+        for input_var in aiger_vars.alloc_range(aig.input_count) {
             let input_id = InputId(input_var.0.index() as u32);
             self.var_map[input_var]
                 .get_or_insert_with(|| egraph.insert_term(BitlevelTerm::Input(input_id)));
@@ -80,7 +80,7 @@ impl AigerImporter {
         self.latch_init
             .resize_with(aig.latches.len(), Default::default);
 
-        let latch_output_vars = aiger_vars.alloc_range(aig.latches.len()).unwrap();
+        let latch_output_vars = aiger_vars.alloc_range(aig.latches.len());
         let latch_init_inputs =
             IdRange::from(SteadyInputId(0)..SteadyInputId(aig.latches.len() as u32));
 
@@ -99,7 +99,7 @@ impl AigerImporter {
         }
 
         for aiger_and in aig.and_gates.iter() {
-            let output_aiger_var = aiger_vars.alloc().unwrap();
+            let output_aiger_var = aiger_vars.alloc();
             let inputs = aiger_and
                 .inputs
                 .map(|lit| lit.lookup(|var| self.var_map[var].unwrap()));
