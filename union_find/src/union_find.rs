@@ -86,11 +86,13 @@ impl<Atom, Elem> UnionFind<Atom, Elem> {
 }
 
 impl<Atom: Id, Elem: Id + Element<Atom>> UnionFind<Atom, Elem> {
-    /// Constructs an empty `UnionFind`, with room for `capacity` elements.
-    pub fn with_capacity(capacity: usize) -> Self {
-        UnionFind {
-            parent: IdVec::from_vec(Vec::with_capacity(capacity)),
+    /// Constructs a `UnionFind` with `len` variables.
+    pub fn with_len(len: usize) -> Self {
+        let mut uf = Self::default();
+        if len > 0 {
+            uf.ensure_allocated(Atom::from_id_index(len - 1));
         }
+        uf
     }
     /// Clears all equivalences, but retains any allocated memory.
     pub fn clear(&mut self) {

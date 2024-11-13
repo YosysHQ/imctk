@@ -170,11 +170,12 @@ impl<Atom: Id, Elem: Id + Element<Atom>> CTUnionFind<Atom, Elem> {
     }
     fn renumber(&mut self) -> Arc<Renumbering<Atom, Elem>> {
         let (forward, reverse) = self.repr_reduction();
+        let len = reverse.len();
         let renumbering = self.dut.renumber(forward, reverse);
         for vec in self.logs.values_mut() {
             vec.push(Change::Renumber(renumbering.clone()));
         }
-        self.uf = UnionFind::new();
+        self.uf = UnionFind::with_len(len);
         renumbering
     }
 }

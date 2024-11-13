@@ -299,7 +299,7 @@ impl<Atom: Id, Elem: Id + Element<Atom>> TrackedUnionFind<Atom, Elem> {
     ) -> Arc<Renumbering<Atom, Elem>> {
         let old_generation = self.tracking.generation();
         let new_generation = Generation(old_generation.0 + 1);
-        let new_max = Atom::from_id_index(reverse.len().checked_sub(1).unwrap());
+        let len = reverse.len();
         let renumbering = Arc::new(Renumbering::new(
             forward,
             reverse,
@@ -308,8 +308,7 @@ impl<Atom: Id, Elem: Id + Element<Atom>> TrackedUnionFind<Atom, Elem> {
         ));
         debug_assert!(renumbering.is_repr_reduction(&self.union_find));
         self.tracking.log(Change::Renumber(renumbering.clone()));
-        self.union_find = UnionFind::new();
-        self.union_find.ensure_allocated(new_max);
+        self.union_find = UnionFind::with_len(len);
         renumbering
     }
 }
