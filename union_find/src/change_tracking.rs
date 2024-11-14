@@ -80,7 +80,7 @@ pub struct ChangeTracking<Change> {
     /// and also allows retrieving the minimum absolute position of any observer.
     ///
     /// `truncate_log` will reset that minimum position to be at relative position 0.
-    observers: PriorityQueue<ObserverId, Reverse<u64>>,
+    observers: parking_lot::RwLock<PriorityQueue<ObserverId, Reverse<u64>>>,
     /// Offset between absolute and relative positions in the log.
     ///
     /// absolute position = relative position + `log_start`
@@ -111,7 +111,7 @@ impl<C> Default for ChangeTracking<C> {
             tracking_id: TRACKING_ID_ALLOC.alloc(),
             log: VecDeque::new(),
             observer_id_alloc: IdAlloc::new(),
-            observers: PriorityQueue::new(),
+            observers: parking_lot::RwLock::new(PriorityQueue::new()),
             log_start: 0,
             generation: Generation(0),
         }
@@ -120,12 +120,13 @@ impl<C> Default for ChangeTracking<C> {
 
 impl<C: Change> ChangeTracking<C> {
     pub fn log(&mut self, change: C) {
+        self.truncate_log();
         if let Some((old_generation, new_generation)) = change.as_renumbering() {
             debug_assert!(self.generation == old_generation);
             debug_assert!(old_generation < new_generation);
             self.generation = new_generation;
         }
-        if !self.observers.is_empty() {
+        if !self.observers.get_mut().is_empty() {
             self.log.push_back(change);
         }
     }
@@ -149,7 +150,8 @@ impl<C: Change> ChangeTracking<C> {
     /// the memory corresponding to old log entries cannot be reclaimed until the `ChangeTracking` is dropped.
     pub fn start_observing(&mut self) -> ObserverToken {
         let observer_id = self.observer_id_alloc.alloc();
-        self.observers.push(observer_id, Reverse(self.log_end()));
+        let reverse_end = Reverse(self.log_end());
+        self.observers.get_mut().push(observer_id, reverse_end);
         ObserverToken {
             tracking_id: self.tracking_id,
             generation: self.generation,
@@ -160,8 +162,12 @@ impl<C: Change> ChangeTracking<C> {
     pub fn clone_token(&mut self, token: &ObserverToken) -> ObserverToken {
         assert!(token.tracking_id == self.tracking_id);
         let new_observer_id = self.observer_id_alloc.alloc();
-        let pos = *self.observers.get_priority(&token.observer_id).unwrap();
-        self.observers.push(new_observer_id, pos);
+        let pos = *self
+            .observers
+            .get_mut()
+            .get_priority(&token.observer_id)
+            .unwrap();
+        self.observers.get_mut().push(new_observer_id, pos);
         ObserverToken {
             tracking_id: self.tracking_id,
             generation: token.generation,
@@ -173,11 +179,11 @@ impl<C: Change> ChangeTracking<C> {
     /// You must call this to allow the `ChangeTracking` to allow memory to be reclaimed.
     pub fn stop_observing(&mut self, token: ObserverToken) {
         assert!(token.tracking_id == self.tracking_id);
-        self.observers.remove(&token.observer_id);
+        self.observers.get_mut().remove(&token.observer_id);
         self.truncate_log();
     }
     fn truncate_log(&mut self) {
-        if let Some((_, &Reverse(new_start))) = self.observers.peek() {
+        if let Some((_, &Reverse(new_start))) = self.observers.get_mut().peek() {
             if new_start > self.log_start {
                 let delete = (new_start - self.log_start).try_into().unwrap();
                 drop(self.log.drain(0..delete));
@@ -190,26 +196,31 @@ impl<C: Change> ChangeTracking<C> {
     }
     fn observer_rel_pos(&self, token: &ObserverToken) -> usize {
         assert!(token.tracking_id == self.tracking_id);
-        let abs_pos = self.observers.get_priority(&token.observer_id).unwrap().0;
+        let abs_pos = self
+            .observers
+            .read()
+            .get_priority(&token.observer_id)
+            .unwrap()
+            .0;
         debug_assert!(abs_pos >= self.log_start);
         (abs_pos - self.log_start).try_into().unwrap()
     }
-    fn observer_inc_pos(&mut self, token: &ObserverToken, by: u64) {
+    fn observer_inc_pos(&self, token: &mut ObserverToken, by: u64) {
         let (min, max) = (self.log_start, self.log_end());
         self.observers
+            .write()
             .change_priority_by(&token.observer_id, |pos| {
                 let new = pos.0 + by;
                 debug_assert!(new >= min && new <= max);
                 *pos = Reverse(new);
             });
-        self.truncate_log();
     }
-    fn observer_set_rel_pos(&mut self, token: &ObserverToken, rel_pos: usize) {
+    fn observer_set_rel_pos(&self, token: &mut ObserverToken, rel_pos: usize) {
         debug_assert!(rel_pos <= self.log.len());
         let abs_pos = self.log_start + rel_pos as u64;
         self.observers
+            .write()
             .change_priority(&token.observer_id, Reverse(abs_pos));
-        self.truncate_log();
     }
     #[allow(clippy::type_complexity)]
     fn change_slices(&self, token: &ObserverToken) -> (&[C], &[C]) {
@@ -264,7 +275,7 @@ impl<C: Change> ChangeTracking<C> {
     /// Dropping this iterator will clear any unread entries, call `stop` if this is undesirable.
     ///
     /// You must not leak the returned iterator. Otherwise log entries may be observed multiple times and appear duplicated.
-    pub fn drain_changes<'a>(&mut self, token: &'a mut ObserverToken) -> DrainChanges<'_, 'a, C> {
+    pub fn drain_changes<'a>(&self, token: &'a mut ObserverToken) -> DrainChanges<'_, 'a, C> {
         assert!(token.tracking_id == self.tracking_id);
         let rel_pos = self.observer_rel_pos(token);
         DrainChanges {
@@ -280,7 +291,7 @@ impl<C: Change> ChangeTracking<C> {
 /// Since this is a lending iterator, it does not implement the standard `Iterator` trait,
 /// but its `map` and `cloned` methods will create a standard iterator.
 pub struct DrainChanges<'a, 'b, C: Change> {
-    tracking: &'a mut ChangeTracking<C>,
+    tracking: &'a ChangeTracking<C>,
     token: &'b mut ObserverToken,
     rel_pos: usize,
 }

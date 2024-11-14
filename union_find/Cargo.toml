@@ -10,6 +10,7 @@ imctk-ids = { version = "0.1.0", path = "../ids" }
 imctk-lit = { version = "0.1.0", path = "../lit" }
 atomic = "0.6"
 priority-queue = "*"
+parking_lot = "0.12.3"
 
 [dev-dependencies]
 rand = "*"
