@@ -14,35 +14,22 @@ use imctk_union_find::{
 
 use crate::egraph::{EgraphChange, EgraphMut, EgraphRef, EgraphRenumbering};
 
-pub trait InsertionPolicy {
-    fn on_insertion<C: IndexedCatalog>(
-        dag: &mut IrDagCore<C>,
-        egraph: &EgraphRef<C>,
-        node_id: C::NodeId,
-    );
+pub trait InsertionPolicy<C: IndexedCatalog> {
+    fn on_insertion(dag: &mut IrDagCore<C>, egraph: &EgraphRef<C>, node_id: C::NodeId);
 }
 
 pub struct AlwaysInsert;
 
-impl InsertionPolicy for AlwaysInsert {
-    fn on_insertion<C: IndexedCatalog>(
-        dag: &mut IrDagCore<C>,
-        egraph: &EgraphRef<C>,
-        node_id: C::NodeId,
-    ) {
+impl<C: IndexedCatalog> InsertionPolicy<C> for AlwaysInsert {
+    fn on_insertion(dag: &mut IrDagCore<C>, egraph: &EgraphRef<C>, node_id: C::NodeId) {
         let _ = dag.try_add_node(egraph, node_id);
     }
 }
 
 pub struct NeverInsert;
 
-impl InsertionPolicy for NeverInsert {
-    fn on_insertion<C: IndexedCatalog>(
-        _dag: &mut IrDagCore<C>,
-        _egraph: &EgraphRef<C>,
-        _node_id: C::NodeId,
-    ) {
-    }
+impl<C: IndexedCatalog> InsertionPolicy<C> for NeverInsert {
+    fn on_insertion(_dag: &mut IrDagCore<C>, _egraph: &EgraphRef<C>, _node_id: C::NodeId) {}
 }
 
 #[derive(Clone, Debug)]
@@ -83,9 +70,9 @@ impl<C: IndexedCatalog> IrDagCore<C> {
             }
         }
         match &mut self.def[def_var] {
-            None => Err(IrDagError::AlreadyDefined),
-            Some(def) => {
-                *def = (node_id, level);
+            Some(_) => Err(IrDagError::AlreadyDefined),
+            def @ None => {
+                *def = Some((node_id, level));
                 Ok(())
             }
         }
@@ -132,14 +119,14 @@ impl<C: IndexedCatalog> IrDagCore<C> {
     }
 }
 
-pub struct IrDag<C: IndexedCatalog, Policy: InsertionPolicy> {
+pub struct IrDag<C: IndexedCatalog, Policy: InsertionPolicy<C>> {
     core: IrDagCore<C>,
     tuf_token: ObserverToken,
     egraph_token: ObserverToken,
     _phantom: PhantomData<Policy>,
 }
 
-impl<C: IndexedCatalog, Policy: InsertionPolicy> Deref for IrDag<C, Policy> {
+impl<C: IndexedCatalog, Policy: InsertionPolicy<C>> Deref for IrDag<C, Policy> {
     type Target = IrDagCore<C>;
 
     fn deref(&self) -> &Self::Target {
@@ -147,13 +134,13 @@ impl<C: IndexedCatalog, Policy: InsertionPolicy> Deref for IrDag<C, Policy> {
     }
 }
 
-impl<C: IndexedCatalog, Policy: InsertionPolicy> DerefMut for IrDag<C, Policy> {
+impl<C: IndexedCatalog, Policy: InsertionPolicy<C>> DerefMut for IrDag<C, Policy> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.core
     }
 }
 
-impl<C: IndexedCatalog, Policy: InsertionPolicy> IrDag<C, Policy> {
+impl<C: IndexedCatalog, Policy: InsertionPolicy<C>> IrDag<C, Policy> {
     pub fn new(egraph: &mut EgraphMut<C>) -> Self {
         let tuf_token = egraph.union_find_mut().start_observing();
         let egraph_token = egraph.start_observing();
