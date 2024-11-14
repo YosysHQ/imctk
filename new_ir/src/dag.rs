@@ -61,7 +61,17 @@ impl<C: IndexedCatalog> IrDagCore<C> {
             def: IdVec::from_vec(vec![None; len]),
         }
     }
-    pub fn try_add_node(&mut self, egraph: &EgraphRef<C>, node_id: C::NodeId) -> Result<(), IrDagError> {
+    pub fn try_def(&self, var: C::Var) -> Option<C::NodeId> {
+        self.def[var].map(|x| x.0)
+    }
+    pub fn def(&self, var: C::Var) -> C::NodeId {
+        self.try_def(var).unwrap()
+    }
+    pub fn try_add_node(
+        &mut self,
+        egraph: &EgraphRef<C>,
+        node_id: C::NodeId,
+    ) -> Result<(), IrDagError> {
         let node: C::NodeRef<'_> = egraph.get(node_id);
         let def_var = node.output().atom();
         let mut level = 0;
@@ -122,14 +132,14 @@ impl<C: IndexedCatalog> IrDagCore<C> {
     }
 }
 
-pub struct IrDag<C: IndexedCatalog, Policy: InsertionPolicy + ?Sized> {
+pub struct IrDag<C: IndexedCatalog, Policy: InsertionPolicy> {
     core: IrDagCore<C>,
     tuf_token: ObserverToken,
     egraph_token: ObserverToken,
     _phantom: PhantomData<Policy>,
 }
 
-impl<C: IndexedCatalog, Policy: InsertionPolicy + ?Sized> Deref for IrDag<C, Policy> {
+impl<C: IndexedCatalog, Policy: InsertionPolicy> Deref for IrDag<C, Policy> {
     type Target = IrDagCore<C>;
 
     fn deref(&self) -> &Self::Target {
@@ -137,13 +147,13 @@ impl<C: IndexedCatalog, Policy: InsertionPolicy + ?Sized> Deref for IrDag<C, Pol
     }
 }
 
-impl<C: IndexedCatalog, Policy: InsertionPolicy + ?Sized> DerefMut for IrDag<C, Policy> {
+impl<C: IndexedCatalog, Policy: InsertionPolicy> DerefMut for IrDag<C, Policy> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.core
     }
 }
 
-impl<C: IndexedCatalog, Policy: InsertionPolicy + ?Sized> IrDag<C, Policy> {
+impl<C: IndexedCatalog, Policy: InsertionPolicy> IrDag<C, Policy> {
     pub fn new(egraph: &mut EgraphMut<C>) -> Self {
         let tuf_token = egraph.union_find_mut().start_observing();
         let egraph_token = egraph.start_observing();
