@@ -1,0 +1,19 @@
+[package]
+name = "testapp"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+imctk-lit = { version = "0.1.0", path = "../lit" }
+imctk_new_ir = { version = "0.1.0", path = "../new_ir" }
+clap = { version = "4.5.20", features = ["derive"] }
+color-eyre = "0.6.3"
+imctk-logger = { version = "0.1.0", path = "../logger" }
+imctk-ids = { version = "0.1.0", path = "../ids" }
+stable_set = { version = "0.1.0", path = "../stable_set" }
+imctk-util = { version = "0.1.0", path = "../util" }
+imctk-paged_storage = { version = "0.1.0", path = "../paged_storage" }
+
+[lints]
+workspace = true
+

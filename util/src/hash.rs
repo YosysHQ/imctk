@@ -1,7 +1,9 @@
 //! Utilities for computing hashes.
-use std::hash::{BuildHasher, BuildHasherDefault};
+use std::hash::{BuildHasher, BuildHasherDefault as StdBuildHasherDefault};
 
 use zwohash::ZwoHasher;
+
+pub type BuildHasherDefault<Hasher = ZwoHasher> = StdBuildHasherDefault<Hasher>;
 
 /// Computes the hash of a value using imctk's default hasher.
 #[inline]

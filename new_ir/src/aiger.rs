@@ -27,7 +27,7 @@ impl AigerLit {
     fn var(self) -> AigerVar {
         AigerVar(self.0.var())
     }
-    fn lookup<T: imctk_lit::Negate>(self, f: impl FnOnce(AigerVar) -> T) -> T::Negated {
+    pub fn lookup<T: imctk_lit::Negate>(self, f: impl FnOnce(AigerVar) -> T) -> T::Negated {
         self.0.lookup(|var| f(AigerVar(var)))
     }
 }
@@ -98,6 +98,22 @@ impl AigerImporter {
             self.var_map[output_var].get_or_insert_with(|| egraph.fresh_var().as_lit());
         }
 
+        for ((aiger_latch, init), output_var) in latches.clone() {
+            let init_lit = self.latch_init[init].unwrap();
+            let next = aiger_latch.next_state.lookup(|var| {
+                *self.var_map[var].get_or_insert_with(|| egraph.fresh_var().as_lit())
+            });
+            let output = self.var_map[output_var].unwrap();
+
+            egraph.insert_node(Node {
+                output,
+                term: BitlevelTerm::Reg(Reg {
+                    next,
+                    init: init_lit,
+                }),
+            });
+        }
+
         for aiger_and in aig.and_gates.iter() {
             let output_aiger_var = aiger_vars.alloc();
             let inputs = aiger_and
@@ -109,22 +125,6 @@ impl AigerImporter {
             } else {
                 self.var_map[output_aiger_var] = Some(egraph.insert_term(term));
             }
-        }
-
-        for ((aiger_latch, init), output_var) in latches.clone() {
-            let init_lit = self.latch_init[init].unwrap();
-            let next = aiger_latch
-                .next_state
-                .lookup(|var| self.var_map[var].unwrap());
-            let output = self.var_map[output_var].unwrap();
-
-            egraph.insert_node(Node {
-                output,
-                term: BitlevelTerm::Reg(Reg {
-                    next,
-                    init: init_lit,
-                }),
-            });
         }
 
         IdVec::from_vec(
