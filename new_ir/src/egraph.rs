@@ -4,7 +4,7 @@ use std::{
     sync::Arc,
 };
 
-use imctk_ids::{Id, IdAlloc};
+use imctk_ids::{id_vec::IdVec, Id};
 use imctk_paged_storage::{
     index::{
         IndexedCatalog, IndexedNode, IndexedNodeMut, IndexedNodeRef, IndexedPagedStorage,
@@ -20,16 +20,29 @@ use imctk_union_find::{
 
 pub use imctk_union_find::change_tracking::{Generation, ObserverToken};
 
+pub struct EgraphRenumbering<C: IndexedCatalog> {
+    forward: IdVec<C::NodeId, Option<C::NodeId>>,
+    reverse: IdVec<C::NodeId, Option<C::NodeId>>,
+    old_generation: Generation,
+    new_generation: Generation,
+}
+
+impl<C: IndexedCatalog> EgraphRenumbering<C> {
+    pub fn forward(&self) -> &IdVec<C::NodeId, Option<C::NodeId>> {
+        &self.forward
+    }
+}
+
 pub enum EgraphChange<C: IndexedCatalog> {
     Insert(C::NodeId),
-    Renumber(Generation, Generation),
+    Renumber(Arc<EgraphRenumbering<C>>),
 }
 
 impl<C: IndexedCatalog> change_tracking::Change for EgraphChange<C> {
     fn as_renumbering(&self) -> Option<(Generation, Generation)> {
         match self {
-            EgraphChange::Renumber(old_generation, new_generation) => {
-                Some((*old_generation, *new_generation))
+            EgraphChange::Renumber(renumbering) => {
+                Some((renumbering.old_generation, renumbering.new_generation))
             }
             _ => None,
         }
@@ -118,9 +131,36 @@ impl<'a, Catalog: IndexedCatalog> EgraphRef<'a, Catalog> {
     ) -> impl Iterator<Item = (Catalog::NodeId, T)> + 'a {
         self.storage.iter()
     }
+    pub fn union_find(&self) -> &TrackedUnionFind<Catalog::Var, Catalog::Lit> {
+        self.union_find
+    }
+    pub fn generation(&self) -> Generation {
+        self.storage.change_tracking.generation()
+    }
+    pub fn drain_changes_with_fn(
+        &self,
+        token: &mut ObserverToken,
+        mut f: impl FnMut(&[EgraphChange<Catalog>]),
+    ) -> bool {
+        self.storage
+            .change_tracking
+            .drain_changes_with_fn(token, |ch| f(ch))
+    }
+    pub fn drain_changes<'b>(
+        &self,
+        token: &'b mut ObserverToken,
+    ) -> change_tracking::DrainChanges<'_, 'b, EgraphChange<Catalog>> {
+        self.storage.change_tracking.drain_changes(token)
+    }
 }
 
-impl<'a, Catalog: IndexedCatalog + Default> EgraphMut<'a, Catalog> {
+impl<Catalog: IndexedCatalog> EgraphMut<'_, Catalog> {
+    pub fn union_find_mut(&mut self) -> &mut TrackedUnionFind<Catalog::Var, Catalog::Lit> {
+        self.union_find
+    }
+}
+
+impl<'a, Catalog: IndexedCatalog> EgraphMut<'a, Catalog> {
     pub fn new(
         storage: &'a mut EgraphStorage<Catalog>,
         union_find: &'a mut TrackedUnionFind<Catalog::Var, Catalog::Lit>,
@@ -170,6 +210,8 @@ impl<'a, Catalog: IndexedCatalog + Default> EgraphMut<'a, Catalog> {
     pub fn union_full(&mut self, lits: [Catalog::Lit; 2]) -> (bool, [Catalog::Lit; 2]) {
         self.union_find.union_full(lits)
     }
+}
+impl<Catalog: IndexedCatalog + Default> EgraphMut<'_, Catalog> {
     fn collect_rebuild_variables(&mut self) -> HashSet<Catalog::Var> {
         let mut result: HashSet<Catalog::Var> = HashSet::new();
         let mut iter = self
@@ -276,17 +318,29 @@ impl<'a, Catalog: IndexedCatalog + Default> EgraphMut<'a, Catalog> {
             storage: &mut new_storage,
             union_find: self.union_find,
         };
-        for (_, node) in self.storage.iter::<Catalog::NodeRef<'_>>() {
+        let mut forward: IdVec<Catalog::NodeId, Option<Catalog::NodeId>> = IdVec::default();
+        let mut reverse: IdVec<Catalog::NodeId, Option<Catalog::NodeId>> = IdVec::default();
+        for (old_id, node) in self.storage.iter::<Catalog::NodeRef<'_>>() {
             let node = node.map(|lit| renumbering.old_to_new(lit).unwrap());
-            new_egraph.insert_node(node);
+            let new_id = new_egraph.insert_node(node);
+            *forward.grow_for_key(old_id) = Some(new_id);
+            *reverse.grow_for_key(new_id) = Some(old_id);
         }
         let old_storage = std::mem::replace(self.storage, new_storage);
         self.union_find.stop_observing(old_storage.observer_token);
-        self.storage.change_tracking.log(EgraphChange::Renumber(
-            renumbering.old_generation(),
-            renumbering.new_generation(),
-        ));
+        let renumbering = Arc::new(EgraphRenumbering {
+            forward,
+            reverse,
+            old_generation: renumbering.old_generation(),
+            new_generation: renumbering.new_generation(),
+        });
+        self.storage
+            .change_tracking
+            .log(EgraphChange::Renumber(renumbering));
     }
+}
+
+impl<Catalog: IndexedCatalog> EgraphMut<'_, Catalog> {
     pub fn start_observing(&mut self) -> ObserverToken {
         self.storage.change_tracking.start_observing()
     }
@@ -295,30 +349,6 @@ impl<'a, Catalog: IndexedCatalog + Default> EgraphMut<'a, Catalog> {
     }
     pub fn stop_observing(&mut self, token: ObserverToken) {
         self.storage.change_tracking.stop_observing(token);
-    }
-    pub fn generation(&self) -> Generation {
-        self.storage.change_tracking.generation()
-    }
-    pub fn drain_changes_with_fn(
-        &mut self,
-        token: &mut ObserverToken,
-        mut f: impl FnMut(&[EgraphChange<Catalog>], &IndexedPagedStorage<Catalog>),
-    ) -> bool {
-        self.storage
-            .change_tracking
-            .drain_changes_with_fn(token, |ch| f(ch, &self.storage.storage))
-    }
-    pub fn drain_changes<'b>(
-        &mut self,
-        token: &'b mut ObserverToken,
-    ) -> (
-        change_tracking::DrainChanges<'_, 'b, EgraphChange<Catalog>>,
-        &IndexedPagedStorage<Catalog>,
-    ) {
-        (
-            self.storage.change_tracking.drain_changes(token),
-            &self.storage.storage,
-        )
     }
 }
 

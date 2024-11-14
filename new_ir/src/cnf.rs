@@ -3,7 +3,7 @@ use imctk_lit::{Lit, Var};
 use imctk_union_find::{change_tracking::ObserverToken, tracked_union_find::Change};
 
 use crate::{
-    bitlevel::{BitlevelCatalog, BitlevelTerm, InputId, Node, SteadyInputId},
+    bitlevel::{BitlevelTerm, InputId, Node, SteadyInputId},
     egraph::EgraphChange,
     ir::BitIr,
 };
@@ -100,15 +100,15 @@ impl IncrementalCnf {
         sink: &mut Sink,
     ) -> Result<(), Sink::Error> {
         {
-            let mut egraph = ir.egraph_mut();
-            let (mut iter, storage) = egraph.drain_changes(&mut self.egraph_token);
+            let egraph = ir.egraph_ref();
+            let mut iter = egraph.drain_changes(&mut self.egraph_token);
             while let Some(change) = iter.next() {
                 match change {
                     &EgraphChange::Insert(node_id) => {
-                        let node = storage.get(node_id);
+                        let node = egraph.get(node_id);
                         handle_node(sink, node)?;
                     }
-                    EgraphChange::Renumber(_, _) => unimplemented!(),
+                    EgraphChange::Renumber(_) => unimplemented!(),
                 }
             }
         }

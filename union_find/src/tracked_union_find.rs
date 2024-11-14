@@ -242,6 +242,9 @@ impl<Atom, Elem> TrackedUnionFind<Atom, Elem> {
 }
 
 impl<Atom: Id, Elem: Id + Element<Atom>> TrackedUnionFind<Atom, Elem> {
+    pub fn len(&self) -> usize {
+        self.union_find.len()
+    }
     /// Returns an element's representative. See [`UnionFind::find`].
     pub fn find(&self, elem: Elem) -> Elem {
         self.union_find.find(elem)
@@ -342,7 +345,7 @@ impl<Atom, Elem> TrackedUnionFind<Atom, Elem> {
     ///
     /// Returns `true` iff `f` has been called at least once.
     pub fn drain_changes_with_fn(
-        &mut self,
+        &self,
         token: &mut ObserverToken,
         mut f: impl FnMut(&[Change<Atom, Elem>], &UnionFind<Atom, Elem>),
     ) -> bool {
@@ -355,7 +358,7 @@ impl<Atom, Elem> TrackedUnionFind<Atom, Elem> {
     ///
     /// You must not leak the returned iterator. Otherwise log entries may be observed multiple times and appear duplicated.
     pub fn drain_changes<'a>(
-        &mut self,
+        &self,
         token: &'a mut ObserverToken,
     ) -> DrainChanges<'_, 'a, Change<Atom, Elem>> {
         self.tracking.drain_changes(token)

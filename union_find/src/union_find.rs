@@ -229,6 +229,14 @@ impl<Atom: Id, Elem: Id + Element<Atom>> UnionFind<Atom, Elem> {
     pub fn lowest_unused_atom(&self) -> Atom {
         self.parent.next_unused_key()
     }
+    /// Returns the number of allocated variables.
+    pub fn len(&self) -> usize {
+        self.parent.len()
+    }
+    /// Returns `true` if there are no allocated variables.
+    pub fn is_empty(&self) -> bool {
+        self.parent.is_empty()
+    }
     /// Returns an iterator that yields all tracked atoms and their representatives.
     pub fn iter(&self) -> impl '_ + Iterator<Item = (Atom, Elem)> {
         IdRange::from(Atom::MIN_ID..self.lowest_unused_atom())

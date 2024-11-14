@@ -249,10 +249,17 @@ impl IndexedTerm<BitlevelCatalog> for BitlevelTerm {
             BitlevelTerm::SteadyInput(_) => vec![],
             BitlevelTerm::And(and_term) => and_term.0.as_slice().into(),
             BitlevelTerm::Xor(xor_term) => xor_term.0.as_slice().into(),
-            BitlevelTerm::Reg(reg) => vec![reg.next, reg.init],
+            BitlevelTerm::Reg(reg) => vec![reg.next, reg.init], // guarded var must be first, see `nonguarding_vars()`
         }
         .into_iter()
         .map(Lit::var)
+    }
+    fn nonguarding_vars(&self) -> impl Iterator<Item = <BitlevelCatalog as IndexedCatalog>::Var> + '_ {
+        let mut iter = self.use_vars();
+        if let BitlevelTerm::Reg(_) = self {
+            iter.next();
+        }
+        iter
     }
 }
 

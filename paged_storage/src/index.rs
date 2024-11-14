@@ -12,6 +12,9 @@ use crate::{
 
 pub trait IndexedTerm<C: IndexedCatalog>: Eq + Hash {
     fn use_vars(&self) -> impl Iterator<Item = C::Var> + '_;
+    fn nonguarding_vars(&self) -> impl Iterator<Item = C::Var> + '_ {
+        self.use_vars()
+    }
     fn max_var(&self) -> C::Var {
         self.use_vars().fold(C::Var::MIN_ID, C::Var::max)
     }

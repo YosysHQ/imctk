@@ -251,7 +251,7 @@ impl<C: Change> ChangeTracking<C> {
     ///
     /// Returns `true` iff `f` has been called at least once.
     pub fn drain_changes_with_fn(
-        &mut self,
+        &self,
         token: &mut ObserverToken,
         mut f: impl FnMut(&[C]),
     ) -> bool {
