@@ -90,12 +90,25 @@ impl AigerImporter {
             .zip(latch_init_inputs)
             .zip(latch_output_vars);
 
-        for ((aiger_latch, init), output_var) in latches.clone() {
-            self.latch_init[init].get_or_insert_with(|| match aiger_latch.initialization {
-                Some(constant) => Lit::FALSE ^ constant,
-                None => egraph.insert_term(BitlevelTerm::SteadyInput(init)),
+        for ((aiger_latch, init), output_var) in latches {
+            let init_lit =
+                *self.latch_init[init].get_or_insert_with(|| match aiger_latch.initialization {
+                    Some(constant) => Lit::FALSE ^ constant,
+                    None => egraph.insert_term(BitlevelTerm::SteadyInput(init)),
+                });
+            let output =
+                *self.var_map[output_var].get_or_insert_with(|| egraph.fresh_var().as_lit());
+            let next = aiger_latch.next_state.lookup(|var| {
+                *self.var_map[var].get_or_insert_with(|| egraph.fresh_var().as_lit())
             });
-            self.var_map[output_var].get_or_insert_with(|| egraph.fresh_var().as_lit());
+
+            egraph.insert_node(Node {
+                output,
+                term: BitlevelTerm::Reg(Reg {
+                    next,
+                    init: init_lit,
+                }),
+            });
         }
 
         for aiger_and in aig.and_gates.iter() {
@@ -109,22 +122,6 @@ impl AigerImporter {
             } else {
                 self.var_map[output_aiger_var] = Some(egraph.insert_term(term));
             }
-        }
-
-        for ((aiger_latch, init), output_var) in latches.clone() {
-            let init_lit = self.latch_init[init].unwrap();
-            let next = aiger_latch
-                .next_state
-                .lookup(|var| self.var_map[var].unwrap());
-            let output = self.var_map[output_var].unwrap();
-
-            egraph.insert_node(Node {
-                output,
-                term: BitlevelTerm::Reg(Reg {
-                    next,
-                    init: init_lit,
-                }),
-            });
         }
 
         IdVec::from_vec(
