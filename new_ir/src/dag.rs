@@ -42,6 +42,12 @@ pub struct IrDagCore<C: IndexedCatalog> {
     def: IdVec<C::Var, Option<(C::NodeId, u32)>>,
 }
 
+impl<C: IndexedCatalog> std::fmt::Debug for IrDagCore<C> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("IrDagCore").field("def", &self.def).finish()
+    }
+}
+
 impl<C: IndexedCatalog> IrDagCore<C> {
     pub fn with_len(len: usize) -> Self {
         IrDagCore {
@@ -137,6 +143,16 @@ impl<C: IndexedCatalog, Policy: InsertionPolicy<C>> Deref for IrDag<C, Policy> {
 impl<C: IndexedCatalog, Policy: InsertionPolicy<C>> DerefMut for IrDag<C, Policy> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.core
+    }
+}
+
+impl<C: IndexedCatalog, Policy: InsertionPolicy<C>> std::fmt::Debug for IrDag<C, Policy> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("IrDag")
+            .field("core", &self.core)
+            .field("tuf_token", &self.tuf_token)
+            .field("egraph_token", &self.egraph_token)
+            .finish()
     }
 }
 
