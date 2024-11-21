@@ -17,17 +17,17 @@ pub struct AigerVar(pub Var);
 pub struct AigerLit(pub Lit);
 
 impl AigerVar {
-    const FALSE: AigerVar = AigerVar(Var::FALSE);
-    fn from_index(index: usize) -> Self {
+    pub const FALSE: AigerVar = AigerVar(Var::FALSE);
+    pub fn from_index(index: usize) -> Self {
         AigerVar(Var::from_index(index))
     }
 }
 
 impl AigerLit {
-    fn var(self) -> AigerVar {
+    pub fn var(self) -> AigerVar {
         AigerVar(self.0.var())
     }
-    fn lookup<T: imctk_lit::Negate>(self, f: impl FnOnce(AigerVar) -> T) -> T::Negated {
+    pub fn lookup<T: imctk_lit::Negate>(self, f: impl FnOnce(AigerVar) -> T) -> T::Negated {
         self.0.lookup(|var| f(AigerVar(var)))
     }
 }
@@ -71,8 +71,8 @@ impl AigerImporter {
         let aiger_vars = IdAlloc::<AigerVar>::new();
         assert_eq!(aiger_vars.alloc(), AigerVar::FALSE);
 
-        for input_var in aiger_vars.alloc_range(aig.input_count) {
-            let input_id = InputId(input_var.0.index() as u32);
+        for (input_index, input_var) in aiger_vars.alloc_range(aig.input_count).iter().enumerate() {
+            let input_id = InputId(input_index as u32);
             self.var_map[input_var]
                 .get_or_insert_with(|| egraph.insert_term(BitlevelTerm::Input(input_id)));
         }
@@ -96,19 +96,18 @@ impl AigerImporter {
                     Some(constant) => Lit::FALSE ^ constant,
                     None => egraph.insert_term(BitlevelTerm::SteadyInput(init)),
                 });
-            let output =
-                *self.var_map[output_var].get_or_insert_with(|| egraph.fresh_var().as_lit());
             let next = aiger_latch.next_state.lookup(|var| {
                 *self.var_map[var].get_or_insert_with(|| egraph.fresh_var().as_lit())
             });
-
-            egraph.insert_node(Node {
-                output,
-                term: BitlevelTerm::Reg(Reg {
-                    next,
-                    init: init_lit,
-                }),
+            let term = BitlevelTerm::Reg(Reg {
+                next,
+                init: init_lit,
             });
+            if let Some(lit) = self.var_map[output_var] {
+                egraph.insert_node(Node { output: lit, term });
+            } else {
+                self.var_map[output_var] = Some(egraph.insert_term(term));
+            }
         }
 
         for aiger_and in aig.and_gates.iter() {

@@ -5,7 +5,7 @@ use imctk_lit::{Lit, Var};
 use imctk_paged_storage::{
     index::{
         IndexedCatalog, IndexedNode, IndexedNodeMut, IndexedNodeMutFamily, IndexedNodeRef,
-        IndexedTerm,
+        IndexedTermRef,
     },
     PagedStorageCatalog, PagedStorageItem, PagedStorageItemMut, PagedStorageItemRef,
 };
@@ -19,6 +19,8 @@ pub struct InputId(pub u32);
 pub struct SteadyInputId(pub u32);
 
 #[derive(PartialEq, Eq, Hash, Debug, Clone)]
+pub struct ConstFalse;
+#[derive(PartialEq, Eq, Hash, Debug, Clone)]
 pub struct AndTerm(pub UnorderedPair<Lit>);
 #[derive(PartialEq, Eq, Hash, Debug, Clone)]
 pub struct XorTerm(pub UnorderedPair<Lit>);
@@ -30,6 +32,7 @@ pub struct Reg {
 
 #[derive(PartialEq, Eq, Hash, Debug, Clone)]
 pub enum BitlevelTerm {
+    ConstFalse(ConstFalse),
     Input(InputId),
     SteadyInput(SteadyInputId),
     And(AndTerm),
@@ -38,6 +41,7 @@ pub enum BitlevelTerm {
 }
 
 pub enum BitlevelTermMut<'a> {
+    ConstFalse(&'a mut ConstFalse),
     Input(&'a mut InputId),
     SteadyInput(&'a mut SteadyInputId),
     And(&'a mut AndTerm),
@@ -94,6 +98,7 @@ pub struct BitlevelCatalog;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, EnumIter)]
 pub enum BitlevelVariant {
+    ConstFalse,
     Input,
     SteadyInput,
     And,
@@ -111,6 +116,7 @@ unsafe impl PagedStorageCatalog for BitlevelCatalog {
 
     fn item_layout(&self, variant: Self::Variant) -> std::alloc::Layout {
         match variant {
+            Variant::ConstFalse => Layout::new::<Node<()>>(),
             Variant::Input => Layout::new::<Node<InputId>>(),
             Variant::SteadyInput => Layout::new::<Node<SteadyInputId>>(),
             Variant::And => Layout::new::<Node<AndTerm>>(),
@@ -123,6 +129,7 @@ unsafe impl PagedStorageCatalog for BitlevelCatalog {
 unsafe impl PagedStorageItem<BitlevelCatalog> for Node<BitlevelTerm> {
     fn storage_variant(&self, _catalog: &mut BitlevelCatalog) -> BitlevelVariant {
         match self.term {
+            BitlevelTerm::ConstFalse(_) => Variant::ConstFalse,
             BitlevelTerm::Input(_) => Variant::Input,
             BitlevelTerm::SteadyInput(_) => Variant::SteadyInput,
             BitlevelTerm::And(_) => Variant::And,
@@ -134,6 +141,13 @@ unsafe impl PagedStorageItem<BitlevelCatalog> for Node<BitlevelTerm> {
     unsafe fn write_to_storage(self, ptr: *mut u8) {
         unsafe {
             match self.term {
+                BitlevelTerm::ConstFalse(const_false) => ptr::write(
+                    ptr as *mut Node<ConstFalse>,
+                    Node {
+                        output: self.output,
+                        term: const_false,
+                    },
+                ),
                 BitlevelTerm::Input(input_id) => ptr::write(
                     ptr as *mut Node<InputId>,
                     Node {
@@ -180,6 +194,9 @@ unsafe impl PagedStorageItem<BitlevelCatalog> for Node<BitlevelTerm> {
     ) -> Option<Self> {
         unsafe {
             Some(match variant {
+                Variant::ConstFalse => {
+                    ptr::read(ptr as *const Node<ConstFalse>).map_term(BitlevelTerm::ConstFalse)
+                }
                 Variant::Input => {
                     ptr::read(ptr as *const Node<InputId>).map_term(BitlevelTerm::Input)
                 }
@@ -191,6 +208,24 @@ unsafe impl PagedStorageItem<BitlevelCatalog> for Node<BitlevelTerm> {
                 Variant::Reg => ptr::read(ptr as *const Node<Reg>).map_term(BitlevelTerm::Reg),
             })
         }
+    }
+}
+
+unsafe impl PagedStorageItemRef<'_, BitlevelCatalog> for BitlevelTerm {
+    unsafe fn ref_storage(
+        ptr: *const u8,
+        catalog: &BitlevelCatalog,
+        variant: <BitlevelCatalog as PagedStorageCatalog>::Variant,
+    ) -> Option<Self> {
+        unsafe {
+            <Node<BitlevelTerm>>::read_from_storage(ptr, catalog, variant).map(|node| node.term)
+        }
+    }
+
+    fn possible_storage_variants(
+        _catalog: &BitlevelCatalog,
+    ) -> impl Iterator<Item = <BitlevelCatalog as PagedStorageCatalog>::Variant> + '_ {
+        Variant::iter()
     }
 }
 
@@ -218,6 +253,10 @@ unsafe impl<'a> PagedStorageItemMut<'a, BitlevelCatalog> for NodeMut<'a, Bitleve
     ) -> Option<Self> {
         unsafe {
             Some(match variant {
+                Variant::ConstFalse => NodeMut::map_term(
+                    (&mut *(ptr as *mut Node<ConstFalse>)).into(),
+                    BitlevelTermMut::ConstFalse,
+                ),
                 Variant::Input => NodeMut::map_term(
                     (&mut *(ptr as *mut Node<InputId>)).into(),
                     BitlevelTermMut::Input,
@@ -242,9 +281,10 @@ unsafe impl<'a> PagedStorageItemMut<'a, BitlevelCatalog> for NodeMut<'a, Bitleve
     }
 }
 
-impl IndexedTerm<BitlevelCatalog> for BitlevelTerm {
+impl IndexedTermRef<BitlevelCatalog> for BitlevelTerm {
     fn use_vars(&self) -> impl Iterator<Item = Var> + '_ {
         match self {
+            BitlevelTerm::ConstFalse(_) => vec![],
             BitlevelTerm::Input(_) => vec![],
             BitlevelTerm::SteadyInput(_) => vec![],
             BitlevelTerm::And(and_term) => and_term.0.as_slice().into(),
@@ -254,22 +294,31 @@ impl IndexedTerm<BitlevelCatalog> for BitlevelTerm {
         .into_iter()
         .map(Lit::var)
     }
-    fn nonguarding_vars(&self) -> impl Iterator<Item = <BitlevelCatalog as IndexedCatalog>::Var> + '_ {
+    fn nonguarding_vars(
+        &self,
+    ) -> impl Iterator<Item = <BitlevelCatalog as IndexedCatalog>::Var> + '_ {
         let mut iter = self.use_vars();
         if let BitlevelTerm::Reg(_) = self {
             iter.next();
         }
         iter
     }
+    fn map(&self, mut fun: impl FnMut(Lit) -> Lit) -> BitlevelTerm {
+        match self {
+            BitlevelTerm::ConstFalse(_) | BitlevelTerm::Input(_) | BitlevelTerm::SteadyInput(_) => {
+                self.clone()
+            }
+            BitlevelTerm::And(and_term) => BitlevelTerm::And(AndTerm(and_term.0.map(fun))),
+            BitlevelTerm::Xor(xor_term) => BitlevelTerm::Xor(XorTerm(xor_term.0.map(fun))),
+            BitlevelTerm::Reg(reg) => BitlevelTerm::Reg(Reg {
+                next: fun(reg.next),
+                init: fun(reg.init),
+            }),
+        }
+    }
 }
 
 impl IndexedNode<BitlevelCatalog> for Node<BitlevelTerm> {
-    fn term(&self) -> BitlevelTerm {
-        self.term.clone()
-    }
-    fn output(&self) -> Lit {
-        self.output
-    }
     fn new(output: Lit, term: BitlevelTerm) -> Self {
         Node { output, term }
     }
@@ -282,25 +331,13 @@ impl IndexedNodeRef<BitlevelCatalog> for Node<BitlevelTerm> {
     fn term(&self) -> BitlevelTerm {
         self.term.clone()
     }
-    fn map(&self, mut fun: impl FnMut(Lit) -> Lit) -> Node<BitlevelTerm> {
-        let output = fun(self.output);
-        let term = match &self.term {
-            BitlevelTerm::Input(_) | BitlevelTerm::SteadyInput(_) => self.term.clone(),
-            BitlevelTerm::And(and_term) => BitlevelTerm::And(AndTerm(and_term.0.map(fun))),
-            BitlevelTerm::Xor(xor_term) => BitlevelTerm::Xor(XorTerm(xor_term.0.map(fun))),
-            BitlevelTerm::Reg(reg) => BitlevelTerm::Reg(Reg {
-                next: fun(reg.next),
-                init: fun(reg.init),
-            }),
-        };
-        Node { output, term }
-    }
 }
 
 impl<'a> IndexedNodeMut<BitlevelCatalog> for NodeMut<'a, BitlevelTermMut<'a>> {
     fn rewrite(&mut self, mut fun: impl FnMut(Lit) -> Lit) {
         *self.output = fun(*self.output);
         match &mut self.term {
+            BitlevelTermMut::ConstFalse(_) => {}
             BitlevelTermMut::Input(_) => {}
             BitlevelTermMut::SteadyInput(_) => {}
             BitlevelTermMut::And(and_term) => {

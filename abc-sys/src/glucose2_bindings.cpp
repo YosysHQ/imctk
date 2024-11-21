@@ -53,8 +53,8 @@ void imctk_abc_glucose2_produce_inner_model(void *s, int produce_inner) {
   solver->produceInnerModel = produce_inner;
 }
 
-int imctk_abc_glucose2_value(void *s, int var) {
-  return lboolToInt(solver->value(var));
+int imctk_abc_glucose2_model_value(void *s, int var) {
+  return lboolToInt(solver->modelValue(var));
 }
 
 void imctk_abc_glucose2_markapprox(void *s, int v0, int v1, int nlim) {

@@ -10,7 +10,7 @@ use crate::{
     PagedStorage, PagedStorageCatalog, PagedStorageItem, PagedStorageItemMut, PagedStorageItemRef,
 };
 
-pub trait IndexedTerm<C: IndexedCatalog>: Eq + Hash {
+pub trait IndexedTermRef<C: IndexedCatalog>: Eq + Hash {
     fn use_vars(&self) -> impl Iterator<Item = C::Var> + '_;
     fn nonguarding_vars(&self) -> impl Iterator<Item = C::Var> + '_ {
         self.use_vars()
@@ -18,18 +18,21 @@ pub trait IndexedTerm<C: IndexedCatalog>: Eq + Hash {
     fn max_var(&self) -> C::Var {
         self.use_vars().fold(C::Var::MIN_ID, C::Var::max)
     }
-}
-
-pub trait IndexedNode<C: IndexedCatalog> {
-    fn output(&self) -> C::Lit;
-    fn term(&self) -> C::TermRef<'_>;
-    fn new(output: C::Lit, term: C::Term) -> Self;
+    fn map(&self, fun: impl FnMut(C::Lit) -> C::Lit) -> C::Term;
 }
 
 pub trait IndexedNodeRef<C: IndexedCatalog> {
     fn output(&self) -> C::Lit;
     fn term(&self) -> C::TermRef<'_>;
-    fn map(&self, fun: impl FnMut(C::Lit) -> C::Lit) -> C::Node;
+    fn map(&self, mut fun: impl FnMut(C::Lit) -> C::Lit) -> C::Node {
+        let new_output = fun(self.output());
+        let new_term = self.term().map(fun);
+        C::Node::new(new_output, new_term)
+    }
+}
+
+pub trait IndexedNode<C: IndexedCatalog>: IndexedNodeRef<C> {
+    fn new(output: C::Lit, term: C::Term) -> Self;
 }
 
 pub trait IndexedNodeMut<C: IndexedCatalog> {
@@ -57,10 +60,10 @@ pub trait IndexedCatalog: PagedStorageCatalog + Sized {
     type Lit: Id + Element<Self::Var>;
     type NodeId: Id;
     type Node: 'static + PagedStorageItem<Self> + IndexedNode<Self>;
-    type NodeRef<'a>: PagedStorageItemRef<'a, Self> + IndexedNodeRef<Self>;
+    type NodeRef<'a>: PagedStorageItemRef<'a, Self> + IndexedNodeRef<Self> + std::fmt::Debug;
     type NodeMut: IndexedNodeMutFamily<Self>;
     type Term: 'static;
-    type TermRef<'a>: IndexedTerm<Self> + From<&'a Self::Term>;
+    type TermRef<'a>: IndexedTermRef<Self> + From<&'a Self::Term>;
     fn term_eq(a: &Self::TermRef<'_>, b: &Self::TermRef<'_>) -> bool;
 }
 
@@ -100,13 +103,13 @@ impl<C: IndexedCatalog> NodeIndex<C> {
             |id, _| C::term_eq(&storage.get::<R>(*id).term(), &term),
             |id| hash_value(storage.get::<R>(*id).term()),
         );
+        self.defs.grow_for(item.output().atom()).insert(id);
+        for var in term.use_vars() {
+            self.uses.grow_for(var).insert(id);
+        }
         if result.1.is_some() {
             Some(*result.0)
         } else {
-            self.defs.grow_for(item.output().atom()).insert(id);
-            for var in term.use_vars() {
-                self.uses.grow_for(var).insert(id);
-            }
             None
         }
     }
@@ -247,12 +250,13 @@ mod tests {
     struct NotTerm(Var);
 
     type Var = u32;
-    #[derive(PartialEq, Eq, Hash)]
+    #[derive(PartialEq, Eq, Hash, Debug)]
     enum ExampleTerm {
         And(AndTerm),
         Or(OrTerm),
         Not(NotTerm),
     }
+    #[derive(Debug)]
     struct ExampleItem(Var, ExampleTerm);
     #[derive(PartialEq, Eq, Hash, Debug, Clone)]
     enum ExampleTermRef<'a> {
@@ -386,7 +390,7 @@ mod tests {
         }
     }
 
-    impl<'a> IndexedTerm<ExampleCatalog> for ExampleTermRef<'a> {
+    impl<'a> IndexedTermRef<ExampleCatalog> for ExampleTermRef<'a> {
         fn use_vars(&self) -> impl Iterator<Item = Var> + '_ {
             match self {
                 ExampleTermRef::And(&AndTerm(a, b)) => vec![a, b],
@@ -394,6 +398,15 @@ mod tests {
                 ExampleTermRef::Not(&NotTerm(a)) => vec![a],
             }
             .into_iter()
+        }
+
+        fn map(
+            &self,
+            fun: impl FnMut(
+                <ExampleCatalog as IndexedCatalog>::Lit,
+            ) -> <ExampleCatalog as IndexedCatalog>::Lit,
+        ) -> <ExampleCatalog as IndexedCatalog>::Term {
+            todo!()
         }
     }
 
@@ -407,7 +420,7 @@ mod tests {
         }
     }
 
-    impl IndexedNode<ExampleCatalog> for ExampleItem {
+    impl IndexedNodeRef<ExampleCatalog> for ExampleItem {
         fn output(&self) -> <ExampleCatalog as IndexedCatalog>::Lit {
             self.0
         }
@@ -415,7 +428,9 @@ mod tests {
         fn term(&self) -> <ExampleCatalog as IndexedCatalog>::TermRef<'_> {
             (&self.1).into()
         }
+    }
 
+    impl IndexedNode<ExampleCatalog> for ExampleItem {
         fn new(
             output: <ExampleCatalog as IndexedCatalog>::Lit,
             term: <ExampleCatalog as IndexedCatalog>::Term,
@@ -431,15 +446,6 @@ mod tests {
 
         fn term(&self) -> <ExampleCatalog as IndexedCatalog>::TermRef<'_> {
             self.1.clone()
-        }
-
-        fn map(
-            &self,
-            fun: impl FnMut(
-                <ExampleCatalog as IndexedCatalog>::Lit,
-            ) -> <ExampleCatalog as IndexedCatalog>::Lit,
-        ) -> <ExampleCatalog as IndexedCatalog>::Node {
-            todo!()
         }
     }
 

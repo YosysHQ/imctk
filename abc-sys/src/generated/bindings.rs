@@ -20835,7 +20835,7 @@ extern "C" {
     );
 }
 extern "C" {
-    pub fn imctk_abc_glucose2_value(
+    pub fn imctk_abc_glucose2_model_value(
         s: *mut ::std::os::raw::c_void,
         var: ::std::os::raw::c_int,
     ) -> ::std::os::raw::c_int;

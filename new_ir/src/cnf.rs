@@ -28,6 +28,9 @@ fn handle_node<Sink: CnfSink>(
 ) -> Result<(), Sink::Error> {
     let output = node.output.lookup(|var| sink.var(var).into());
     match node.term {
+        BitlevelTerm::ConstFalse(_) => {
+            sink.clause(&[!output])?;
+        }
         BitlevelTerm::Input(input_id) => {
             sink.input(input_id, output);
         }
@@ -80,13 +83,18 @@ pub struct IncrementalCnf {
 }
 
 impl IncrementalCnf {
-    pub fn new(ir: &mut BitIr) -> Self {
+    pub fn new_only_updates(ir: &mut BitIr) -> Self {
         let egraph_token = ir.egraph_mut().start_observing();
         let tuf_token = ir.union_find.start_observing();
         IncrementalCnf {
             egraph_token,
             tuf_token,
         }
+    }
+
+    pub fn new_full<Sink: CnfSink>(ir: &mut BitIr, sink: &mut Sink) -> Result<Self, Sink::Error> {
+        translate_to_cnf(ir, sink)?;
+        Ok(Self::new_only_updates(ir))
     }
 
     pub fn finish(self, ir: &mut BitIr) {

@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 flussab-aiger = "0.1.1"
+imctk-abc = { version = "0.1.0", path = "../abc" }
 imctk-ids = { version = "0.1.0", path = "../ids" }
 imctk-lit = { version = "0.1.0", path = "../lit" }
 imctk-paged_storage = { version = "0.1.0", path = "../paged_storage" }

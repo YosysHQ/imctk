@@ -28,7 +28,7 @@ int *imctk_abc_glucose2_get_cex(void *s);
 
 void imctk_abc_glucose2_produce_inner_model(void *s, int produce_inner);
 
-int imctk_abc_glucose2_value(void *s, int var);
+int imctk_abc_glucose2_model_value(void *s, int var);
 
 void imctk_abc_glucose2_markapprox(void *s, int v0, int v1, int nlim);
 

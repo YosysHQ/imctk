@@ -3,7 +3,7 @@ use imctk_paged_storage::PagedStorageItemRef;
 use imctk_union_find::TrackedUnionFind;
 
 use crate::{
-    bitlevel::{BitlevelCatalog, BitlevelTerm},
+    bitlevel::{BitlevelCatalog, BitlevelTerm, Node},
     dag::{self, IrDag},
     egraph::{EgraphMut, EgraphRef, EgraphStorage},
 };
@@ -21,6 +21,11 @@ impl Default for BitIr {
         let observer = union_find.start_observing();
         let mut egraph = EgraphStorage::new(observer);
         let primary_def = IrDag::new(&mut EgraphMut::new(&mut egraph, &mut union_find));
+        union_find.ensure_allocated(Var::FALSE);
+        EgraphMut::new(&mut egraph, &mut union_find).insert_node(Node {
+            output: Lit::FALSE,
+            term: BitlevelTerm::ConstFalse(crate::bitlevel::ConstFalse),
+        });
         Self {
             union_find,
             egraph,
@@ -57,5 +62,10 @@ impl BitIr {
     }
     pub fn term(&mut self, term: impl Into<BitlevelTerm>) -> Lit {
         self.egraph_mut().insert_term(term.into())
+    }
+    pub fn find_term(&self, term: impl Into<BitlevelTerm>) -> Option<Lit> {
+        let node_id = self.egraph.find_term(&term.into())?;
+        let node: Node<BitlevelTerm> = self.egraph.get(node_id);
+        Some(node.output)
     }
 }

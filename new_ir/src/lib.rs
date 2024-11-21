@@ -6,3 +6,4 @@ pub mod cnf;
 pub mod egraph;
 pub mod ir;
 pub mod dag;
+pub mod aigbmc;

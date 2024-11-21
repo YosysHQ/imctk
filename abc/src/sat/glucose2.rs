@@ -409,6 +409,26 @@ impl<Mode: SolverMode> Solver<'_, Mode> {
         // SAFETY: safe FFI call
         unsafe { abc::imctk_abc_glucose2_conflicts(self.ptr) as u64 }
     }
+
+    /// Returns the value of the given literal.
+    /// 
+    /// Panics if the last solve wasn't satisfiable.
+    pub fn value(&self, lit: Lit) -> Option<bool> {
+        assert!(self.state == State::Sat);
+        // SAFETY: safe FFI call
+        let nvars = unsafe { abc::imctk_abc_glucose2_nvars(self.ptr) } as usize;
+        if lit.index() >= nvars {
+            return None;
+        }
+        // SAFETY: safe FFI call
+        let result = unsafe { abc::imctk_abc_glucose2_model_value(self.ptr, lit.var().index() as i32) };
+        match result {
+            0 => None,
+            1 => Some(true ^ lit.pol()),
+            -1 => Some(false ^ lit.pol()),
+            _ => unreachable!(),
+        }
+    }
 }
 
 /// Trait to receive proof-tracing callbacks while solving.

@@ -5,7 +5,7 @@ use std::{
 };
 
 use imctk_ids::id_vec::IdVec;
-use imctk_paged_storage::index::{IndexedCatalog, IndexedNodeRef, IndexedTerm};
+use imctk_paged_storage::index::{IndexedCatalog, IndexedNodeRef, IndexedTermRef};
 use imctk_union_find::{
     change_tracking::ObserverToken,
     tracked_union_find::{Change, Renumbering},

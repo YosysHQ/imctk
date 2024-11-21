@@ -547,6 +547,7 @@ name = "imctk_new_ir"
 version = "0.1.0"
 dependencies = [
  "flussab-aiger",
+ "imctk-abc",
  "imctk-ids",
  "imctk-lit",
  "imctk-paged_storage",
