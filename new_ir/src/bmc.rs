@@ -1,5 +1,5 @@
 use imctk_abc::sat::glucose2::{CnfOnly, Solver};
-use imctk_ids::{id_vec::IdVec, Id, IdAlloc};
+use imctk_ids::{id_vec::IdVec, Id, IdAlloc, IdRange};
 use imctk_lit::{Lit, Var};
 use imctk_paged_storage::index::IndexedTermRef;
 
@@ -88,8 +88,17 @@ pub struct BmcWitness<'a> {
     bmc: &'a mut Bmc,
 }
 
+impl Default for Bmc {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Bmc {
-    pub fn new(mut solver: Solver<'static, CnfOnly>) -> Self {
+    pub fn new() -> Self {
+        Self::with_solver(Default::default())
+    }
+    pub fn with_solver(mut solver: Solver<'static, CnfOnly>) -> Self {
         let unroller = Unroller::default();
         let mut unrolled_ir = BitIr::default();
         let cnf = IncrementalCnf::new_full(&mut unrolled_ir, &mut solver).unwrap();
@@ -101,8 +110,8 @@ impl Bmc {
             assumptions: Vec::new(),
         }
     }
-    pub fn assume(&mut self, assumption: Lit) {
-        self.assumptions.push(assumption);
+    pub fn assume(&mut self, assumptions: impl IntoIterator<Item = Lit>) {
+        self.assumptions.extend(assumptions);
     }
     pub fn run(
         &mut self,
@@ -144,6 +153,15 @@ impl Bmc {
 }
 
 impl BmcWitness<'_> {
+    pub fn max_frame(&self) -> Frame {
+        self.max_frame
+    }
+    pub fn frames(&self) -> IdRange<Frame> {
+        IdRange::from_index_range(0..1 + self.max_frame.0 as usize)
+    }
+    pub fn property_index(&self) -> usize {
+        self.property_index
+    }
     pub fn get_lit(&self, frame: Frame, lit: Lit) -> Option<bool> {
         if frame > self.max_frame {
             None
@@ -163,75 +181,6 @@ impl BmcWitness<'_> {
                 .find_term(BitlevelTerm::Input(unrolled_input_id))
                 .unwrap();
             self.bmc.solver.value(unrolled_lit)
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use std::io::{BufReader, BufWriter, Write};
-
-    use flussab_aiger::aig::OrderedAig;
-
-    use crate::aiger::{AigerImporter, AigerLit, AigerVar};
-
-    use super::*;
-
-    fn opt_to_char(b: Option<bool>) -> char {
-        match b {
-            None => 'x',
-            Some(true) => '1',
-            Some(false) => '0',
-        }
-    }
-
-    fn print_witness(
-        mut f: impl std::io::Write,
-        witness: &BmcWitness,
-        aiger_map: &IdVec<AigerVar, Lit>,
-        ordered_aig: &OrderedAig<AigerLit>,
-        prop_index: usize,
-    ) -> Result<(), std::io::Error> {
-        writeln!(f, "1")?;
-        writeln!(f, "b{prop_index}")?;
-        for latch_index in 0..ordered_aig.latches.len() {
-            let aiger_var = AigerVar(Var::from_index(1 + ordered_aig.input_count + latch_index));
-            let lit = aiger_map[aiger_var];
-            write!(f, "{}", opt_to_char(witness.get_lit(Frame(0), lit)))?;
-        }
-        writeln!(f)?;
-        for frame in (0..=witness.max_frame.0).map(Frame) {
-            for input_id in (0..ordered_aig.input_count as u32).map(InputId) {
-                write!(f, "{}", opt_to_char(witness.get_input(frame, input_id)))?;
-            }
-            writeln!(f)?;
-        }
-        writeln!(f, ".")?;
-        Ok(())
-    }
-
-    #[test]
-    fn test() {
-        let depth = 10;
-        let file = std::fs::File::open("aiger_test.aig").unwrap();
-        let file = BufReader::new(file);
-        let mut seq_ir = BitIr::default();
-        let (aiger_map, ordered_aig) = AigerImporter::default()
-            .import_binary(&mut seq_ir, file)
-            .unwrap();
-        seq_ir.refresh();
-        let mut bmc = Bmc::new(Solver::default());
-        for constraint in &ordered_aig.invariant_constraints {
-            bmc.assume(constraint.lookup(|var| aiger_map[var]));
-        }
-        let bad_state_properties: Vec<_> = ordered_aig.bad_state_properties.iter().map(|lit| lit.lookup(|var| aiger_map[var])).collect();
-        if let Some(witness) = bmc.run(&seq_ir, depth, &bad_state_properties) {
-            let mut witness_file = BufWriter::new(std::fs::File::create("witness").unwrap());
-            print_witness(&mut witness_file, &witness, &aiger_map, &ordered_aig, witness.property_index)
-                .unwrap();
-            witness_file.flush().unwrap();
-        } else {
-            panic!("unsat");
         }
     }
 }

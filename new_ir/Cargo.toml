@@ -16,3 +16,8 @@ strum_macros = "0.26.4"
 
 [lints]
 workspace = true
+
+[dev-dependencies]
+clap = { version = "4.5.21", features = ["derive"] }
+color-eyre = "0.6.3"
+imctk-logger = { path = "../logger" }

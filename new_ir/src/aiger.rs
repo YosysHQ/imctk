@@ -48,21 +48,23 @@ pub struct AigerImporter {
     latch_init: IdVec<SteadyInputId, Option<Lit>>,
 }
 
+#[derive(Debug)]
+pub struct AigerMapping {
+    var_map: IdVec<AigerVar, Lit>,
+    aig: OrderedAig<AigerLit>,
+}
+
 impl AigerImporter {
     pub fn import_binary(
         self,
         ir: &mut BitIr,
         file: impl io::Read,
-    ) -> Result<(IdVec<AigerVar, Lit>, OrderedAig<AigerLit>), ParseError> {
+    ) -> Result<AigerMapping, ParseError> {
         let parser = flussab_aiger::binary::Parser::from_read(file, Default::default())?;
         let aig = parser.parse()?;
-        Ok((self.import_ordered(ir, &aig), aig))
+        Ok(self.import_ordered(ir, aig))
     }
-    pub fn import_ordered(
-        mut self,
-        ir: &mut BitIr,
-        aig: &OrderedAig<AigerLit>,
-    ) -> IdVec<AigerVar, Lit> {
+    pub fn import_ordered(mut self, ir: &mut BitIr, aig: OrderedAig<AigerLit>) -> AigerMapping {
         let mut egraph = ir.egraph_mut();
 
         self.var_map
@@ -123,12 +125,51 @@ impl AigerImporter {
             }
         }
 
-        IdVec::from_vec(
+        let var_map = IdVec::from_vec(
             self.var_map
                 .into_values()
                 .into_iter()
                 .map(|lit| lit.unwrap())
                 .collect(),
-        )
+        );
+
+        AigerMapping { var_map, aig }
+    }
+}
+
+impl AigerMapping {
+    pub fn ordered_aig(&self) -> &OrderedAig<AigerLit> {
+        &self.aig
+    }
+    pub fn into_ordered_aig(self) -> OrderedAig<AigerLit> {
+        self.aig
+    }
+    pub fn aiger_lit_to_ir(&self, lit: AigerLit) -> Lit {
+        lit.lookup(|var| self.var_map[var])
+    }
+    pub fn aiger_input_to_ir(&self, input: usize) -> InputId {
+        InputId(input.try_into().unwrap())
+    }
+    pub fn bad_state_properties(&self) -> Vec<Lit> {
+        self.aig
+            .bad_state_properties
+            .iter()
+            .map(|&lit| self.aiger_lit_to_ir(lit))
+            .collect()
+    }
+    pub fn invariant_constraints(&self) -> Vec<Lit> {
+        self.aig
+            .invariant_constraints
+            .iter()
+            .map(|&lit| self.aiger_lit_to_ir(lit))
+            .collect()
+    }
+    pub fn inputs(&self) -> IdRange<InputId> {
+        IdRange::from_index_range(0..self.aig.input_count)
+    }
+    pub fn latch_outputs(&self) -> &[Lit] {
+        let start = 1 + self.aig.input_count;
+        let end = start + self.aig.latches.len();
+        &self.var_map.values()[start..end]
     }
 }
