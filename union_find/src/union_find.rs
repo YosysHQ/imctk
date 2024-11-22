@@ -85,7 +85,7 @@ impl<Atom, Elem> UnionFind<Atom, Elem> {
     }
 }
 
-impl<Atom: Id, Elem: Id + Element<Atom>> UnionFind<Atom, Elem> {
+impl<Atom: Id, Elem: Id + Element<Atom = Atom>> UnionFind<Atom, Elem> {
     /// Constructs a `UnionFind` with `len` variables.
     pub fn with_len(len: usize) -> Self {
         let mut uf = Self::default();
@@ -245,7 +245,7 @@ impl<Atom: Id, Elem: Id + Element<Atom>> UnionFind<Atom, Elem> {
     }
 }
 
-impl<Atom: Id, Elem: Id + Element<Atom>> std::fmt::Debug for UnionFind<Atom, Elem> {
+impl<Atom: Id, Elem: Id + Element<Atom = Atom>> std::fmt::Debug for UnionFind<Atom, Elem> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // prints non-trivial sets of equivalent elements, always printing the representative first
         let mut sets = std::collections::HashMap::<Atom, Vec<Elem>>::new();

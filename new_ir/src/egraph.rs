@@ -372,7 +372,7 @@ mod tests {
             });
             forward
                 .grow_for_key(atom)
-                .replace(Element::<Var>::apply_pol_of(new_repr, repr));
+                .replace(Element::apply_pol_of(new_repr, repr));
         }
         (forward, reverse)
     }

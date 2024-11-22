@@ -39,7 +39,7 @@ struct CTUnionFind<Atom, Elem> {
     logs: HashMap<ObserverId, Vec<Change<Atom, Elem>>>,
 }
 
-impl<Atom: Id, Elem: Id + Element<Atom>> CTUnionFind<Atom, Elem> {
+impl<Atom: Id, Elem: Id + Element<Atom = Atom>> CTUnionFind<Atom, Elem> {
     fn new() -> Self {
         CTUnionFind {
             dut: TrackedUnionFind::new(),

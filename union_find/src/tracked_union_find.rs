@@ -40,7 +40,7 @@ impl<Atom: Id, Elem: Id> std::fmt::Debug for Renumbering<Atom, Elem> {
     }
 }
 
-impl<Atom: Id, Elem: Id + Element<Atom>> Renumbering<Atom, Elem> {
+impl<Atom: Id, Elem: Id + Element<Atom = Atom>> Renumbering<Atom, Elem> {
     pub fn forward(&self) -> &IdVec<Atom, Option<Elem>> {
         &self.forward
     }
@@ -204,7 +204,7 @@ pub struct TrackedUnionFind<Atom, Elem> {
     tracking: ChangeTracking<Change<Atom, Elem>>,
 }
 
-impl<Atom: std::fmt::Debug + Id, Elem: std::fmt::Debug + Id + Element<Atom>> std::fmt::Debug
+impl<Atom: std::fmt::Debug + Id, Elem: std::fmt::Debug + Id + Element<Atom = Atom>> std::fmt::Debug
     for TrackedUnionFind<Atom, Elem>
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -241,7 +241,7 @@ impl<Atom, Elem> TrackedUnionFind<Atom, Elem> {
     }
 }
 
-impl<Atom: Id, Elem: Id + Element<Atom>> TrackedUnionFind<Atom, Elem> {
+impl<Atom: Id, Elem: Id + Element<Atom = Atom>> TrackedUnionFind<Atom, Elem> {
     pub fn len(&self) -> usize {
         self.union_find.len()
     }

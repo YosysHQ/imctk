@@ -12,7 +12,7 @@ struct CheckedUnionFind<Atom: Id, Elem> {
     equivs: IdSetSeq<Atom, Elem>,
 }
 
-impl<Atom: Id, Elem: Id + Element<Atom>> UnionFind<Atom, Elem> {
+impl<Atom: Id, Elem: Id + Element<Atom = Atom>> UnionFind<Atom, Elem> {
     fn debug_print_tree(
         children: &IdVec<Atom, Vec<Elem>>,
         atom: Atom,
@@ -68,7 +68,7 @@ enum VarRel {
     NotEquiv,
 }
 
-impl<Atom: Id, Elem: Id + Element<Atom>> CheckedUnionFind<Atom, Elem> {
+impl<Atom: Id, Elem: Id + Element<Atom = Atom>> CheckedUnionFind<Atom, Elem> {
     fn new() -> Self {
         CheckedUnionFind {
             dut: Default::default(),

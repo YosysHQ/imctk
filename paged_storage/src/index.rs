@@ -57,7 +57,7 @@ where
 
 pub trait IndexedCatalog: PagedStorageCatalog + Sized {
     type Var: Id;
-    type Lit: Id + Element<Self::Var>;
+    type Lit: Id + Element<Atom = Self::Var>;
     type NodeId: Id;
     type Node: 'static + PagedStorageItem<Self> + IndexedNode<Self>;
     type NodeRef<'a>: PagedStorageItemRef<'a, Self> + IndexedNodeRef<Self> + std::fmt::Debug;
