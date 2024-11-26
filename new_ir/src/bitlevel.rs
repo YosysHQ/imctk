@@ -11,7 +11,6 @@ use imctk_paged_storage::{
     PagedStorageCatalog, PagedStorageItem, PagedStorageItemMut, PagedStorageItemRef,
 };
 use imctk_util::unordered_pair::UnorderedPair;
-use strum_macros::EnumIter;
 
 define_ir_terms! {
     root Bitlevel;
@@ -38,9 +37,6 @@ pub struct InputId(pub u32);
 #[derive(Debug, Id)]
 #[repr(transparent)]
 pub struct SteadyInputId(pub u32);
-
-pub use And as AndTerm;
-pub use Xor as XorTerm;
 
 pub use BitlevelNode as Node;
 pub use BitlevelNodeMut as NodeMut;

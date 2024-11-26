@@ -499,7 +499,7 @@ impl ToTokens for Model {
                 variant_tokens.extend(quote![#term,]);
             }
             tokens.extend(quote! {
-                #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, EnumIter)]
+                #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
                 pub enum #variant_sym {
                     #variant_tokens
                 }
@@ -787,7 +787,7 @@ impl ToTokens for Model {
                         fn map(&self, mut fun: impl FnMut(#lit_type) -> #lit_type) -> #node_sym<#term_sym> {
                             let output = fun(self.output);
                             let term = self.term.map(fun);
-                            Node { output, term }
+                            #node_sym { output, term }
                         }
                     }
 
