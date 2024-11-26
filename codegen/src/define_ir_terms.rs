@@ -393,10 +393,10 @@ impl ToTokens for Model {
         for ident in root_subset.terms.iter() {
             let term_type = &term_types[ident];
             drop_item_tokens.extend(quote! {
-                #root_variant_sym::#ident => item.cast::<#term_type>().drop_in_place(),
+                #root_variant_sym::#ident => item.cast::<#node_sym<#term_type>>().drop_in_place(),
             });
             item_layout_tokens.extend(quote! {
-                #root_variant_sym::#ident => Layout::new::<Node<#term_type>>(),
+                #root_variant_sym::#ident => Layout::new::<#node_sym<#term_type>>(),
             });
         }
 
@@ -477,7 +477,7 @@ impl ToTokens for Model {
                 }
             }
 
-            impl ContainedVars<BitlevelCatalog> for UnorderedPair<Lit> {
+            impl ContainedVars<#catalog_sym> for UnorderedPair<Lit> {
                 fn contained_vars_into_extend(
                     &self,
                     sink: &mut impl Extend<#var_type>,
@@ -634,8 +634,8 @@ impl ToTokens for Model {
                 unsafe impl<'a> PagedStorageItemMut<'a, #catalog_sym> for #node_mut_sym<'a, #term_mut_sym<'a>> {
                     unsafe fn mut_storage(
                         ptr: *mut u8,
-                        _catalog: &BitlevelCatalog,
-                        variant: BitlevelVariant,
+                        _catalog: &#catalog_sym,
+                        variant: <#catalog_sym as PagedStorageCatalog>::Variant,
                     ) -> Option<Self> {
                         unsafe {
                             match variant {
