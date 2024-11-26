@@ -164,3 +164,13 @@ pub fn derive_newtype_cast(input: MacroTokenStream) -> MacroTokenStream {
         .unwrap_or_else(|err| err.to_compile_error())
         .into()
 }
+
+#[proc_macro]
+pub fn define_ir_terms(input: MacroTokenStream) -> MacroTokenStream {
+    let statements = parse_macro_input!(input as imctk_codegen::define_ir_terms::Statements);
+
+    imctk_codegen::define_ir_terms::Model::new(statements)
+        .map(|model| model.to_token_stream())
+        .unwrap_or_else(|err| err.to_compile_error())
+        .into()
+}

@@ -4,16 +4,43 @@ use std::hash::Hash;
 use imctk_ids::{id_set_seq::IdSetSeq, Id};
 use imctk_union_find::Element;
 use imctk_util::hash::hash_value;
+use smallvec::SmallVec;
 use table_seq::TableSeq;
 
 use crate::{
     PagedStorage, PagedStorageCatalog, PagedStorageItem, PagedStorageItemMut, PagedStorageItemRef,
 };
 
+pub trait ContainedVars<C: IndexedCatalog> {
+    fn contained_vars_into_extend(&self, sink: &mut impl Extend<C::Var>);
+
+    fn contained_vars(&self) -> impl Iterator<Item = C::Var> + '_ {
+        let mut buffer: SmallVec<[C::Var; 8]> = Default::default();
+        self.contained_vars_into_extend(&mut buffer);
+        buffer.into_iter()
+    }
+    fn map_contained_vars(&self, fun: impl FnMut(C::Lit) -> C::Lit) -> Self;
+}
+
 pub trait IndexedTermRef<C: IndexedCatalog>: Eq + Hash {
-    fn use_vars(&self) -> impl Iterator<Item = C::Var> + '_;
+    fn use_vars_into_extend(&self, sink: &mut impl Extend<C::Var>);
+    //  {
+    //     sink.extend(self.use_vars());
+    // }
+    fn nonguarding_vars_into_extend(&self, sink: &mut impl Extend<C::Var>);
+    //  {
+    //     sink.extend(self.nonguarding_vars());
+    // }
+
+    fn use_vars(&self) -> impl Iterator<Item = C::Var> + '_ {
+        let mut buffer: SmallVec<[C::Var; 8]> = Default::default();
+        self.use_vars_into_extend(&mut buffer);
+        buffer.into_iter()
+    }
     fn nonguarding_vars(&self) -> impl Iterator<Item = C::Var> + '_ {
-        self.use_vars()
+        let mut buffer: SmallVec<[C::Var; 8]> = Default::default();
+        self.nonguarding_vars_into_extend(&mut buffer);
+        buffer.into_iter()
     }
     fn max_var(&self) -> C::Var {
         self.use_vars().fold(C::Var::MIN_ID, C::Var::max)
@@ -390,7 +417,7 @@ mod tests {
         }
     }
 
-    impl<'a> IndexedTermRef<ExampleCatalog> for ExampleTermRef<'a> {
+    impl IndexedTermRef<ExampleCatalog> for ExampleTermRef<'_> {
         fn use_vars(&self) -> impl Iterator<Item = Var> + '_ {
             match self {
                 ExampleTermRef::And(&AndTerm(a, b)) => vec![a, b],
@@ -406,7 +433,22 @@ mod tests {
                 <ExampleCatalog as IndexedCatalog>::Lit,
             ) -> <ExampleCatalog as IndexedCatalog>::Lit,
         ) -> <ExampleCatalog as IndexedCatalog>::Term {
+            #![allow(unused_variables)] // to be able to use `fun` instead of `_fun`
             todo!()
+        }
+
+        fn use_vars_into_extend(
+            &self,
+            sink: &mut impl Extend<<ExampleCatalog as IndexedCatalog>::Var>,
+        ) {
+            sink.extend(self.use_vars())
+        }
+
+        fn nonguarding_vars_into_extend(
+            &self,
+            sink: &mut impl Extend<<ExampleCatalog as IndexedCatalog>::Var>,
+        ) {
+            self.use_vars_into_extend(sink);
         }
     }
 

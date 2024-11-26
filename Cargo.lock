@@ -253,6 +253,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "22ec99545bb0ed0ea7bb9b8e1e9122ea386ff8a48c0922e43f36d45ab09e0e80"
 
 [[package]]
+name = "derive-syn-parse"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d65d7ce8132b7c0e54497a4d9a55a1c2a0912a0d786cf894472ba818fba45762"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "encode_unicode"
 version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -406,6 +417,7 @@ dependencies = [
 name = "imctk-derive"
 version = "0.1.0"
 dependencies = [
+ "imctk_codegen",
  "proc-macro-crate",
  "proc-macro2",
  "quote",
@@ -524,6 +536,7 @@ dependencies = [
  "imctk_union_find",
  "rand",
  "rand_pcg",
+ "smallvec",
  "table_seq",
 ]
 
@@ -543,6 +556,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "imctk_codegen"
+version = "0.1.0"
+dependencies = [
+ "derive-syn-parse",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "imctk_new_ir"
 version = "0.1.0"
 dependencies = [
@@ -550,6 +573,7 @@ dependencies = [
  "color-eyre",
  "flussab-aiger",
  "imctk-abc",
+ "imctk-derive",
  "imctk-ids",
  "imctk-lit",
  "imctk-logger",

@@ -1,8 +1,10 @@
 #![allow(missing_docs)]
 use clap::Parser;
-use imctk_new_ir::aiger::{AigerImporter, AigerMapping};
-use imctk_new_ir::bmc::{Bmc, BmcWitness, Frame};
-use imctk_new_ir::ir::BitIr;
+use imctk_new_ir::{
+    aiger::{AigerImporter, AigerMapping},
+    bmc::{Bmc, BmcWitness, Frame},
+    ir::BitIr,
+};
 use std::io::BufReader;
 
 fn opt_to_char(b: Option<bool>) -> char {

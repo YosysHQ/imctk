@@ -389,12 +389,10 @@ mod tests {
         let (_, input1) = egraph.insert_term_full(BitlevelTerm::Input(InputId(1)));
         let (_, input2) = egraph.insert_term_full(BitlevelTerm::Input(InputId(2)));
         let (_, input3) = egraph.insert_term_full(BitlevelTerm::Input(InputId(3)));
-        let (_, and0) =
-            egraph.insert_term_full(BitlevelTerm::And(AndTerm([input0, input2].into())));
-        let (_, and1) =
-            egraph.insert_term_full(BitlevelTerm::And(AndTerm([input1, input2].into())));
-        let (_, _xor0) = egraph.insert_term_full(BitlevelTerm::Xor(XorTerm([and0, input3].into())));
-        let (_, _xor1) = egraph.insert_term_full(BitlevelTerm::Xor(XorTerm([and1, input3].into())));
+        let (_, and0) = egraph.insert_term_full(BitlevelTerm::And(And([input0, input2].into())));
+        let (_, and1) = egraph.insert_term_full(BitlevelTerm::And(And([input1, input2].into())));
+        let (_, _xor0) = egraph.insert_term_full(BitlevelTerm::Xor(Xor([and0, input3].into())));
+        let (_, _xor1) = egraph.insert_term_full(BitlevelTerm::Xor(Xor([and1, input3].into())));
         for node in egraph.storage.iter::<Node<BitlevelTerm>>() {
             println!("{node:?}");
         }

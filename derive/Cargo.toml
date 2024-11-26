@@ -12,6 +12,7 @@ workspace = true
 proc-macro = true
 
 [dependencies]
+imctk_codegen = { version = "0.1.0", path = "../codegen" }
 proc-macro-crate = "3.1.0"
 proc-macro2 = "1.0.81"
 quote = { version = "1.0.36" }

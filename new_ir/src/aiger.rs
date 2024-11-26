@@ -5,7 +5,7 @@ use imctk_ids::{id_vec::IdVec, Id, IdAlloc, IdRange};
 use imctk_lit::{Lit, Var};
 
 use crate::{
-    bitlevel::{AndTerm, BitlevelTerm, InputId, Node, Reg, SteadyInputId},
+    bitlevel::{And, BitlevelTerm, InputId, Node, Reg, SteadyInputId},
     ir::BitIr,
 };
 
@@ -117,7 +117,7 @@ impl AigerImporter {
             let inputs = aiger_and
                 .inputs
                 .map(|lit| lit.lookup(|var| self.var_map[var].unwrap()));
-            let term = BitlevelTerm::And(AndTerm(inputs.into()));
+            let term = BitlevelTerm::And(And(inputs.into()));
             if let Some(lit) = self.var_map[output_aiger_var] {
                 egraph.insert_node(Node { output: lit, term });
             } else {
