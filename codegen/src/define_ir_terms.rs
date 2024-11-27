@@ -464,12 +464,12 @@ impl ToTokens for Model {
                     'a: 'b;
             }
 
-            impl ContainedVars<#catalog_sym> for Lit {
+            impl ContainedVars<#catalog_sym> for #lit_type {
                 fn contained_vars_into_extend(
                     &self,
                     sink: &mut impl Extend<#var_type>,
                 ) {
-                    sink.extend([self.var()])
+                    sink.extend([self.atom()])
                 }
 
                 fn map_contained_vars(&self, mut fun: impl FnMut(#lit_type) -> #lit_type) -> Self {
@@ -477,12 +477,12 @@ impl ToTokens for Model {
                 }
             }
 
-            impl ContainedVars<#catalog_sym> for UnorderedPair<Lit> {
+            impl ContainedVars<#catalog_sym> for UnorderedPair<#lit_type> {
                 fn contained_vars_into_extend(
                     &self,
                     sink: &mut impl Extend<#var_type>,
                 ) {
-                    sink.extend((*self).map(Lit::var).into_iter())
+                    sink.extend((*self).map(Element::atom).into_iter())
                 }
 
                 fn map_contained_vars(&self, mut fun: impl FnMut(#lit_type) -> #lit_type) -> Self {
@@ -678,12 +678,14 @@ impl ToTokens for Model {
                         TermKind::Tuple | TermKind::Struct => quote![term.#member],
                     };
 
+                    let field_ty = &field.ty;
+
                     if !field.is_opaque {
                         field_handler.extend(quote! {
-                            #field_access.contained_vars_into_extend(sink);
+                            <#field_ty as ContainedVars<#catalog_sym>>::contained_vars_into_extend(&#field_access, sink);
                         });
                         rewrite_handler.extend(quote! {
-                            #mut_field_access = #mut_field_access.map_contained_vars(&mut fun);
+                            #mut_field_access = <#field_ty as ContainedVars<#catalog_sym>>::map_contained_vars(&#mut_field_access, &mut fun);
                         });
                     }
 
@@ -695,7 +697,7 @@ impl ToTokens for Model {
                     let map_action = if field.is_opaque {
                         quote![#field_access.clone()]
                     } else {
-                        quote![#field_access.map_contained_vars(&mut fun)]
+                        quote![<#field_ty as ContainedVars<#catalog_sym>>::map_contained_vars(&#field_access, &mut fun)]
                     };
 
                     match self.terms[ident].kind {

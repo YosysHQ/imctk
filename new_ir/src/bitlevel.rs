@@ -11,6 +11,7 @@ use imctk_paged_storage::{
     PagedStorageCatalog, PagedStorageItem, PagedStorageItemMut, PagedStorageItemRef,
 };
 use imctk_util::unordered_pair::UnorderedPair;
+use imctk_union_find::Element;
 
 define_ir_terms! {
     root Bitlevel;
