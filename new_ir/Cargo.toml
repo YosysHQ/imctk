@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 flussab-aiger = "0.1.1"
+flussab-btor2 = "0.1.0"
 imctk-abc = { version = "0.1.0", path = "../abc" }
 imctk-derive = { version = "0.1.0", path = "../derive" }
 imctk-ids = { version = "0.1.0", path = "../ids" }
@@ -12,6 +13,8 @@ imctk-lit = { version = "0.1.0", path = "../lit" }
 imctk-paged_storage = { version = "0.1.0", path = "../paged_storage" }
 imctk-util = { version = "0.1.0", path = "../util" }
 imctk_union_find = { version = "0.1.0", path = "../union_find" }
+num-bigint = "0.4.6"
+num-traits = "0.2.19"
 strum = "0.26.3"
 strum_macros = "0.26.4"
 
