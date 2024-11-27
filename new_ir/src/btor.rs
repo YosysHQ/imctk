@@ -16,6 +16,7 @@ struct Node {
 }
 
 struct State {
+    sort: Sort,
     next: Var,
     init: Var,
     next_set: bool,
@@ -344,6 +345,7 @@ impl BtorImporter {
                 self.states.insert(
                     id,
                     State {
+                        sort: sort.clone(),
                         next,
                         init,
                         next_set: false,
@@ -397,20 +399,43 @@ impl BtorImporter {
                 self.nodes.insert(node.id, Node { value, sort });
             }
             NodeVariant::Assignment(assignment) => {
+                let rhs = &self.nodes[&assignment.value];
+                assert_eq!(self.sort(assignment.sort), rhs.sort);
                 let state = self.states.get_mut(&assignment.state).unwrap();
-                let rhs = self.nodes[&assignment.value].value;
+                assert_eq!(state.sort, rhs.sort);
                 match assignment.kind {
                     btor2::AssignmentKind::Init => {
                         assert!(!std::mem::replace(&mut state.init_set, true));
-                        ir.union_find.union([state.init, rhs]);
+                        assert!(assignment.value < assignment.state);
+                        ir.union_find.union([state.init, rhs.value]);
                     }
                     btor2::AssignmentKind::Next => {
                         assert!(!std::mem::replace(&mut state.next_set, true));
-                        ir.union_find.union([state.next, rhs]);
+                        ir.union_find.union([state.next, rhs.value]);
                     }
                 }
             }
             NodeVariant::Output(output) => todo!(),
+        }
+    }
+    fn state_fixup(&mut self, ir: &mut WordIr) {
+        for (node_id, state) in self.states.iter_mut() {
+            // TODO: maybe allocate ids?
+            let id = node_id.0.get() as u32;
+            if !state.next_set {
+                ir.node(
+                    state.next,
+                    WordlevelTerm::Input(Input(InputId(id), state.sort.clone())),
+                );
+                state.next_set = true;
+            }
+            if !state.init_set {
+                ir.node(
+                    state.next,
+                    WordlevelTerm::SteadyInput(SteadyInput(SteadyInputId(id), state.sort.clone())),
+                );
+                state.init_set = true;
+            }
         }
     }
     pub fn import(
@@ -424,6 +449,7 @@ impl BtorImporter {
                 self.handle_node(ir, node);
             }
         }
+        self.state_fixup(ir);
         Ok(())
     }
 }

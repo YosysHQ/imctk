@@ -123,6 +123,12 @@ impl WordIr {
     pub fn term(&mut self, term: impl Into<WordlevelTerm>) -> Var {
         self.egraph_mut().insert_term(term.into())
     }
+    pub fn node(&mut self, output: Var, term: impl Into<WordlevelTerm>) {
+        self.egraph_mut().insert_node(WordlevelNode {
+            output,
+            term: term.into(),
+        });
+    }
     pub fn find_term(&self, term: impl Into<WordlevelTerm>) -> Option<Var> {
         let node_id = self.egraph.find_term(&term.into())?;
         let node: WordlevelNode<WordlevelTerm> = self.egraph.get(node_id);
