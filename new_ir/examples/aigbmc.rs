@@ -5,7 +5,6 @@ use imctk_new_ir::{
     bmc::{Bmc, BmcWitness, Frame},
     ir::BitIr,
 };
-use std::io::BufReader;
 
 fn opt_to_char(b: Option<bool>) -> char {
     match b {
@@ -50,7 +49,6 @@ fn main() -> color_eyre::Result<()> {
 
     let depth = args.depth.unwrap_or(10);
     let file = std::fs::File::open(args.aiger_file)?;
-    let file = BufReader::new(file);
     let mut seq_ir = BitIr::default();
     let aiger_map = AigerImporter::default().import_binary(&mut seq_ir, file)?;
     seq_ir.refresh();
