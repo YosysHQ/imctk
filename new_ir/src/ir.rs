@@ -4,7 +4,7 @@ use imctk_union_find::TrackedUnionFind;
 use num_bigint::BigUint;
 
 use crate::{
-    bitlevel::{BitlevelCatalog, BitlevelTerm, Node},
+    bitlevel::{self, BitlevelCatalog, BitlevelTerm, Node},
     dag::{self, IrDag},
     egraph::{EgraphMut, EgraphRef, EgraphStorage},
     wordlevel::{Concat, Const, HasSort, Sort, WordlevelCatalog, WordlevelNode, WordlevelTerm},
@@ -65,10 +65,56 @@ impl BitIr {
     pub fn term(&mut self, term: impl Into<BitlevelTerm>) -> Lit {
         self.egraph_mut().insert_term(term.into())
     }
+    pub fn node(&mut self, output: Lit, term: impl Into<BitlevelTerm>) {
+        self.egraph_mut().insert_node(Node {
+            output,
+            term: term.into(),
+        });
+    }
     pub fn find_term(&self, term: impl Into<BitlevelTerm>) -> Option<Lit> {
         let node_id = self.egraph.find_term(&term.into())?;
         let node: Node<BitlevelTerm> = self.egraph.get(node_id);
         Some(node.output)
+    }
+    pub fn and(&mut self, a: Lit, b: Lit) -> Lit {
+        self.term(BitlevelTerm::And(bitlevel::And([a, b].into())))
+    }
+    pub fn and_node(&mut self, a: Lit, b: Lit, q: Lit) {
+        self.node(q, BitlevelTerm::And(bitlevel::And([a, b].into())))
+    }
+    pub fn or(&mut self, a: Lit, b: Lit) -> Lit {
+        !self.term(BitlevelTerm::And(bitlevel::And([!a, !b].into())))
+    }
+    pub fn or_node(&mut self, a: Lit, b: Lit, q: Lit) {
+        self.node(!q, BitlevelTerm::And(bitlevel::And([!a, !b].into())))
+    }
+    pub fn xor(&mut self, a: Lit, b: Lit) -> Lit {
+        self.term(BitlevelTerm::Xor(bitlevel::Xor([a, b].into())))
+    }
+    pub fn xor_node(&mut self, a: Lit, b: Lit, q: Lit) {
+        self.node(q, BitlevelTerm::Xor(bitlevel::Xor([a, b].into())))
+    }
+    pub fn reduce_and(&mut self, args: impl IntoIterator<Item = Lit>) -> Lit {
+        args.into_iter()
+            .reduce(|a, b| self.and(a, b))
+            .unwrap_or(Lit::FALSE)
+    }
+    pub fn reduce_or(&mut self, args: impl IntoIterator<Item = Lit>) -> Lit {
+        args.into_iter()
+            .reduce(|a, b| self.or(a, b))
+            .unwrap_or(Lit::FALSE)
+    }
+    pub fn reduce_xor(&mut self, args: impl IntoIterator<Item = Lit>) -> Lit {
+        args.into_iter()
+            .reduce(|a, b| self.xor(a, b))
+            .unwrap_or(Lit::FALSE)
+    }
+    pub fn fresh_lits(&mut self, n: usize) -> Vec<Lit> {
+        self.union_find
+            .fresh_atoms(n)
+            .iter()
+            .map(|v| v.as_lit())
+            .collect()
     }
 }
 
@@ -134,7 +180,10 @@ impl WordIr {
         let node: WordlevelNode<WordlevelTerm> = self.egraph.get(node_id);
         Some(node.output)
     }
-    pub fn constant(&mut self, value: u64, sort: Sort) -> Var {
+    pub fn constant(&mut self, mut value: u64, sort: Sort) -> Var {
+        if sort.0 < 64 {
+            value &= (1u64 << sort.0) - 1;
+        }
         self.term(WordlevelTerm::Const(Const { value, sort }))
     }
     pub fn big_constant(&mut self, value: &BigUint, sort: Sort) -> Var {

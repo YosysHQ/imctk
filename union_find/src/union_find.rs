@@ -218,6 +218,15 @@ impl<Atom: Id, Elem: Id + Element<Atom = Atom>> UnionFind<Atom, Elem> {
             .push(Atomic::new(Elem::from_atom(self.parent.next_unused_key())))
             .0
     }
+    /// Allocates a range of `Atom`s about which no equivalences are known.
+    pub fn fresh_atoms(&mut self, n: usize) -> IdRange<Atom> {
+        let start = self.parent.next_unused_key().id_index();
+        let end = start.checked_add(n).unwrap();
+        if n > 0 {
+            self.ensure_allocated(Atom::from_id_index(end - 1));
+        }
+        IdRange::from_index_range(start..end)
+    }
     /// Ensures that all atoms up to and including `atom` are allocated.
     ///
     /// After this call it is guaranteed that `lowest_unused_atom() > atom`.

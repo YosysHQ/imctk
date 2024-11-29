@@ -1,5 +1,5 @@
 //! A `TrackedUnionFind` augments a [`UnionFind`] structure with change tracking.
-use imctk_ids::{id_vec::IdVec, Id};
+use imctk_ids::{id_vec::IdVec, Id, IdRange};
 use std::sync::Arc;
 
 use crate::{
@@ -282,6 +282,13 @@ impl<Atom: Id, Elem: Id + Element<Atom = Atom>> TrackedUnionFind<Atom, Elem> {
         let atom = self.union_find.fresh_atom();
         self.tracking.log(Change::AllocAtoms { new_max: atom });
         atom
+    }
+    pub fn fresh_atoms(&mut self, n: usize) -> IdRange<Atom> {
+        let atoms = self.union_find.fresh_atoms(n);
+        if let Some(last) = atoms.iter().next_back() {
+            self.tracking.log(Change::AllocAtoms { new_max: last });
+        }
+        atoms
     }
     pub fn ensure_allocated(&mut self, atom: Atom) {
         if atom >= self.union_find.lowest_unused_atom() {

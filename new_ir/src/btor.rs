@@ -415,7 +415,7 @@ impl BtorImporter {
                     }
                 }
             }
-            NodeVariant::Output(output) => todo!(),
+            NodeVariant::Output(output) => { }
         }
     }
     fn state_fixup(&mut self, ir: &mut WordIr) {
