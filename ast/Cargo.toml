@@ -1,0 +1,13 @@
+[package]
+name = "ast"
+version = "0.1.0"
+edition = "2024"
+
+publish = false
+
+[dependencies]
+lazy_static = "1.5.0"
+zwohash = "0.1.2"
+
+[lints]
+workspace = true
