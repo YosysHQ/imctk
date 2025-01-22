@@ -8,13 +8,11 @@ It consists of a language used for modeling system behavior, specifying properti
 
 .. todo:: some early examples
 
-Values
-------
+Objects
+-------
 
-As Whisk is based on set theory, sets play an important role.
-Unlike a pure set theory, where there are only sets, Whisk also supports non-set values.
-
-It supports the following kinds of values:
+In Whisk, we use the term "object" to refer to any value a variable could take or, equivalently, any value that can be a member of a set.
+In a pure set theory the only objects would be sets, but in Whisk we also consider the following list of non-set objects:
 
 * sets
 * Booleans
@@ -22,258 +20,302 @@ It supports the following kinds of values:
 * natural numbers
 * tuples
 * infinite sequences
-* functions
+* functions defined on sets
 * opaque named IDs
 * constructors, which pair an ID with a wrapped value
 
 .. todo:: some of these kinds should probably use a constructor encoding instead of being builtins
 
-Terms
------
+.. note::
+
+   When defining the formal semantics of Whisk, we will also encounter certain non-object values, e.g. optionally defined objects or (higher-order) functions with all objects as domain.
+   We can only refer to such values from the meta-level we use to specify Whisk and not from within the formal system itself.
+
+Abstract Syntax
+---------------
+
+In this section we will specify Whisk's abstract syntax and a textual representation for it.
+
+Whisk's abstract syntax trees have the form of the following recursive datatype:
+
+.. code:: rust
+
+   enum Term {
+      Var(String),
+      Id(String),
+      Op(Op),
+   }
+
+   struct Op {
+      name: String,
+      arguments: Vec<Block>,
+   }
+
+   struct Block {
+      bound: Vec<String>,
+      body: Term,
+   }
+
+The textual representation is given by the following PEG grammar.
+
+.. code:: peg
+
+   Term = NAME                     -- Term::Var($1)
+        | "'" NAME                 -- Term::Id($1)
+        | Op                       -- Term::Op($1)
+
+   Op = "(" NAME Block* ")"        -- Op { name: $1, arguments: $2 }
+      | ":" NAME                   -- Op { name: $1, arguments: vec![] }
+
+   Block = "[" NAME* ":" Term "]"  -- Block { bound: $1, body: $1 }
+         | Term                    -- Block { bound: vec![], body: $1 }
+
+
+.. todo:: specify the used tokenization
 
 .. note::
 
-   From here on we will use Haskell like pseudocode to avoid ambiguities.
-   Differences from actuall Haskell are that we assume `data` defines inductive datatypes not co-inductive datatypes and that we will use functions that can quantify over infinite types like `forall :: (a -> Bool) -> Bool`.
+   This is a very simple textual representation of the *abstract* syntax and not the Whisk surface language.
+   It is used within the specification since translating between the abstract syntax and the surface language is neither trivial nor lossless.
+
+Terms are built out of variables, ids and operators.
+
+Variables are named and the textual representation is the variable name itself:
+
+* `x`
+* `y`
+* `foo`
+* `bar`
+* etc.
+
+Ids are distinguished by name but are completely opaque from within Whisk.
+They are represented by prefixing their name with a single quote.
+
+* `'x`
+* `'foo`
+* etc.
+
+Operator invocations are represented using parantheses.
+Within the parantheses they start with an identifier followed by any number of arguments, including zero arguments for constant operators.
+When an operator is used without any arguments, instead of using parantheses the name can be prefixed by a colon instead.
+
+* `(false)` or `:false`
+* `(abs x)`
+* `(min x y)`
+* `(maj a b c)`
+* `(eq f g)`
+* `(not (not x))`
+* `(max lower (min upper x))`
+* etc.
+
+Each argument of an operator is a block.
+A block can be a raw subterm, as for the examples above, or it can bind variables within the scope of a body subterm.
+If it does bind variables, the list of bound variables precedes the body subterm, separated by a colon and the full block is enclosed in square brackets.
+
+* `(forall [x : (eq x x)])`,
+* `(exists [x : (eq (mul x x) (2))])`
+* `(fun (Int) (Int) (Int) [a b c : (add a (sub b c))])`
+* `(set (Int) [x : (gt x 0)] [x : (mul x x)])`
+* etc.
+
+Blocks with bound variables are similar to what other languages might call lambda-abstraction, closures or also blocks.
 
-To specify the terms of the Whisk language, we first define the abstract term grammar as an inductive datatype:
+In Whisk, a block on its own isn't a term, it is merely part of the syntax for operator invocation.
+Thus a block doesn't have to represent an object-level value.
+This is done so that a block's bound variables can have an unrestricted domain ranging over all object-level values,
+Whisk cannot allow this for object-level functions, but at the same time it is a requirement for the predicate logic quantifiers.
 
-.. code:: haskell
 
-   data Term = Lit Literal
-             | Var Name
-             | Operator Name [Operand]
+.. todo:: introduce the following graphical notation
 
-   data Operand = Subterm Term
-                | Bind Name
-                | Token OperandToken
+.. graphviz::
+   :caption: `(forall [x y : (implies (lt x y) (exists [a : (and (lt x a) (lt a y))]))])`
 
-   data Literal = {- ... -}
-   data OperandToken = {- ... -}
-   data Name = {- ... -}
+   digraph {
+      graph [ranksep=0.3];
+      node [margin=0.05,width=0,height=0,shape=record]
+      edge [dir=none];
+      subgraph cluster_n1_0 { graph [color=crimson];
+         n4 [shape=plain, fontcolor=crimson, label="x"];
+         n5 [shape=plain, fontcolor=crimson, label="y"];
+         n3 [label="lt|<0>|<1>"];
+         n3:0:s -> n4;
+         n3:1:s -> n5;
+         subgraph cluster_n6_0 { graph [color=dodgerblue4];
+            n9 [shape=plain, fontcolor=crimson, label="x"];
+            n10 [shape=plain, fontcolor=dodgerblue4, label="a"];
+            n8 [label="lt|<0>|<1>"];
+            n8:0:s -> n9;
+            n8:1:s -> n10;
+            n12 [shape=plain, fontcolor=dodgerblue4, label="a"];
+            n13 [shape=plain, fontcolor=crimson, label="y"];
+            n11 [label="lt|<0>|<1>"];
+            n11:0:s -> n12;
+            n11:1:s -> n13;
+            n7 [label="and|<0>|<1>"];
+            n7:0:s -> n8;
+            n7:1:s -> n11;
+         }
+         n6 [label="exists|<0>a"];
+         n6:0:s -> n7[color=dodgerblue4];
+         n2 [label="implies|<0>|<1>"];
+         n2:0:s -> n3;
+         n2:1:s -> n6;
+      }
+      n1 [label="forall|<0>x y"];
+      n1:0:s -> n2[color=crimson];
+   }
 
-We give meaning to the terms by specifying an interpretation function `interpretTerm` that assigns values to terms.
-Not every term of our grammar will have a well-defined value.
-Instead of having to pick a placeholder value or leaving the value of such terms indeterminate, we will make interpretation a partial mapping to values, i.e. the `interpretTerm` function should ultimately produce an `Option Value`.
+.. todo:: after defining primitives, make sure all examples use these correctly or add a note that they don't
 
-In general, it is also not possible to interpret a term in isolation as the value can depend on an *environment*, specifying the values of free variables, and on a set of *operator definitions*.
-For now, we will defer details on how operators are defined and use an opaque type `OperatorDefs` to represent them.
+Semantics
+---------
 
+This section specifies the semantics of the Whisk term language.
+To give meaning to all Whisk terms, we recursively construct an interpretation of each term in some target theory.
 
-.. code:: haskell
+There are many suitable target theories for this, and the best choice may vary depending on the use case.
+To remain flexible, we will describe an interpretation as a many-sorted first-order theory.
+This can then be either axiomatized or interpreted in some other theory, e.g. the simply typed lambda calculus.
 
-   type Value = {- ... -}
-   type Env = Name -> Value
+Sorts
+*****
 
-   type OperatorDefs = {- ... -}
+Our theory will use values of the following sorts:
 
+*  Sorts representing opaque identifiers
 
-While the value of a term depends on both the environment and the operator definitions, they are used in different ways.
-When interpreting a single given term, we usually keep the operator definitions fixed but will often vary the environment.
+   *  `Var` the sort of variable names
+   *  `Op` the sort of operator names
+   *  `Id` the sort of ids
 
-As such, for the `interpretTerm` function, we will order the arguments starting with the operator definitions, followed by the term and finishing with the environment:
+*  Sorts representing object-level values or higher-order functions on object-level values
 
+   *  `Object` the sort of object-level values
+   *  `ClosedTerm` the sort of object-level values and a distinct `undef` value
 
-.. code:: haskell
+      *  This comes with a partial order with every object-level value above `undef` and every pair of distinct object-level values being incomparable.
 
-   interpretTerm :: OperatorDefs -> Term -> Env -> Maybe Value
+   *  `ClosedBlock[n]` the sort of definable n-ary partial functions on object-level values
 
-Using partial application of the `interpretTerm` function we can view the interpretation of a term as a map from operator definitions and a term to an *environment dependent value*.
-The concept of an environment dependent value, or *dependent value* for short, will come up repeatedly, so we will define a type alias for it:
+      *  This is partially ordered using the subset order of their domains
 
-.. code:: haskell
+   *  `ClosedOp[n_1, ..., n_k]` the sort of definable monotone maps from `ClosedBlock[n_1] x ... x ClosedBlock[n_k]` to `ClosedTerm`
 
-   type DepValue = Env -> Maybe Value
+*  Sorts for dependencies on free variables
 
-   interpretTerm :: OperatorDefs -> Term -> DepValue
+   *  `Env` the sort of variable environments (assignments of object-level values to all variables)
+   *  `OpenTerm` the sort of `ClosedTerms` with an additional dependency on a variable environment
+   *  `OpenBlock[n]` the sort of `ClosedBlock[n]` with an additionally dependency on a variable environment
+   *  `OpenOp[n_1, ..., n_k]` the sort of `ClosedOp[n_1, ..., n_k]` with an additionally dependency on a variable environment
 
-At this point we can define the interpretation of literals and variables.
-The value of a literal doesn't depend on any operator definitions and doesn't include free variables.
-This means we can delegate the interpretation of literals to a separate `interpretLiteral :: Literal -> Value`.
-The value of a variable can be looked up in the environment but also doesn't depend on any operators.
+Function Symbols
+****************
 
-.. code:: haskell
+For the interpretation, we will make use of the following function symbols:
 
-   interpretTerm :: OperatorDefs -> Term -> DepValue
-   interpretTerm _ (Lit l)                  = const (Just (interpretLiteral l))
-   interpretTerm _ (Var name)               = \env -> Just (env  name)
-   interpretTerm _ (Operator name operands) = {- ... -}
+*  `var : Var -> OpenTerm`
 
-To be able to define the interpretation of operators, we will first define the concept of an operator fingerprint which captures the structure and top-level syntax of an operator but doesn't include the actual subterms or bound variable names:
+   An open term that represents the value of a given variable.
 
-.. code:: haskell
+*  `const : Object -> ClosedTerm`
 
-   data OperatorFingerprint = OperatorFingerprint Name [OperandFingeprint]
+   A closed term with a constant object-level value.
 
-   data OperandFingeprint = SubtermOperand | BindOperand | TokenOperand OperandToken
+*  `openTerm : ClosedTerm -> OpenTerm`
 
-   operatorFingerprint :: Name -> [Operand] -> [OperandFingerprint]
-   operatorFingerprint name operands = OperatorFingerprint name (map operandFingerprint operands)
+   The inclusion map of the closed terms in the open terms.
 
-   operandFingerprint :: Operand -> OperandFingerprint
-   operandFingerprint (Subterm _) = SubtermOperand
-   operandFingerprint (Bind _)    = BindOperand
-   operandFingerprint (Token tok) = TokenOperand tok
+*  `id : Id -> Object`
 
-   operatorBoundNames :: [Operand] -> [Name]
-   operatorBoundNames operands = [name | Bind name <- operands]
+   The inclusion map of the opaque ids in the object-level values.
 
-The operator fingerprint is used as a lookup key for operator definitions:
+*  `bind[n] : Var^n x OpenTerm -> OpenBlock[n]`
 
-.. code:: haskell
+   Constructor for a block given a term and a number of variables to bind.
 
-   type OperatorDef = {- ... -}
-   type OperatorDefs = OperatorFingerprint -> Maybe OperatorDef
+*  `applyOpen[n_1, ..., n_k] : OpenOp[n_1, ..., n_k] x OpenBlock[n_1] x ... x OpenBlock[n_k] -> OpenTerm`
 
-The interpretation of an operator itself is given as a map from bound variable names and subterm interpretations to the interpretation of the expression containing the operator.
+   Application of an operator to open blocks, yields an open term representing the result of the operator.
 
-.. code:: haskell
+*  `opDef[n_1, ..., n_k] : Op -> ClosedOp[n_1, ..., n_k]`
 
-   data OperatorDef = OperatorDef
-     { interpretOperator :: [Name] -> [DepValue] -> DepValue
-     , {- ... -}
-     }
+   Look up an operator definition for a given signature.
 
-This allows us to complete the definition of the `interpretTerm` function:
+*  `openOp : ClosedOp -> OpenOp`
 
-.. code:: haskell
+   The inclusion map of the closed ops in the open ops.
 
-   interpretTerm :: OperatorDefs -> Term -> DepValue
-   interpretTerm _    (Lit l)                  = const (Just (interpretLiteral l))
-   interpretTerm _    (Var name)               = \env -> Just (env name)
-   interpretTerm defs (Operator name operands) = \env -> do
-      def <- defs (operatorFingerprint name operands)
-      interpretOperator def
-         [name | Bind name <- operands]
-         [interpretTerm defs term | Subterm term <- operands]
-         env
+Interpretation
+**************
 
-While this is sufficient for defining the interpretation of terms, we would like to enforce a bit more structure to simplify reasoning about terms.
-We will do that by adding some data to all operator definitions and also by imposing some requirements that operator definitions will have to satisfy.
+The interpretation of a Whisk term is then obtained by recursion on the Whisk abstract syntax, yielding a first-order term of sort `OpenTerm`.
 
-We add the following data to operator definitions:
+*  `TERM[ V ] := var(VAR[ V ])`
+*  `TERM[ 'I ] := const(id(ID[ 'I ]))`
+*  `TERM[ :const ] := TERM[ (const) ]`
+*  `TERM[ (O B_1 ... B_k) ] := applyOpen(openOp(opDef(OP[ O ])), BLOCK[ B_1 ], ..., BLOCK[ B_k ])`
+*  `BLOCK[ T ] := BLOCK[ [ : T ] ]`
+*  `BLOCK[ [ V_1 ... V_k : T ] ] := bind(VAR[ V_1 ], ..., VAR[ V_k ], TERM[ T ])`
+*  `VAR[ V ] : Var` a unique distinct constant for every `V`
+*  `ID[ 'I ] : Id` a unique distinct constant for every `I`
 
-.. code:: haskell
+Axiomatization
+**************
 
-   data OperatorDef = OperatorDef
-     { interpretOperator :: [Name] -> [DepValue] -> DepValue
-     , boundNames :: [Set Integer]
-     , subtermContextDependencies :: [Set Integer]
-     }
+To axiomatize the theory we introduce the following additional function symbols
 
-The `boundNames` data specifies, for each subterm in order, which names are bound when interpreting that subterm.
-The names are specified as an index into the list of names.
+*  `get : Env x Var -> Object` look up a variable value
+*  `update : Env x Var x Object -> Env` update a variable value
+*  `undef : ClosedTerm` the undefined term
+*  `const : Object -> ClosedTerm` a term with a constant value
+*  `closeTerm : Env x OpenTerm -> ClosedTerm` close the term over an environment
+*  `closeBlock[n] : Env x OpenBlock[n] -> ClosedBlock[n]` close the block over an environment
+*  `openBlock[n] : ClosedBlock[n] -> OpenBlock[n]` inclusion of the closed blocks in the open blocks
+*  `substitute[n] : ClosedBlock[n] x Object^n -> ClosedTerm` substitute values for the bound variables in a closed block
+*  `apply[n_1, ..., n_k] : ClosedOp[n_1, ..., n_k] x ClosedBlock[n_1] x ... x ClosedBlock[n_k] -> ClosedTerm`
 
-We have the following requirements for operator definitions:
+The axioms of the theory are:
 
-* Monotonicity with respect to definedness
-* Invariance under variable renaming and bypassing
+Environments:
 
-  .. todo:: add section for this
+* `(forall v, get(e_1, v) = get(e_2, v)) -> (e_1 = e_2)` extensionality for environments
+* `get(update(e, v, o), v) = o` get last updated variable
+* `v_1 != v_2 -> get(update(e, v_1, o), v_2) = get(e, v_2)` get other variable
 
-* Partial order on subterm context dependencies
+Terms:
 
-  .. todo:: explain `subtermContextDependencies` above and add section for this
+* `(forall e, closeTerm(e, t_1) = closeTerm(e, t_2)) -> (t_1 = t_2)` extensionality for open terms
+* `closeTerm(e, openTerm(t)) = t` environment independence of closed terms + inclusion
+* `closeTerm(e, var(v)) = const(get(e, v))` definition of variable terms
+* `const o != undef` defined and undefined values are distinct
+* `t = undef \\/ (exists o, t = const o)` every closed term that isn't undefined is a constant object-level value
 
-Together these requirements ensure that, among other things, reasoning under assumptions, substitution of variables and context inference during subterm traversal are well behaved.
+Blocks:
 
-Monotonicity with Respect to Definedness
-****************************************
+* `(forall e, closeBlock(e, b_1) = closeBlock(e, b_2)) -> (b_1 = b_2)` extensionality for open blocks
+* `closeBlock(e, openBlock(b)) = b` environment independence of closed blocks + inclusion
+* `(forall o_1 .. o_n, substitute(b_1, o_1, ..., o_n) = substitute(b_2, o_1, ..., o_n)) -> b_1 = b_2` extensionality for closed blocks
+* `substitute(closeBlock(e, bind(v_1, ..., v_n, b)), get(e, v_1), ..., get(e, v_n)) = closeTerm(e, b)`
+* .. todo:: double check abstraction and substitution is fully defined
 
-One property that should hold for all operators is that making operand dependent values more defined without changing any already defined value will also make the operator result more defined and also wont change any already defined value.
-Equivalently, we can require that all operator interpretation functions must be monotone with respect to a suitable partial order on dependent operand values and the resulting dependent operator value.
+Operators:
 
-For this, we will start by defining a partial order on optional values and extend it pointwise to dependent values and componentwise to tuples of dependent values:
+* `(forall e, closeOp(e, o_1) = closeOp(e, o_2)) -> (o_1 = o_2)` extensionality for open operators
+* `closeTerm(e, applyOpen(o, b_1, ..., b_n)) = apply(closeOp(e), closeBlock(e, b_1), ...,  closeBlock(e, b_n))` operator application is pointwise w.r.t the environment
+* `(forall b_1 .. b_n, apply(o_1, b_1, ..., b_n) = apply(o_2, b_1, ..., b_n)) -> o_1 = o_2` extensionality for closed operators
+* `b_1 <= b_1' /\\ ... /\\ b_n <= b_n' -> apply(o_1, b_1, ..., b_n) <= apply(o_1, b_1', ..., b_n')` monotonicity wrt definedness
 
-.. code:: haskell
+Lambda-Calculus Interpretation
+******************************
 
-   valueDefinednessCompare :: Maybe Value -> Maybe Value -> Maybe Ordering
-   valueDefinednessCompare lhs rhs =
-         case (compare (isJust lhs) (isJust rhs), lhs == rhs) of
-            (EQ,  False) -> Nothing
-            (ord, _)     -> Just (ord)
+.. todo:: mapping to simply typed lambda calculus
 
-   depValueDefinednessCompare :: DepValue -> DepValue -> Maybe Ordering
-   depValueDefinednessCompare = pointwisePartialOrdCompare valueDefinednessCompare
+   Map every sort to a type, every indexed sort to a family of types.
 
-   operandDefinednessCompare :: [DepValue] -> [DepValue] -> Maybe Ordering
-   operandDefinednessCompare = componentwisePartialOrdCompare depValueDefinednessCompare
+.. todo:: do we need other mappings at this point?
 
-   pointwisePartialOrdCompare :: (a -> a -> Maybe Ordering) -> (b -> a) -> (b -> a) -> Maybe Ordering
-   pointwisePartialOrdCompare = {- ... -}
-
-   componentwisePartialOrdCompare :: (a -> a -> Maybe Ordering) -> [a] -> [a] -> Maybe Ordering
-   componentwisePartialOrdCompare = {- ... -}
-
-With this we can define the monotonicity requirement for an operator definition:
-
-.. code:: haskell
-
-   monotoneOperatorRequirement :: OperatorDef -> Bool
-   monotoneOperatorRequirement def = forall \boundNames ->
-      isMonotoneMap
-         operandDefinednessCompare
-         depValueDefinednessCompare
-         (interpretOperator def boundNames)
-
-   isMonotoneMap :: (a -> a -> Maybe Ordering) -> (b -> b -> Maybe Ordering) -> (a -> b) -> Bool
-   isMonotoneMap = {- ... -}
-
-Judgements
-----------
-
-
-.. todo:: figure out section structure
-
-.. code:: haskell
-
-   type Context = Env -> Bool
-
-   definedJ :: OperatorDefs -> Context -> Term -> Bool
-   definedJ defs ctx term =
-      forall \env -> not (ctx env) || isSome (interpret defs term env)
-
-   eqJ :: OperatorDefs -> Context -> Term -> Term -> Bool
-   eqJ defs ctx lhs rhs =
-      definedJ defs ctx lhs &&
-      forall \env -> not (ctx env) || interpret defs lhs env == interpret defs rhs env
-
-   boolJ :: OperatorDefs -> Context -> Term -> Bool
-   boolJ defs ctx term =
-      definedJ defs ctx term &&
-      forall \env -> not (ctx env) || (fromJust (interpret defs term env) `elem` [trueValue, falseValue])
-
-   trueJ :: OperatorDefs -> Context -> Term -> Bool
-   trueJ defs ctx term =
-      definedJ defs ctx term &&
-      forall \env -> not (ctx env) || interpret defs term env == Just trueValue
-
-   termCtx :: OperatorDefs -> Term -> Context
-   termCtx defs term env = interpret defs term env == Just trueValue
-
-   -- [<defs>] |= <term> defined
-   alwaysDefinedJ defs term = definedJ defs (const True) term
-
-   -- [<defs>] |= <lhs> == <rhs>
-   alwaysEqJ defs lhs rhs = eqJ defs (const True) lhs rhs
-
-   -- [<defs>] |= <term> bool
-   alwaysBoolJ defs term = boolJ defs (const True) term
-
-   -- [<defs>] |= <term>
-   alwaysTrueJ defs term = trueJ defs (const True) term
-
-   -- [<defs>] <ctx> |= <term> defined
-   ctxDefinedJ defs ctx term = alwaysBoolJ defs ctx && definedJ defs (termCtx defs ctx) term
-
-   -- [<defs>] <ctx> |= <lhs> == <rhs>
-   ctxEqJ defs ctx lhs rhs = alwaysBoolJ defs ctx && eqJ defs (termCtx defs ctx) lhs rhs
-
-   -- [<defs>] <ctx> |= <term> bool
-   ctxBoolJ defs ctx term = alwaysBoolJ defs ctx && boolJ defs (termCtx defs ctx) term
-
-   -- [<defs>] <ctx> |= <term>
-   ctxTrueJ defs ctx term = alwaysBoolJ defs ctx && trueJ defs (termCtx defs ctx) term
+.. todo:: use latex formulas instead of code for this section
 
 Builtin Operators
 -----------------
