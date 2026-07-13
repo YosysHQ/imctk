@@ -1167,7 +1167,7 @@ impl<T> TableSeq<T> {
     /// that, the iteration order is unspecified.
     // TODO serialization & deserialization maintaining iteration order!
     // TODO examples/doctests
-    pub fn subtable_iter(&self, subtable: usize) -> SubtableIter<T> {
+    pub fn subtable_iter(&self, subtable: usize) -> SubtableIter<'_, T> {
         assert!(subtable < self.subtables);
         // SAFETY: with the subtable checked to be in bounds, every unsafe call contained below
         // either requires just the global data structure invariants to hold or has documented
@@ -1228,7 +1228,7 @@ impl<T> TableSeq<T> {
     /// that, the iteration order is unspecified.
     // TODO serialization & deserialization maintaining iteration order!
     // TODO examples/doctests
-    pub fn subtable_iter_mut(&mut self, subtable: usize) -> SubtableIterMut<T> {
+    pub fn subtable_iter_mut(&mut self, subtable: usize) -> SubtableIterMut<'_, T> {
         assert!(subtable < self.subtables);
         // SAFETY: with the subtable checked to be in bounds, every unsafe call contained below
         // either requires just the global data structure invariants to hold or has documented

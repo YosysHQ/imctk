@@ -99,7 +99,7 @@ impl<T, S> SetSeq<T, S> {
     ///
     /// Provides mutable access to the set at the given index.
     #[inline(always)]
-    pub fn grow_for(&mut self, set: usize) -> SetSeqSetMut<T, S> {
+    pub fn grow_for(&mut self, set: usize) -> SetSeqSetMut<'_, T, S> {
         self.tables.grow_for_subtable(set);
         SetSeqSetMut { seq: self, set }
     }
@@ -111,7 +111,7 @@ impl<T, S> SetSeq<T, S> {
     ///
     /// Panics if `set >= self.len()`.
     #[inline(always)]
-    pub fn at(&self, set: usize) -> SetSeqSet<T, S> {
+    pub fn at(&self, set: usize) -> SetSeqSet<'_, T, S> {
         assert!(self.tables.len() > set);
         SetSeqSet { seq: self, set }
     }
@@ -123,7 +123,7 @@ impl<T, S> SetSeq<T, S> {
     ///
     /// Panics if `set >= self.len()`.
     #[inline(always)]
-    pub fn at_mut(&mut self, set: usize) -> SetSeqSetMut<T, S> {
+    pub fn at_mut(&mut self, set: usize) -> SetSeqSetMut<'_, T, S> {
         assert!(self.tables.len() > set);
         SetSeqSetMut { seq: self, set }
     }
@@ -132,7 +132,7 @@ impl<T, S> SetSeq<T, S> {
     ///
     /// This returns `None` if `set >= self.len()`.
     #[inline(always)]
-    pub fn get(&self, set: usize) -> Option<SetSeqSet<T, S>> {
+    pub fn get(&self, set: usize) -> Option<SetSeqSet<'_, T, S>> {
         (self.tables.len() > set).then_some(SetSeqSet { seq: self, set })
     }
 
@@ -140,7 +140,7 @@ impl<T, S> SetSeq<T, S> {
     ///
     /// This returns `None` if `set >= self.len()`.
     #[inline(always)]
-    pub fn get_mut(&mut self, set: usize) -> Option<SetSeqSetMut<T, S>> {
+    pub fn get_mut(&mut self, set: usize) -> Option<SetSeqSetMut<'_, T, S>> {
         (self.tables.len() > set).then_some(SetSeqSetMut { seq: self, set })
     }
 }

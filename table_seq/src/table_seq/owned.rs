@@ -178,7 +178,7 @@ impl<T> OwnedSubtable<T> {
     ///
     /// The subtable maintains a fixed iteration order that only changes with mutations. Beyond
     /// that, the iteration order is unspecified.
-    pub fn iter(&self) -> SubtableIter<T> {
+    pub fn iter(&self) -> SubtableIter<'_, T> {
         self.into_iter()
     }
 
@@ -186,7 +186,7 @@ impl<T> OwnedSubtable<T> {
     ///
     /// The subtable maintains a fixed iteration order that only changes with mutations. Beyond
     /// that, the iteration order is unspecified.
-    pub fn iter_mut(&mut self) -> SubtableIterMut<T> {
+    pub fn iter_mut(&mut self) -> SubtableIterMut<'_, T> {
         self.into_iter()
     }
 }
