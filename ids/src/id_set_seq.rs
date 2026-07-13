@@ -41,7 +41,7 @@ impl<I: Id, T, S> IdSetSeq<I, T, S> {
     ///
     /// Provides mutable access to the set for the given id.
     #[inline(always)]
-    pub fn grow_for(&mut self, id: I) -> SetSeqSetMut<T, S> {
+    pub fn grow_for(&mut self, id: I) -> SetSeqSetMut<'_, T, S> {
         self.set_seq.grow_for(id.id_index())
     }
 
@@ -52,7 +52,7 @@ impl<I: Id, T, S> IdSetSeq<I, T, S> {
     ///
     /// Panics if `id.id_index() >= self.len()`.
     #[inline(always)]
-    pub fn at(&self, id: I) -> SetSeqSet<T, S> {
+    pub fn at(&self, id: I) -> SetSeqSet<'_, T, S> {
         self.set_seq.at(id.id_index())
     }
 
@@ -63,7 +63,7 @@ impl<I: Id, T, S> IdSetSeq<I, T, S> {
     ///
     /// Panics if `id.id_index() >= self.len()`.
     #[inline(always)]
-    pub fn at_mut(&mut self, id: I) -> SetSeqSetMut<T, S> {
+    pub fn at_mut(&mut self, id: I) -> SetSeqSetMut<'_, T, S> {
         self.set_seq.at_mut(id.id_index())
     }
 
@@ -71,7 +71,7 @@ impl<I: Id, T, S> IdSetSeq<I, T, S> {
     ///
     /// This returns `None` if `id.id_index() >= self.len()`.
     #[inline(always)]
-    pub fn get(&self, id: I) -> Option<SetSeqSet<T, S>> {
+    pub fn get(&self, id: I) -> Option<SetSeqSet<'_, T, S>> {
         self.set_seq.get(id.id_index())
     }
 
@@ -79,7 +79,7 @@ impl<I: Id, T, S> IdSetSeq<I, T, S> {
     ///
     /// This returns `None` if `id.id_index() >= self.len()`.
     #[inline(always)]
-    pub fn get_mut(&mut self, id: I) -> Option<SetSeqSetMut<T, S>> {
+    pub fn get_mut(&mut self, id: I) -> Option<SetSeqSetMut<'_, T, S>> {
         self.set_seq.get_mut(id.id_index())
     }
 }

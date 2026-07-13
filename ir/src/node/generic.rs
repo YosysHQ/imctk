@@ -548,7 +548,6 @@ impl<T: Term> TermDynAuto for T {
         self.def_eq(other)
     }
 
-    #[must_use]
     fn dyn_apply_var_map(&mut self, var_repr: &mut dyn FnMut(Var) -> Lit) -> Pol {
         self.apply_var_map(var_repr)
     }

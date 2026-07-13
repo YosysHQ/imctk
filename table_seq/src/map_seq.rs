@@ -74,7 +74,7 @@ impl<K, V, S> MapSeq<K, V, S> {
     ///
     /// Provides mutable access to the map at the given index.
     #[inline(always)]
-    pub fn grow_for(&mut self, map: usize) -> MapSeqMapMut<K, V, S> {
+    pub fn grow_for(&mut self, map: usize) -> MapSeqMapMut<'_, K, V, S> {
         self.tables.grow_for_subtable(map);
         MapSeqMapMut { seq: self, map }
     }
@@ -86,7 +86,7 @@ impl<K, V, S> MapSeq<K, V, S> {
     ///
     /// Panics if `map >= self.len()`.
     #[inline(always)]
-    pub fn at(&self, map: usize) -> MapSeqMap<K, V, S> {
+    pub fn at(&self, map: usize) -> MapSeqMap<'_, K, V, S> {
         assert!(self.tables.len() > map);
         MapSeqMap { seq: self, map }
     }
@@ -98,7 +98,7 @@ impl<K, V, S> MapSeq<K, V, S> {
     ///
     /// Panics if `map >= self.len()`.
     #[inline(always)]
-    pub fn at_mut(&mut self, map: usize) -> MapSeqMapMut<K, V, S> {
+    pub fn at_mut(&mut self, map: usize) -> MapSeqMapMut<'_, K, V, S> {
         assert!(self.tables.len() > map);
         MapSeqMapMut { seq: self, map }
     }
@@ -107,7 +107,7 @@ impl<K, V, S> MapSeq<K, V, S> {
     ///
     /// This returns `None` if `map >= self.len()`.
     #[inline(always)]
-    pub fn get(&self, map: usize) -> Option<MapSeqMap<K, V, S>> {
+    pub fn get(&self, map: usize) -> Option<MapSeqMap<'_, K, V, S>> {
         (self.tables.len() > map).then_some(MapSeqMap { seq: self, map })
     }
 
@@ -115,7 +115,7 @@ impl<K, V, S> MapSeq<K, V, S> {
     ///
     /// This returns `None` if `map >= self.len()`.
     #[inline(always)]
-    pub fn get_mut(&mut self, map: usize) -> Option<MapSeqMapMut<K, V, S>> {
+    pub fn get_mut(&mut self, map: usize) -> Option<MapSeqMapMut<'_, K, V, S>> {
         (self.tables.len() > map).then_some(MapSeqMapMut { seq: self, map })
     }
 }
@@ -305,7 +305,7 @@ impl<K, V, S> MapSeqMapMut<'_, K, V, S> {
 
     /// Returns an iterator over the elements of the map, with mutable references to values.
     #[inline(always)]
-    pub fn iter_mut(&mut self) -> MapIterMut<K, V> {
+    pub fn iter_mut(&mut self) -> MapIterMut<'_, K, V> {
         self.reborrow().into_iter()
     }
 

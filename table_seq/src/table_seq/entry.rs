@@ -250,8 +250,8 @@ impl<'a, T> VacantEntry<'a, T> {
             let chunk_index = self.subtable >> CHUNK_SHIFT;
             let allocator_index = self.subtable >> ALLOCATOR_SHIFT;
 
-            let chunk_alloc = (*tables).allocators.get_unchecked_mut(allocator_index);
-            let chunk = (*tables).chunks.get_unchecked_mut(chunk_index);
+            let chunk_alloc = (&mut (*tables).allocators).get_unchecked_mut(allocator_index);
+            let chunk = (&mut (*tables).chunks).get_unchecked_mut(chunk_index);
             match kind {
                 VacantEntryKind::EmptyChunk => {
                     (*tables).entries += 1;
@@ -321,7 +321,7 @@ impl<'a, T> VacantEntry<'a, T> {
 
                     let table_ptr = node.table_ptr(table_offset);
 
-                    let table_alloc = &mut (*tables).allocators[allocator_index ^ 1];
+                    let table_alloc = &mut (&mut (*tables).allocators)[allocator_index ^ 1];
                     let (entry_ptr, table) =
                         SmallSubtable::new(found_pair, pair_hashes, value, hash, table_alloc);
 
@@ -343,7 +343,7 @@ impl<'a, T> VacantEntry<'a, T> {
                     }
                 }
                 VacantEntryKind::SmallTable(vacant_entry) => {
-                    let table_alloc = &mut (*tables).allocators[allocator_index ^ 1];
+                    let table_alloc = &mut (&mut (*tables).allocators)[allocator_index ^ 1];
                     let mut new_entry = vacant_entry.insert(value, table_alloc);
                     (*tables).entries += 1;
                     OccupiedEntry {
@@ -418,8 +418,8 @@ impl<'a, T> OccupiedEntry<'a, T> {
             let chunk_index = subtable >> CHUNK_SHIFT;
             let allocator_index = subtable >> ALLOCATOR_SHIFT;
 
-            let chunk = (*tables).chunks.get_unchecked_mut(chunk_index);
-            let chunk_alloc = (*tables).allocators.get_unchecked_mut(allocator_index);
+            let chunk = (&mut (*tables).chunks).get_unchecked_mut(chunk_index);
+            let chunk_alloc = (&mut (*tables).allocators).get_unchecked_mut(allocator_index);
 
             match kind {
                 OccupiedEntryKind::SingletonTable => {
@@ -468,7 +468,7 @@ impl<'a, T> OccupiedEntry<'a, T> {
                 }
                 OccupiedEntryKind::SmallTable(entry, will_delete) => {
                     let mut node = chunk.node(chunk_alloc);
-                    let table_alloc = &mut (*tables).allocators[allocator_index ^ 1];
+                    let table_alloc = &mut (&mut (*tables).allocators)[allocator_index ^ 1];
                     (*tables).entries -= 1;
                     let (removed, entry) = entry.remove(table_alloc);
 
@@ -477,7 +477,7 @@ impl<'a, T> OccupiedEntry<'a, T> {
                         let table = entry.into_table();
                         let table_offset = chunk.meta.table_offset(chunk_slot);
                         table.drop_and_dealloc(table_alloc);
-                        let chunk_alloc = (*tables).allocators.get_unchecked_mut(allocator_index);
+                        let chunk_alloc = (&mut (*tables).allocators).get_unchecked_mut(allocator_index);
                         node.close_table_gap_resize(table_offset, chunk, chunk_alloc);
                         chunk.meta.make_empty(chunk_slot);
                         if chunk.meta.is_empty() {
